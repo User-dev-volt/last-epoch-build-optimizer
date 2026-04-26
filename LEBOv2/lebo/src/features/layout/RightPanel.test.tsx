@@ -46,7 +46,7 @@ describe('RightPanel', () => {
   beforeEach(() => {
     useBuildStore.setState(initialBuildState, true)
     useOptimizationStore.setState(initialOptState, true)
-    useAppStore.setState(initialAppState, true)
+    useAppStore.setState({ ...initialAppState, isOnline: true }, true)
     vi.clearAllMocks()
   })
 
@@ -162,6 +162,43 @@ describe('RightPanel', () => {
     render(<RightPanel />)
     // ScoreGauge in comparison mode renders "→" between baseline and preview values
     expect(screen.getByTestId('score-gauge')).toHaveTextContent('→')
+  })
+
+  // Story 5.2: Offline guard
+  it('OptimizeButton is disabled when offline and activeBuild is present (AC4)', () => {
+    useBuildStore.setState({ activeBuild: MOCK_BUILD })
+    useAppStore.setState({ isOnline: false })
+    render(<RightPanel />)
+    expect(screen.getByTestId('optimize-button')).toBeDisabled()
+  })
+
+  it('shows offline note when offline (AC4)', () => {
+    useBuildStore.setState({ activeBuild: MOCK_BUILD })
+    useAppStore.setState({ isOnline: false })
+    render(<RightPanel />)
+    expect(screen.getByTestId('offline-note')).toBeInTheDocument()
+    expect(screen.getByText(/AI optimization requires internet connectivity/)).toBeInTheDocument()
+  })
+
+  it('OptimizeButton is enabled when online and activeBuild is present (AC5)', () => {
+    useBuildStore.setState({ activeBuild: MOCK_BUILD })
+    useAppStore.setState({ isOnline: true })
+    render(<RightPanel />)
+    expect(screen.getByTestId('optimize-button')).not.toBeDisabled()
+  })
+
+  it('offline note is not shown when online', () => {
+    useBuildStore.setState({ activeBuild: MOCK_BUILD })
+    useAppStore.setState({ isOnline: true })
+    render(<RightPanel />)
+    expect(screen.queryByTestId('offline-note')).toBeNull()
+  })
+
+  it('offline note is visible when offline and no activeBuild', () => {
+    useBuildStore.setState({ activeBuild: null })
+    useAppStore.setState({ isOnline: false })
+    render(<RightPanel />)
+    expect(screen.getByTestId('offline-note')).toBeInTheDocument()
   })
 
   it('ScoreGauge shows single score when no preview active', () => {

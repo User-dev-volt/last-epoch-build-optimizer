@@ -11,6 +11,7 @@ import { SuggestionsList } from '../optimization/SuggestionsList'
 
 export function RightPanel() {
   const isCollapsed = useAppStore((s) => s.activePanel.right === 'collapsed')
+  const isOnline = useAppStore((s) => s.isOnline)
   const setPanelState = useAppStore((s) => s.setPanelState)
   const activeBuild = useBuildStore((s) => s.activeBuild)
   const scores = useOptimizationStore((s) => s.scores)
@@ -80,9 +81,19 @@ export function RightPanel() {
 
           <OptimizeButton
             onOptimize={startOptimization}
-            disabled={!activeBuild}
+            disabled={!activeBuild || !isOnline}
             isOptimizing={isOptimizing}
           />
+
+          {!isOnline && (
+            <p
+              className="text-xs"
+              style={{ color: 'var(--color-text-muted)' }}
+              data-testid="offline-note"
+            >
+              AI optimization requires internet connectivity. Connect to the internet and retry.
+            </p>
+          )}
 
           {showContextNote && (
             <div

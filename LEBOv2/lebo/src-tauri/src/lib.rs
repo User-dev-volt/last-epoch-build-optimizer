@@ -3,7 +3,7 @@ pub mod db;
 pub mod models;
 pub mod services;
 
-use commands::app_commands::{check_api_key_configured, set_api_key};
+use commands::app_commands::{check_api_key_configured, check_connectivity, set_api_key};
 use commands::build_commands::{
     delete_build, load_build, load_builds_list, rename_build, save_build,
 };
@@ -16,6 +16,11 @@ use commands::game_data_commands::{
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .setup(|app| {
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(services::connectivity_service::start_watcher(handle));
+            Ok(())
+        })
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_sql::Builder::default().build())
         .plugin(tauri_plugin_http::init())
@@ -44,6 +49,7 @@ pub fn run() {
             invoke_claude_api,
             set_api_key,
             check_api_key_configured,
+            check_connectivity,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

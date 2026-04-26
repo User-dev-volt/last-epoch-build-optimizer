@@ -1,6 +1,6 @@
 # Story 5.2: Connectivity Detection & Offline Mode
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -40,67 +40,51 @@ so that I know when AI features are unavailable and never encounter a confusing 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `connectivity_service.rs` (AC: 1, 6, 7)
-  - [ ] Create `lebo/src-tauri/src/services/connectivity_service.rs`
-  - [ ] Implement `pub async fn check_once() -> bool` — HEAD request to `game_data_service::REMOTE_DATA_BASE_URL` with 5s timeout, returns `true` if a response is received regardless of HTTP status, `false` on connection error or timeout (see Dev Notes for reqwest pattern)
-  - [ ] Implement `pub async fn start_watcher(app_handle: tauri::AppHandle)` — initial check + emit, then loops on 30s interval, emits `app:connectivity-changed` only on state change (see Dev Notes for pattern)
-  - [ ] Add `pub mod connectivity_service;` to `lebo/src-tauri/src/services/mod.rs`
+- [x] Task 1: Create `connectivity_service.rs` (AC: 1, 6, 7)
+  - [x] Create `lebo/src-tauri/src/services/connectivity_service.rs`
+  - [x] Implement `pub async fn check_once() -> bool` — HEAD request to `game_data_service::REMOTE_DATA_BASE_URL` with 5s timeout, returns `true` if a response is received regardless of HTTP status, `false` on connection error or timeout (see Dev Notes for reqwest pattern)
+  - [x] Implement `pub async fn start_watcher(app_handle: tauri::AppHandle)` — initial check + emit, then loops on 30s interval, emits `app:connectivity-changed` only on state change (see Dev Notes for pattern)
+  - [x] Add `pub mod connectivity_service;` to `lebo/src-tauri/src/services/mod.rs`
 
-- [ ] Task 2: Add `check_connectivity` Tauri command (AC: 1)
-  - [ ] In `lebo/src-tauri/src/commands/app_commands.rs`, add:
-    ```rust
-    #[tauri::command]
-    pub async fn check_connectivity(app_handle: tauri::AppHandle) -> Result<bool, String> {
-        let is_online = connectivity_service::check_once().await;
-        app_handle.emit("app:connectivity-changed", serde_json::json!({ "is_online": is_online }))
-            .map_err(|e| format!("UNKNOWN: emit failed: {e}"))?;
-        Ok(is_online)
-    }
-    ```
-  - [ ] Add `use crate::services::connectivity_service;` import to `app_commands.rs`
-  - [ ] Register `check_connectivity` in `lib.rs` invoke_handler
+- [x] Task 2: Add `check_connectivity` Tauri command (AC: 1)
+  - [x] In `lebo/src-tauri/src/commands/app_commands.rs`, add `check_connectivity` command
+  - [x] Add `use crate::services::connectivity_service;` import to `app_commands.rs`
+  - [x] Register `check_connectivity` in `lib.rs` invoke_handler
 
-- [ ] Task 3: Start watcher in `lib.rs` setup (AC: 6, 7)
-  - [ ] Add `.setup()` closure to `tauri::Builder` in `lib.rs` (before `.invoke_handler`) that clones `app_handle` and calls `tauri::async_runtime::spawn(connectivity_service::start_watcher(app_handle.clone()))` — see Dev Notes for exact position
+- [x] Task 3: Start watcher in `lib.rs` setup (AC: 6, 7)
+  - [x] Add `.setup()` closure to `tauri::Builder` in `lib.rs` (before `.plugin()` calls) that spawns `connectivity_service::start_watcher`
 
-- [ ] Task 4: Create `src/shared/hooks/useConnectivity.ts` (AC: 1, 5, 6)
-  - [ ] Create `lebo/src/shared/hooks/useConnectivity.ts`
-  - [ ] On mount: call `invokeCommand<boolean>('check_connectivity')` → `setOnline(result)` (catches and ignores errors — connectivity failure is itself a valid offline state)
-  - [ ] Listen to `app:connectivity-changed` Tauri event → call `setOnline(payload.is_online)` on each event
-  - [ ] Return `unlisten` cleanup function from the `useEffect` (see Dev Notes for listen pattern)
-  - [ ] `data-testid` not applicable — this is a hook, not a component
+- [x] Task 4: Create `src/shared/hooks/useConnectivity.ts` (AC: 1, 5, 6)
+  - [x] Create `lebo/src/shared/hooks/useConnectivity.ts`
+  - [x] On mount: call `invokeCommand<boolean>('check_connectivity')` → `setOnline(result)` (catches and ignores errors — connectivity failure is itself a valid offline state)
+  - [x] Listen to `app:connectivity-changed` Tauri event → call `setOnline(payload.is_online)` on each event
+  - [x] Return `unlisten` cleanup function from the `useEffect` (see Dev Notes for listen pattern)
+  - [x] `data-testid` not applicable — this is a hook, not a component
 
-- [ ] Task 5: Mount `useConnectivity()` in `App.tsx` (AC: 1)
-  - [ ] Import and call `useConnectivity()` inside `App()` — place it alongside the other hooks at the top of the function body (before the `useEffect` calls)
-  - [ ] `useConnectivity` must be called unconditionally (hooks ordering rule — same lesson as Story 5.1 where settings branch was placed after all hooks)
+- [x] Task 5: Mount `useConnectivity()` in `App.tsx` (AC: 1)
+  - [x] Import and call `useConnectivity()` inside `App()` — placed alongside other hooks at the top of the function body
+  - [x] `useConnectivity` called unconditionally (hooks ordering rule)
 
-- [ ] Task 6: Update `RightPanel.tsx` for offline guard (AC: 4, 5)
-  - [ ] Subscribe to `isOnline` from appStore: `const isOnline = useAppStore((s) => s.isOnline)`
-  - [ ] Change OptimizeButton disabled prop: `disabled={!activeBuild || !isOnline}`
-  - [ ] Add offline note below OptimizeButton (shown when `!isOnline`):
-    ```tsx
-    {!isOnline && (
-      <p className="text-xs" style={{ color: 'var(--color-text-muted)' }} data-testid="offline-note">
-        AI optimization requires internet connectivity. Connect to the internet and retry.
-      </p>
-    )}
-    ```
-  - [ ] The note replaces the context note when offline (both can coexist but offline note takes visual priority — show offline note first, context note second in the JSX order)
+- [x] Task 6: Update `RightPanel.tsx` for offline guard (AC: 4, 5)
+  - [x] Subscribe to `isOnline` from appStore: `const isOnline = useAppStore((s) => s.isOnline)`
+  - [x] Change OptimizeButton disabled prop: `disabled={!activeBuild || !isOnline}`
+  - [x] Add offline note below OptimizeButton (shown when `!isOnline`) with `data-testid="offline-note"`
+  - [x] Offline note renders above context note (visual priority)
 
-- [ ] Task 7: Tests (AC: 1–7)
-  - [ ] Create `lebo/src/shared/hooks/useConnectivity.test.ts`:
-    - [ ] `check_connectivity` is called on mount
-    - [ ] `setOnline(true)` is called when command resolves `true`
-    - [ ] `app:connectivity-changed` event with `{ is_online: false }` calls `setOnline(false)`
-    - [ ] `app:connectivity-changed` event with `{ is_online: true }` calls `setOnline(true)`
-    - [ ] Unlisten is called on unmount
-  - [ ] Update `lebo/src/features/layout/RightPanel.test.tsx`:
-    - [ ] When `isOnline=false` and `activeBuild` present: OptimizeButton is disabled
-    - [ ] When `isOnline=false`: offline note text is visible
-    - [ ] When `isOnline=true` and `activeBuild` present: OptimizeButton is enabled (existing behavior preserved)
-    - [ ] When `isOnline=false` and `!activeBuild`: offline note is still visible (button was already disabled)
-  - [ ] `pnpm tsc --noEmit` — clean
-  - [ ] `pnpm vitest run` — all tests pass
+- [x] Task 7: Tests (AC: 1–7)
+  - [x] Create `lebo/src/shared/hooks/useConnectivity.test.ts`:
+    - [x] `check_connectivity` is called on mount
+    - [x] `setOnline(true)` is called when command resolves `true`
+    - [x] `app:connectivity-changed` event with `{ is_online: false }` calls `setOnline(false)`
+    - [x] `app:connectivity-changed` event with `{ is_online: true }` calls `setOnline(true)`
+    - [x] Unlisten is called on unmount
+  - [x] Update `lebo/src/features/layout/RightPanel.test.tsx`:
+    - [x] When `isOnline=false` and `activeBuild` present: OptimizeButton is disabled
+    - [x] When `isOnline=false`: offline note text is visible
+    - [x] When `isOnline=true` and `activeBuild` present: OptimizeButton is enabled (existing behavior preserved)
+    - [x] When `isOnline=false` and `!activeBuild`: offline note is still visible (button was already disabled)
+  - [x] `pnpm tsc --noEmit` — clean
+  - [x] `pnpm vitest run` — all 380 tests pass (36 files)
 
 ## Dev Notes
 
@@ -325,8 +309,27 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Created `connectivity_service.rs` with `check_once()` (HEAD request, 5s timeout) and `start_watcher()` (30s poll loop, emits only on state change)
+- `check_connectivity` Tauri command does eager on-mount check + emits event so frontend store updates immediately
+- `.setup()` closure added to `tauri::Builder` before `.plugin()` calls — spawns the background watcher
+- `useConnectivity` hook: eager invoke on mount + Tauri event listener; unlisten cleanup on unmount
+- `RightPanel` offline guard: `disabled={!activeBuild || !isOnline}` + offline note with `data-testid="offline-note"`
+- Existing RightPanel tests updated: `beforeEach` now sets `isOnline: true` to preserve prior enabled-button behavior
+- All 380 tests pass (36 files), `tsc --noEmit` clean
+
 ### File List
+
+- `lebo/src-tauri/src/services/connectivity_service.rs` (new)
+- `lebo/src/shared/hooks/useConnectivity.ts` (new)
+- `lebo/src/shared/hooks/useConnectivity.test.ts` (new)
+- `lebo/src-tauri/src/services/mod.rs` (modified)
+- `lebo/src-tauri/src/commands/app_commands.rs` (modified)
+- `lebo/src-tauri/src/lib.rs` (modified)
+- `lebo/src/App.tsx` (modified)
+- `lebo/src/features/layout/RightPanel.tsx` (modified)
+- `lebo/src/features/layout/RightPanel.test.tsx` (modified)
 
 ## Change Log
 
 - 2026-04-26: Story 5.2 created — Connectivity Detection & Offline Mode
+- 2026-04-26: Story 5.2 implemented — Rust connectivity service, Tauri command, useConnectivity hook, RightPanel offline guard; all ACs satisfied, 380 tests passing
