@@ -74,7 +74,7 @@ development_status:
 
   # Story 1.3a: SPIKE — research only, 2–3 days time-boxed. Begins after 1.2.
   # Output: docs/game-data-source.md. Gates 1.3b.
-  1-3a-game-data-source-research-spike: backlog
+  1-3a-game-data-source-research-spike: done
 
   # Story 1.3b: Implementation. HARD GATE: requires 1.3a complete + docs/game-data-source.md.
   # Unblocks: 1.4, 1.5, 2.1, 3.1, 3.2, 4.1
