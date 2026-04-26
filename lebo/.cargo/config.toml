@@ -1,0 +1,4 @@
+[build]
+# Build output goes outside the Obsidian Brain directory to avoid
+# Windows Application Control policy blocking proc-macro DLL execution.
+target-dir = "C:/Users/MD_Ki/cargo-targets/lebo"

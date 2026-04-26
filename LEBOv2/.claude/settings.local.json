@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(pnpm --version)",
+      "Bash(cargo --version)",
+      "Bash(pnpm create *)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm add *)",
+      "Bash(cargo add *)",
+      "Bash(rustc *)",
+      "Bash(pnpm vitest *)",
+      "Bash(pnpm tsc *)",
+      "Bash(cargo check *)",
+      "Bash(cargo update *)",
+      "Bash(npx vitest *)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('plugins',{}\\), indent=2\\)\\)\")",
+      "Bash(pnpm dev *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_snapshot",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:1420)",
+      "WebFetch(domain:localhost)",
+      "Bash(netstat -ano)",
+      "Bash(awk '{print $5}')",
+      "Bash(xargs -r taskkill /PID /F)",
+      "Bash(taskkill /PID 5212 /F)",
+      "PowerShell(Stop-Process *)"
+    ]
+  }
+}

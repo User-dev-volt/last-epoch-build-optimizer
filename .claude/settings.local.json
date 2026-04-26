@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm --version)",
+      "Bash(rustc --version)",
+      "Bash(cargo --version)",
+      "Bash(npm --version)",
+      "Bash(npm install:*)",
+      "Bash(curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs)",
+      "Bash(sh -s -- -y --default-toolchain stable)",
+      "Bash(export PATH=\"$HOME/.cargo/bin:$PATH\")",
+      "Bash(pnpm create:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm approve-builds:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm tsc:*)",
+      "Bash(cargo check:*)",
+      "Bash(rustup target:*)",
+      "Bash(rustup toolchain:*)",
+      "Bash(rustup default:*)",
+      "Bash(rustup show:*)",
+      "Bash(export CARGO_TARGET_DIR=\"$HOME/cargo-targets/lebo\")",
+      "Bash(cargo clean:*)",
+      "Bash(timeout 30 pnpm tauri dev)",
+      "Bash(pnpm build:*)",
+      "Bash(cargo test:*)",
+      "WebSearch",
+      "Bash(curl -s \"https://raw.githubusercontent.com/prowner/last-epoch-data/main/skillTrees.ts\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/prowner/last-epoch-data/main/skillTrees.js\")",
+      "Bash(curl -s \"https://api.github.com/repos/prowner/last-epoch-data/contents/\")",
+      "Bash(curl -s \"https://api.github.com/repos/prowner/last-epoch-data/contents/datamined\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/prowner/last-epoch-data/main/datamined/skillTrees.ts\")",
+      "Bash(curl:*)",
+      "Bash(node scripts/generate-game-data.mjs)",
+      "Bash(cmd.exe /c \"where cargo\")",
+      "Bash(cmd.exe /c \"reg query HKCU\\\\Environment /v PATH\")",
+      "Bash(cmd.exe:*)",
+      "Bash(~/.cargo/bin/cargo check:*)"
+    ]
+  }
+}

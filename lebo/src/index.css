@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme {
+  /* LEBO Design System */
+  --color-lebo-base: #0d0e12;
+  --color-lebo-surface: #161820;
+  --color-lebo-surface-elevated: #1e2028;
+  --color-lebo-border: #2a2d38;
+
+  --color-lebo-gold: #c8943a;
+  --color-lebo-gold-bright: #e8b050;
+  --color-lebo-gold-dim: #7a5820;
+
+  --color-lebo-text-primary: #e8e4dc;
+  --color-lebo-text-secondary: #8a8878;
+  --color-lebo-text-muted: #4a4840;
+
+  --color-lebo-score-damage: #e85050;
+  --color-lebo-score-survival: #50a0e8;
+  --color-lebo-score-speed: #50e8a0;
+
+  --font-display: "Cinzel", "Georgia", serif;
+}
+
+/* Base */
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #0d0e12;
+  color: #e8e4dc;
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #161820;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2d38;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7a5820;
+}
+
+/* Font imports */
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+
+/* Pixi canvas */
+canvas {
+  display: block;
+}

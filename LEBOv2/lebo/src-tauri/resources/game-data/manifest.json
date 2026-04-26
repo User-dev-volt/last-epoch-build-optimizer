@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "gameVersion": "1.4.4",
+  "dataVersion": "1.0.0",
+  "generatedAt": "2026-04-22T00:00:00Z",
+  "classes": ["sentinel", "mage", "primalist", "acolyte", "rogue"]
+}
