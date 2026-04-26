@@ -106,6 +106,8 @@ export function SuggestionsList() {
     const { nodeChange } = suggestion
     const { rank } = suggestion
 
+    let fromRemovedPoints: number | null = null
+
     if (nodeChange.fromNodeId) {
       const currentFromPoints = currentBuild.nodeAllocations[nodeChange.fromNodeId] ?? 0
       if (currentFromPoints > 0) {
@@ -119,17 +121,26 @@ export function SuggestionsList() {
           setApplyErrors((prev) => ({ ...prev, [rank]: mapApplyError(removeResult.error) }))
           return
         }
+        fromRemovedPoints = currentFromPoints
       }
     }
 
     const toGameNode = allGameNodes[nodeChange.toNodeId]
     if (!toGameNode) {
+      if (nodeChange.fromNodeId && fromRemovedPoints !== null) {
+        const fromGameNode = allGameNodes[nodeChange.fromNodeId]
+        if (fromGameNode) applyNodeChange(nodeChange.fromNodeId, fromRemovedPoints, fromGameNode, allGameNodes)
+      }
       setApplyErrors((prev) => ({ ...prev, [rank]: 'Cannot apply: target node not found in game data' }))
       return
     }
 
     const result = applyNodeChange(nodeChange.toNodeId, nodeChange.pointsChange, toGameNode, allGameNodes)
     if (!result.success) {
+      if (nodeChange.fromNodeId && fromRemovedPoints !== null) {
+        const fromGameNode = allGameNodes[nodeChange.fromNodeId]
+        if (fromGameNode) applyNodeChange(nodeChange.fromNodeId, fromRemovedPoints, fromGameNode, allGameNodes)
+      }
       setApplyErrors((prev) => ({ ...prev, [rank]: mapApplyError(result.error) }))
       return
     }
@@ -167,8 +178,8 @@ export function SuggestionsList() {
         applyError={applyErrors[suggestion.rank] ?? null}
         isPreviewActive={previewSuggestionRank === suggestion.rank}
         onApply={() => handleApply(suggestion)}
-        onSkip={() => allowInteraction && skipSuggestion(suggestion.rank)}
-        onPreview={() => allowInteraction && handlePreview(suggestion.rank)}
+        onSkip={() => { if (allowInteraction) skipSuggestion(suggestion.rank) }}
+        onPreview={() => { if (allowInteraction) handlePreview(suggestion.rank) }}
         onHoverEnter={() => handleHoverEnter(suggestion)}
         onHoverLeave={handleHoverLeave}
       />

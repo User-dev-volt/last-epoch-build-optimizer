@@ -30,7 +30,7 @@ const DEFAULT_HANDLERS = {
 
 describe('SuggestionCard', () => {
   it('renders rank badge', () => {
-    render(<SuggestionCard {...DEFAULT_HANDLERS} suggestion={makeSuggestion()} toNodeName="Iron Mastery" {...DEFAULT_HANDLERS} />)
+    render(<SuggestionCard {...DEFAULT_HANDLERS} suggestion={makeSuggestion()} toNodeName="Iron Mastery" />)
     const card = screen.getByTestId('suggestion-card-1')
     expect(card).toBeInTheDocument()
     expect(card).toHaveTextContent('1')

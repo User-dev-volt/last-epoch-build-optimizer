@@ -52,7 +52,7 @@
 #   - 4.1 (Context Panel — needs item/affix/idol data from game data)
 
 generated: 2026-04-18
-last_updated: 2026-04-25 # 2.3 → done; 2.4 → review; 3.1 → done; 3.2 → done; 3.3 → done; 3.4 → done; 3.5 → in-progress; 3.6 → done; 4.1 → done; 4.2 → review
+last_updated: 2026-04-25 # 2.3 → done; 2.4 → done; 3.1 → done; 3.2 → done; 3.3 → done; 3.4 → done; 3.5 → done; 3.6 → done; 4.1 → done; 4.2 → done
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -111,7 +111,7 @@ development_status:
   2-3-new-build-creator-class-mastery-selector: done
 
   # Story 2.4: Depends on 2.3 (done). 2.1 deferred — 2.4 proceeds with new-build path only.
-  2-4-build-persistence-save-load-rename-delete: review
+  2-4-build-persistence-save-load-rename-delete: done
 
   epic-2-retrospective: optional
 
@@ -134,7 +134,7 @@ development_status:
   3-4-suggestion-list-display: done
 
   # Story 3.5: Depends on 3.4 (extends suggestion cards with preview/apply/dismiss)
-  3-5-suggestion-interactions-preview-apply-dismiss: in-progress
+  3-5-suggestion-interactions-preview-apply-dismiss: done
 
   # Story 3.6: Depends on 3.5 (iterative workflow on top of full suggestion interaction layer)
   3-6-re-run-optimization-iterative-workflow: done
@@ -150,7 +150,7 @@ development_status:
   4-1-context-panel-shell-gear-input: done
 
   # Story 4.2: Depends on 4.1 (extends context panel with skill + idol inputs)
-  4-2-active-skill-idol-context-input: review
+  4-2-active-skill-idol-context-input: done
 
   epic-4-retrospective: optional
 

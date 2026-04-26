@@ -1,6 +1,6 @@
 # Story 3.5: Suggestion Interactions — Preview, Apply, Dismiss
 
-Status: review
+Status: done
 
 ## Story
 
@@ -353,6 +353,10 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 - All 7 tasks completed. 313/313 tests passing (285 before this story).
+- ✅ Resolved review finding [Patch]: SWAP rollback — `handleApply` now captures `fromRemovedPoints` and re-applies `fromNodeId` allocation if `toNodeId` fails (node not found or `applyNodeChange` returns `success: false`).
+- ✅ Resolved review finding [Patch]: `onSkip`/`onPreview` changed from `() => allowInteraction && fn()` to `() => { if (allowInteraction) fn() }` — explicit void return.
+- ✅ Resolved review finding [Patch]: Removed trailing duplicate `{...DEFAULT_HANDLERS}` spread from `SuggestionCard.test.tsx:33`.
+- 352/352 tests pass after review fixes. `pnpm tsc --noEmit` clean.
 - `HighlightedNodes` type changed from `Set<string>` to `{ glowing: Set<string>; dimmed: Set<string> }` in `types.ts`; propagated through `SkillTreeCanvasProps`, `RendererInstance.renderTree`, and `SkillTreeView.tsx`.
 - `appliedRanks` stored as `number[]` (not `Set<number>`) to avoid Zustand reference-equality issues with Set mutations.
 - `handleApply` in `SuggestionsList.tsx` reads `useBuildStore.getState().activeBuild` (not the React-subscribed value) to avoid stale closure issues during rapid state changes.
@@ -385,9 +389,9 @@ claude-sonnet-4-6
 
 ## Review Findings
 
-- [ ] [Review][Patch] SWAP apply has no rollback on toNodeId failure — if `fromNodeId` removal succeeds but `toNodeId` allocation fails (node not found in game data, or `applyNodeChange` returns `success: false`), the from-node is permanently deallocated without the to-node being allocated, leaving the build in a corrupt partial state [`SuggestionsList.tsx`, `handleApply`, SWAP branch] — fix: if toNodeId add fails, attempt to re-add `fromNodeId` or surface a combined error and abort both operations
-- [ ] [Review][Patch] `onSkip` and `onPreview` handlers return boolean expression instead of void — `onSkip={() => allowInteraction && skipSuggestion(suggestion.rank)}` returns `boolean | void`; typed as `() => void` so TypeScript allows it, but misleading and may cause issues if callers check return value [`SuggestionsList.tsx:161,163`] — fix: use explicit conditionals `() => { if (allowInteraction) skipSuggestion(suggestion.rank) }`
-- [ ] [Review][Patch] Test line 33 has duplicate `{...DEFAULT_HANDLERS}` spread — `<SuggestionCard {...DEFAULT_HANDLERS} suggestion={...} toNodeName="..." {...DEFAULT_HANDLERS} />` spreads the same const twice; same references so functionally harmless, but misleading [`SuggestionCard.test.tsx:33`] — fix: remove the trailing duplicate spread
+- [x] [Review][Patch] SWAP apply has no rollback on toNodeId failure — if `fromNodeId` removal succeeds but `toNodeId` allocation fails (node not found in game data, or `applyNodeChange` returns `success: false`), the from-node is permanently deallocated without the to-node being allocated, leaving the build in a corrupt partial state [`SuggestionsList.tsx`, `handleApply`, SWAP branch] — fix: if toNodeId add fails, attempt to re-add `fromNodeId` or surface a combined error and abort both operations
+- [x] [Review][Patch] `onSkip` and `onPreview` handlers return boolean expression instead of void — `onSkip={() => allowInteraction && skipSuggestion(suggestion.rank)}` returns `boolean | void`; typed as `() => void` so TypeScript allows it, but misleading and may cause issues if callers check return value [`SuggestionsList.tsx:161,163`] — fix: use explicit conditionals `() => { if (allowInteraction) skipSuggestion(suggestion.rank) }`
+- [x] [Review][Patch] Test line 33 has duplicate `{...DEFAULT_HANDLERS}` spread — `<SuggestionCard {...DEFAULT_HANDLERS} suggestion={...} toNodeName="..." {...DEFAULT_HANDLERS} />` spreads the same const twice; same references so functionally harmless, but misleading [`SuggestionCard.test.tsx:33`] — fix: remove the trailing duplicate spread
 
 ## Change Log
 
@@ -396,3 +400,4 @@ claude-sonnet-4-6
 | 2026-04-25 | Story created from Epic 3 context. Stories 3.1–3.4 done. Status → ready-for-dev. |
 | 2026-04-25 | Implementation complete. 7 tasks done, 313/313 tests pass. Status → review. |
 | 2026-04-25 | 3 review findings written (1 patch-SWAP rollback, 1 patch-handler return type, 1 patch-duplicate spread) during 3.4 adversarial re-review. |
+| 2026-04-25 | Addressed all 3 review findings. 352/352 tests pass. Status → done. |

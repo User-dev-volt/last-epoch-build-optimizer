@@ -1,6 +1,6 @@
 # Story 4.2: Active Skill & Idol Context Input
 
-Status: review
+Status: done
 
 ## Story
 

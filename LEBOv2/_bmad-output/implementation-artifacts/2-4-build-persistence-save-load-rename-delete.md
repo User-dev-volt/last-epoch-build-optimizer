@@ -1,6 +1,6 @@
 # Story 2.4: Build Persistence — Save, Load, Rename, Delete
 
-Status: review
+Status: done
 
 ## Story
 
