@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useOptimizationStore } from '../../shared/stores/optimizationStore'
 import { useBuildStore } from '../../shared/stores/buildStore'
 import { useGameDataStore } from '../../shared/stores/gameDataStore'
+import { useAppStore } from '../../shared/stores/appStore'
 import type { GameData, GameNode } from '../../shared/types/gameData'
 import type { SuggestionResult } from '../../shared/types/optimization'
 import { SuggestionCard } from './SuggestionCard'
@@ -238,6 +239,16 @@ export function SuggestionsList() {
           data-testid="stream-error-banner"
         >
           <span className="flex-1">{streamError.message}</span>
+          {streamError.type === 'AUTH_ERROR' && (
+            <button
+              onClick={() => useAppStore.getState().setCurrentView('settings')}
+              data-testid="auth-error-settings-link"
+              className="text-xs shrink-0 underline"
+              style={{ color: 'var(--color-accent-gold)' }}
+            >
+              Go to Settings
+            </button>
+          )}
           <button
             onClick={() => setStreamError(null)}
             aria-label="Dismiss error"

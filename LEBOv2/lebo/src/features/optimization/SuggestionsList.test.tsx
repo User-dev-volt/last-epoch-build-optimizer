@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { useOptimizationStore } from '../../shared/stores/optimizationStore'
 import { useBuildStore } from '../../shared/stores/buildStore'
 import { useGameDataStore } from '../../shared/stores/gameDataStore'
+import { useAppStore } from '../../shared/stores/appStore'
 
 // Mock Tauri event to prevent side-effects
 vi.mock('@tauri-apps/api/event', () => ({
@@ -372,5 +373,42 @@ describe('SuggestionsList', () => {
     })
     render(<SuggestionsList />)
     expect(screen.getByText(/well-optimized for Maximize Damage/)).toBeInTheDocument()
+  })
+
+  // Story 5.1: AUTH_ERROR "Go to Settings" link
+  it('shows Go to Settings button when streamError type is AUTH_ERROR', () => {
+    useOptimizationStore.setState({
+      suggestions: [],
+      isOptimizing: false,
+      streamError: {
+        message: 'No API key configured. Add your Claude API key in Settings.',
+        type: 'AUTH_ERROR',
+      },
+    })
+    render(<SuggestionsList />)
+    expect(screen.getByTestId('auth-error-settings-link')).toBeInTheDocument()
+    expect(screen.getByText('Go to Settings')).toBeInTheDocument()
+  })
+
+  it('does not show Go to Settings button for non-AUTH_ERROR errors', () => {
+    useOptimizationStore.setState({
+      suggestions: [],
+      isOptimizing: false,
+      streamError: { message: 'Something broke', type: 'NETWORK_ERROR' },
+    })
+    render(<SuggestionsList />)
+    expect(screen.queryByTestId('auth-error-settings-link')).toBeNull()
+  })
+
+  it('Go to Settings button navigates to settings view', () => {
+    useAppStore.setState({ currentView: 'main' })
+    useOptimizationStore.setState({
+      suggestions: [],
+      isOptimizing: false,
+      streamError: { message: 'No API key', type: 'AUTH_ERROR' },
+    })
+    render(<SuggestionsList />)
+    fireEvent.click(screen.getByTestId('auth-error-settings-link'))
+    expect(useAppStore.getState().currentView).toBe('settings')
   })
 })

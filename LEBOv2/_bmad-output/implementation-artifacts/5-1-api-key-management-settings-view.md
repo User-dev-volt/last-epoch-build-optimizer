@@ -1,6 +1,6 @@
 # Story 5.1: API Key Management & Settings View
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -38,77 +38,77 @@ so that the AI optimization engine can make authenticated requests without my ke
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `tauri-plugin-stronghold` to the Rust project (AC: 1, 2, 3, 4)
-  - [ ] Check Rust toolchain version (`rustup show`); update if < 1.85 (`rustup update stable`) — required by argon2 0.5.x
-  - [ ] Add to `lebo/src-tauri/Cargo.toml`: `tauri-plugin-stronghold = "2"` and `argon2 = "0.5"`
-  - [ ] Register the stronghold plugin in `lib.rs` with an argon2 KDF function (see Dev Notes for exact code)
-  - [ ] Add stronghold permissions to `lebo/src-tauri/capabilities/default.json` — check plugin docs for exact permission identifiers (typically `stronghold:default` or individual `stronghold:allow-*` keys)
-  - [ ] Verify `cargo build` succeeds before proceeding
+- [x] Task 1: Add `tauri-plugin-stronghold` to the Rust project (AC: 1, 2, 3, 4)
+  - [x] Check Rust toolchain version (`rustup show`); update if < 1.85 (`rustup update stable`) — required by argon2 0.5.x
+  - [x] Add to `lebo/src-tauri/Cargo.toml`: `tauri-plugin-stronghold = "2"` and `argon2 = "0.5"`
+  - [x] Register the stronghold plugin in `lib.rs` with an argon2 KDF function (see Dev Notes for exact code)
+  - [x] Add stronghold permissions to `lebo/src-tauri/capabilities/default.json` — check plugin docs for exact permission identifiers (typically `stronghold:default` or individual `stronghold:allow-*` keys)
+  - [x] Verify `cargo build` succeeds before proceeding
 
-- [ ] Task 2: Create `keychain_service.rs` (AC: 2, 3, 4, 5)
-  - [ ] Create `lebo/src-tauri/src/services/keychain_service.rs`
-  - [ ] Implement `pub async fn set_api_key(app: &AppHandle, key: &str) -> Result<(), String>` — stores key in Stronghold vault, initializes vault on first call
-  - [ ] Implement `pub async fn get_api_key(app: &AppHandle) -> Result<String, String>` — returns `Err("AUTH_ERROR: No API key configured. Add your Claude API key in Settings.".to_string())` when no key stored (error string MUST start with `AUTH_ERROR:` — see Dev Notes)
-  - [ ] Implement `pub async fn is_api_key_configured(app: &AppHandle) -> Result<bool, String>` — returns `Ok(false)` when vault does not exist (NOT `Err(AUTH_ERROR)`) — see Dev Notes for vault init guard
-  - [ ] Export from `services/mod.rs`: replace placeholder comment with `pub mod keychain_service;`
+- [x] Task 2: Create `keychain_service.rs` (AC: 2, 3, 4, 5)
+  - [x] Create `lebo/src-tauri/src/services/keychain_service.rs`
+  - [x] Implement `pub async fn set_api_key(app: &AppHandle, key: &str) -> Result<(), String>` — stores key in Stronghold vault, initializes vault on first call
+  - [x] Implement `pub async fn get_api_key(app: &AppHandle) -> Result<String, String>` — returns `Err("AUTH_ERROR: No API key configured. Add your Claude API key in Settings.".to_string())` when no key stored (error string MUST start with `AUTH_ERROR:` — see Dev Notes)
+  - [x] Implement `pub async fn is_api_key_configured(app: &AppHandle) -> Result<bool, String>` — returns `Ok(false)` when vault does not exist (NOT `Err(AUTH_ERROR)`) — see Dev Notes for vault init guard
+  - [x] Export from `services/mod.rs`: replace placeholder comment with `pub mod keychain_service;`
 
-- [ ] Task 3: Create `app_commands.rs` (AC: 2, 3, 4)
-  - [ ] Create `lebo/src-tauri/src/commands/app_commands.rs`
-  - [ ] Implement `#[tauri::command] pub async fn set_api_key(app_handle: tauri::AppHandle, key: String) -> Result<(), String>` — delegates to `keychain_service::set_api_key`
-  - [ ] Implement `#[tauri::command] pub async fn check_api_key_configured(app_handle: tauri::AppHandle) -> Result<bool, String>` — delegates to `keychain_service::is_api_key_configured`
-  - [ ] Export from `commands/mod.rs`: replace placeholder comment with `pub mod app_commands;`
-  - [ ] Add both commands to the `invoke_handler![]` list in `lib.rs`
+- [x] Task 3: Create `app_commands.rs` (AC: 2, 3, 4)
+  - [x] Create `lebo/src-tauri/src/commands/app_commands.rs`
+  - [x] Implement `#[tauri::command] pub async fn set_api_key(app_handle: tauri::AppHandle, key: String) -> Result<(), String>` — delegates to `keychain_service::set_api_key`
+  - [x] Implement `#[tauri::command] pub async fn check_api_key_configured(app_handle: tauri::AppHandle) -> Result<bool, String>` — delegates to `keychain_service::is_api_key_configured`
+  - [x] Export from `commands/mod.rs`: replace placeholder comment with `pub mod app_commands;`
+  - [x] Add both commands to the `invoke_handler![]` list in `lib.rs`
 
-- [ ] Task 4: Update `invoke_claude_api` to use keychain (AC: 5)
-  - [ ] In `claude_commands.rs:19-20`, replace `std::env::var("ANTHROPIC_API_KEY")` with `keychain_service::get_api_key(&app_handle).await?`
-  - [ ] Add `use crate::services::keychain_service;` import to `claude_commands.rs`
-  - [ ] Remove the `TODO(story-5.1)` comment at line 11
-  - [ ] Optional dev ergonomics: add env var fallback in debug builds only — `#[cfg(debug_assertions)] let api_key = std::env::var("ANTHROPIC_API_KEY").unwrap_or_else(|_| api_key);` — so local dev still works with `.env`
+- [x] Task 4: Update `invoke_claude_api` to use keychain (AC: 5)
+  - [x] In `claude_commands.rs:19-20`, replace `std::env::var("ANTHROPIC_API_KEY")` with `keychain_service::get_api_key(&app_handle).await?`
+  - [x] Add `use crate::services::keychain_service;` import to `claude_commands.rs`
+  - [x] Remove the `TODO(story-5.1)` comment at line 11
+  - [x] Optional dev ergonomics: add env var fallback in debug builds only — `#[cfg(debug_assertions)] let api_key = std::env::var("ANTHROPIC_API_KEY").unwrap_or_else(|_| api_key);` — so local dev still works with `.env`
 
-- [ ] Task 5: Update `appStore.ts` — add API key state (AC: 3, 4)
-  - [ ] Add `isApiKeyConfigured: boolean | null` to `AppStore` interface (null = not yet checked)
-  - [ ] Add `setApiKeyConfigured: (v: boolean | null) => void` action
-  - [ ] Initialize `isApiKeyConfigured: null` in store
+- [x] Task 5: Update `appStore.ts` — add API key state (AC: 3, 4)
+  - [x] Add `isApiKeyConfigured: boolean | null` to `AppStore` interface (null = not yet checked)
+  - [x] Add `setApiKeyConfigured: (v: boolean | null) => void` action
+  - [x] Initialize `isApiKeyConfigured: null` in store
 
-- [ ] Task 6: Create `Settings.tsx` and `ApiKeyInput.tsx` (AC: 1, 2, 3, 4)
-  - [ ] Create `lebo/src/features/settings/Settings.tsx` (see Dev Notes for structure)
-    - [ ] Full-screen view container matching app height (`100dvh`)
-    - [ ] Header row with "← Back" button (left) and title "Settings" (center or left-of-back)
-    - [ ] "← Back" button calls `useAppStore.getState().setCurrentView('main')`
-    - [ ] Renders `<ApiKeyInput />` in the settings body
-  - [ ] Create `lebo/src/features/settings/ApiKeyInput.tsx` (see Dev Notes for structure)
-    - [ ] On mount: call `invokeCommand<boolean>('check_api_key_configured')` → call `setApiKeyConfigured(result)`
-    - [ ] Controlled `<input type="password">` for key entry — local state only, never store value in Zustand
-    - [ ] Placeholder: `isApiKeyConfigured ? "Claude API key saved ✓" : "sk-ant-..."`
-    - [ ] "Save Key" button: disabled when input is empty; Primary button style (gold bg)
-    - [ ] On save: `invokeCommand('set_api_key', { key: inputValue })` → on success: toast "API key saved securely" + `setApiKeyConfigured(true)` + clear local input
-    - [ ] On error: show inline `AppError.message` below the input (not a toast — inline per error display rules)
-    - [ ] `data-testid="api-key-input"` on the `<input>`, `data-testid="save-key-btn"` on the button
+- [x] Task 6: Create `Settings.tsx` and `ApiKeyInput.tsx` (AC: 1, 2, 3, 4)
+  - [x] Create `lebo/src/features/settings/Settings.tsx` (see Dev Notes for structure)
+    - [x] Full-screen view container matching app height (`100dvh`)
+    - [x] Header row with "← Back" button (left) and title "Settings" (center or left-of-back)
+    - [x] "← Back" button calls `useAppStore.getState().setCurrentView('main')`
+    - [x] Renders `<ApiKeyInput />` in the settings body
+  - [x] Create `lebo/src/features/settings/ApiKeyInput.tsx` (see Dev Notes for structure)
+    - [x] On mount: call `invokeCommand<boolean>('check_api_key_configured')` → call `setApiKeyConfigured(result)`
+    - [x] Controlled `<input type="password">` for key entry — local state only, never store value in Zustand
+    - [x] Placeholder: `isApiKeyConfigured ? "Claude API key saved ✓" : "sk-ant-..."`
+    - [x] "Save Key" button: disabled when input is empty; Primary button style (gold bg)
+    - [x] On save: `invokeCommand('set_api_key', { key: inputValue })` → on success: toast "API key saved securely" + `setApiKeyConfigured(true)` + clear local input
+    - [x] On error: show inline `AppError.message` below the input (not a toast — inline per error display rules)
+    - [x] `data-testid="api-key-input"` on the `<input>`, `data-testid="save-key-btn"` on the button
 
-- [ ] Task 7: Update `App.tsx` for view routing (AC: 1)
-  - [ ] Subscribe to `useAppStore((s) => s.currentView)`
-  - [ ] When `currentView === 'settings'`: return `<><Settings /><Toaster .../></>` — keep `<Toaster>` available for toast notifications in settings
-  - [ ] When `currentView === 'main'`: existing full layout (no change to existing JSX)
-  - [ ] Import `Settings` from `'./features/settings/Settings'`
+- [x] Task 7: Update `App.tsx` for view routing (AC: 1)
+  - [x] Subscribe to `useAppStore((s) => s.currentView)`
+  - [x] When `currentView === 'settings'`: return `<><Settings /><Toaster .../></>` — keep `<Toaster>` available for toast notifications in settings
+  - [x] When `currentView === 'main'`: existing full layout (no change to existing JSX)
+  - [x] Import `Settings` from `'./features/settings/Settings'`
 
-- [ ] Task 8: Update `AppHeader.tsx` to add Settings button (AC: 1)
-  - [ ] Subscribe to `useAppStore((s) => s.currentView)` and `useAppStore((s) => s.setCurrentView)`
-  - [ ] Add Settings button to the right side of the header (`ml-auto`), hidden when `currentView === 'settings'`
-  - [ ] Button text: "Settings"; `data-testid="settings-button"`; on click: `setCurrentView('settings')`
-  - [ ] Button style follows secondary/muted pattern (not gold) — this is a nav control, not a primary action
+- [x] Task 8: Update `AppHeader.tsx` to add Settings button (AC: 1)
+  - [x] Subscribe to `useAppStore((s) => s.currentView)` and `useAppStore((s) => s.setCurrentView)`
+  - [x] Add Settings button to the right side of the header (`ml-auto`), hidden when `currentView === 'settings'`
+  - [x] Button text: "Settings"; `data-testid="settings-button"`; on click: `setCurrentView('settings')`
+  - [x] Button style follows secondary/muted pattern (not gold) — this is a nav control, not a primary action
 
-- [ ] Task 9: Update `SuggestionsList.tsx` for AUTH_ERROR "Go to Settings" link (AC: 5)
-  - [ ] In the `streamError` banner (line 230), when `streamError.type === 'AUTH_ERROR'`, render a "Go to Settings" button inside the error div — between the message and the dismiss `×`
-  - [ ] "Go to Settings" button: `onClick={() => useAppStore.getState().setCurrentView('settings')}`, `data-testid="auth-error-settings-link"`
-  - [ ] Style: `color: 'var(--color-accent-gold)'`, small text, no border
+- [x] Task 9: Update `SuggestionsList.tsx` for AUTH_ERROR "Go to Settings" link (AC: 5)
+  - [x] In the `streamError` banner (line 230), when `streamError.type === 'AUTH_ERROR'`, render a "Go to Settings" button inside the error div — between the message and the dismiss `×`
+  - [x] "Go to Settings" button: `onClick={() => useAppStore.getState().setCurrentView('settings')}`, `data-testid="auth-error-settings-link"`
+  - [x] Style: `color: 'var(--color-accent-gold)'`, small text, no border
 
-- [ ] Task 10: Tests (AC: 1–5)
-  - [ ] `Settings.test.tsx` — renders "Claude API Key" heading, renders "← Back" button, back button calls `setCurrentView('main')`
-  - [ ] `ApiKeyInput.test.tsx` — check_api_key_configured called on mount, Save Key disabled when input empty, save calls `set_api_key` invoke, success shows toast + clears input + updates isApiKeyConfigured, error shows inline (not toast)
-  - [ ] Update `AppHeader.test.tsx` — settings button appears when `currentView='main'`, hidden when `currentView='settings'`, click navigates to settings
-  - [ ] Update `SuggestionsList.test.tsx` — when `streamError.type === 'AUTH_ERROR'`, "Go to Settings" button renders; when non-AUTH_ERROR error, button absent
-  - [ ] `pnpm tsc --noEmit` — clean
-  - [ ] `pnpm vitest run` — all tests pass (352 existing + new)
+- [x] Task 10: Tests (AC: 1–5)
+  - [x] `Settings.test.tsx` — renders "Claude API Key" heading, renders "← Back" button, back button calls `setCurrentView('main')`
+  - [x] `ApiKeyInput.test.tsx` — check_api_key_configured called on mount, Save Key disabled when input empty, save calls `set_api_key` invoke, success shows toast + clears input + updates isApiKeyConfigured, error shows inline (not toast)
+  - [x] Update `AppHeader.test.tsx` — settings button appears when `currentView='main'`, hidden when `currentView='settings'`, click navigates to settings
+  - [x] Update `SuggestionsList.test.tsx` — when `streamError.type === 'AUTH_ERROR'`, "Go to Settings" button renders; when non-AUTH_ERROR error, button absent
+  - [x] `pnpm tsc --noEmit` — clean
+  - [x] `pnpm vitest run` — all tests pass (369 total)
 
 ## Dev Notes
 
@@ -441,10 +441,43 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+- `tauri-plugin-stronghold v2.3.1` does NOT expose a `StrongholdExt` trait or `app.stronghold()` method. The plugin is frontend-facing only. Backend key storage was implemented using `tauri_plugin_stronghold::stronghold::Stronghold` (the plugin's public wrapper struct) directly, bypassing the plugin's command layer.
+- `Builder::new` closure parameter is `&str` (not `&[u8]`), requiring `.as_bytes()` for the argon2 call.
+- `App.tsx` settings branch placed after all `useEffect` hooks to avoid React hooks-ordering violation.
+
 ### Completion Notes List
 
+- Implemented full API key lifecycle: secure storage (Stronghold), backend commands, Settings view, AUTH_ERROR flow.
+- `keychain_service.rs` uses `tauri_plugin_stronghold::stronghold::Stronghold` wrapper directly; all three methods (`set_api_key`, `get_api_key`, `is_api_key_configured`) satisfy AC invariants — key never crosses IPC boundary outbound, `is_api_key_configured` returns `Ok(false)` (not `Err`) on first launch.
+- Debug builds retain `ANTHROPIC_API_KEY` env var fallback for local dev ergonomics.
+- TypeScript: clean (`pnpm tsc --noEmit`). Tests: 369 pass (17 new added across Settings, ApiKeyInput, AppHeader, SuggestionsList).
+
 ### File List
+
+**New files:**
+- `lebo/src-tauri/src/services/keychain_service.rs`
+- `lebo/src-tauri/src/commands/app_commands.rs`
+- `lebo/src/features/settings/Settings.tsx`
+- `lebo/src/features/settings/Settings.test.tsx`
+- `lebo/src/features/settings/ApiKeyInput.tsx`
+- `lebo/src/features/settings/ApiKeyInput.test.tsx`
+
+**Modified files:**
+- `lebo/src-tauri/Cargo.toml`
+- `lebo/src-tauri/capabilities/default.json`
+- `lebo/src-tauri/src/lib.rs`
+- `lebo/src-tauri/src/commands/mod.rs`
+- `lebo/src-tauri/src/services/mod.rs`
+- `lebo/src-tauri/src/commands/claude_commands.rs`
+- `lebo/src/App.tsx`
+- `lebo/src/features/layout/AppHeader.tsx`
+- `lebo/src/features/layout/AppHeader.test.tsx`
+- `lebo/src/shared/stores/appStore.ts`
+- `lebo/src/features/optimization/SuggestionsList.tsx`
+- `lebo/src/features/optimization/SuggestionsList.test.tsx`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
 
 ## Change Log
 
 - 2026-04-25: Story 5.1 created — API Key Management & Settings View
+- 2026-04-26: Story 5.1 implemented — all 10 tasks complete, 369 tests passing, status → review

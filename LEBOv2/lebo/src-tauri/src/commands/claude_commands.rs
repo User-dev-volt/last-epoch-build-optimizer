@@ -1,4 +1,4 @@
-use crate::services::{claude_service, game_data_service};
+use crate::services::{claude_service, game_data_service, keychain_service};
 use serde_json::{json, Value};
 use tauri::Emitter;
 
@@ -7,8 +7,6 @@ use tauri::Emitter;
 ///   optimization:suggestion-received — one per parsed suggestion
 ///   optimization:complete            — on stream completion
 ///   optimization:error               — on any failure
-///
-/// TODO(story-5.1): replace env var lookup with keychain_service::get_api_key(&app_handle)
 #[tauri::command]
 pub async fn invoke_claude_api(
     app_handle: tauri::AppHandle,
@@ -16,8 +14,9 @@ pub async fn invoke_claude_api(
     goal: String,
 ) -> Result<(), String> {
     // ── API key ───────────────────────────────────────────────────────────────
-    let api_key = std::env::var("ANTHROPIC_API_KEY")
-        .map_err(|_| "AUTH_ERROR: no API key configured. Set ANTHROPIC_API_KEY env var.".to_string())?;
+    let api_key = keychain_service::get_api_key(&app_handle).await?;
+    #[cfg(debug_assertions)]
+    let api_key = std::env::var("ANTHROPIC_API_KEY").unwrap_or(api_key);
 
     // ── Extract class/mastery IDs from build state ────────────────────────────
     let class_id = build_state["classId"]

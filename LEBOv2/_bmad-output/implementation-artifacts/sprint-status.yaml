@@ -160,7 +160,7 @@ development_status:
   epic-5: in-progress
 
   # Story 5.1: No hard data dependency — can begin once Tauri scaffold (1.1) is done
-  5-1-api-key-management-settings-view: ready-for-dev
+  5-1-api-key-management-settings-view: review
 
   # Story 5.2: Depends on 5.1 (offline state tied to API key / connectivity model)
   5-2-connectivity-detection-offline-mode: backlog

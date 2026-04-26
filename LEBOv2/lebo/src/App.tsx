@@ -7,14 +7,26 @@ import { useBuildStore } from './shared/stores/buildStore'
 import { useGameDataStore } from './shared/stores/gameDataStore'
 import { useOptimizationStore } from './shared/stores/optimizationStore'
 import { calculateScore } from './features/optimization/scoringEngine'
+import { useAppStore } from './shared/stores/appStore'
 import { AppHeader } from './features/layout/AppHeader'
 import { StatusBar } from './features/layout/StatusBar'
 import { LeftPanel } from './features/layout/LeftPanel'
 import { RightPanel } from './features/layout/RightPanel'
 import { CenterCanvas } from './features/layout/CenterCanvas'
+import { Settings } from './features/settings/Settings'
+
+const TOASTER_OPTS = {
+  style: {
+    background: 'var(--color-bg-elevated)',
+    color: 'var(--color-text-primary)',
+    border: '1px solid var(--color-bg-hover)',
+    fontSize: '0.875rem',
+  },
+}
 
 export function App() {
   useAutoSave()
+  const currentView = useAppStore((s) => s.currentView)
 
   useEffect(() => {
     initGameData().catch(console.error)
@@ -65,6 +77,15 @@ export function App() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
+  if (currentView === 'settings') {
+    return (
+      <>
+        <Settings />
+        <Toaster position="bottom-center" toastOptions={TOASTER_OPTS} />
+      </>
+    )
+  }
+
   return (
     <div
       className="flex flex-col overflow-hidden"
@@ -101,17 +122,7 @@ export function App() {
 
       <StatusBar />
 
-      <Toaster
-        position="bottom-center"
-        toastOptions={{
-          style: {
-            background: 'var(--color-bg-elevated)',
-            color: 'var(--color-text-primary)',
-            border: '1px solid var(--color-bg-hover)',
-            fontSize: '0.875rem',
-          },
-        }}
-      />
+      <Toaster position="bottom-center" toastOptions={TOASTER_OPTS} />
     </div>
   )
 }
