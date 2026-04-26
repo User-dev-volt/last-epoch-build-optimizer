@@ -52,7 +52,7 @@
 #   - 4.1 (Context Panel — needs item/affix/idol data from game data)
 
 generated: 2026-04-18
-last_updated: 2026-04-25 # 2.3 → done; 2.4 → done; 3.1 → done; 3.2 → done; 3.3 → done; 3.4 → done; 3.5 → done; 3.6 → done; 4.1 → done; 4.2 → done; 5.1 → ready-for-dev
+last_updated: 2026-04-26 # 2.3 → done; 2.4 → done; 3.1 → done; 3.2 → done; 3.3 → done; 3.4 → done; 3.5 → done; 3.6 → done; 4.1 → done; 4.2 → done; 5.1 → in-progress (review findings)
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -160,7 +160,7 @@ development_status:
   epic-5: in-progress
 
   # Story 5.1: No hard data dependency — can begin once Tauri scaffold (1.1) is done
-  5-1-api-key-management-settings-view: review
+  5-1-api-key-management-settings-view: in-progress
 
   # Story 5.2: Depends on 5.1 (offline state tied to API key / connectivity model)
   5-2-connectivity-detection-offline-mode: backlog

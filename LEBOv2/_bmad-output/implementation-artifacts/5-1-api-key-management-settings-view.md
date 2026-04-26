@@ -1,6 +1,6 @@
 # Story 5.1: API Key Management & Settings View
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -477,7 +477,21 @@ claude-sonnet-4-6
 - `lebo/src/features/optimization/SuggestionsList.test.tsx`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
 
+### Review Findings
+
+- [ ] [Review][Patch] Argon2 params duplicated in lib.rs and keychain_service.rs — plugin builder KDF is never called for direct vault ops (bypassed per debug log), making it dead code; but the duplication misleads future devs into thinking changing lib.rs params affects vault encryption [lib.rs:28-37, keychain_service.rs:hash_vault_password()]
+- [ ] [Review][Patch] Corrupted vault masquerades as AUTH_ERROR in get_api_key — when vault file exists but fails to open, .map_err(|_| "AUTH_ERROR:...") swallows the real error; user sees "No API key configured" when they actually have a vault corruption they cannot diagnose [keychain_service.rs:get_api_key()]
+- [ ] [Review][Patch] load_client().or_else(|_| create_client()) in set_api_key absorbs all load_client errors — a corruption or version mismatch silently triggers create_client, discarding any recoverable client; should only fall through on "not found" errors [keychain_service.rs:set_api_key()]
+- [ ] [Review][Patch] useEffect dependency [setApiKeyConfigured] should be [] — this is a mount-only call; Zustand actions are stable refs but the intent is clearer and safer with an empty dep array [ApiKeyInput.tsx:useEffect]
+- [ ] [Review][Patch] Whitespace-only key accepted and stored — handleSave only guards !localKeyValue (empty string), so "   " passes and stores a useless key; fix: trim before empty check or reject in Rust [ApiKeyInput.tsx:handleSave]
+- [x] [Review][Defer] Hardcoded vault password (VAULT_PASSWORD = b"lebo-vault-password") — spec dev notes explicitly document this as "standard practice for desktop app credential vaults"; acceptable for MVP [keychain_service.rs:5] — deferred, documented design decision
+- [x] [Review][Defer] Debug env var override (#[cfg(debug_assertions)]) bypasses Stronghold — documented in story spec Task 4 as intentional dev ergonomic; deferred for security hardening story [claude_commands.rs:18-19] — deferred, documented design decision
+- [x] [Review][Defer] Double-emit in invoke_claude_api (event + IPC return both fire on error) causing two sequential setStreamError calls — pre-existing pattern, not introduced by this story [claude_commands.rs] — deferred, pre-existing
+- [x] [Review][Defer] hash_vault_password() blocks async executor (64 MB Argon2 on every vault open, not spawn_blocking-wrapped) — pre-existing concern, out of scope for this story [keychain_service.rs] — deferred, pre-existing
+- [x] [Review][Defer] API key String not zeroized after use in get_api_key — memory hardening out of scope for this story — deferred, future security hardening
+
 ## Change Log
 
 - 2026-04-25: Story 5.1 created — API Key Management & Settings View
 - 2026-04-26: Story 5.1 implemented — all 10 tasks complete, 369 tests passing, status → review
+- 2026-04-26: Story 5.1 code review — 5 patches, 5 defers, 6 dismissed; status → in-progress

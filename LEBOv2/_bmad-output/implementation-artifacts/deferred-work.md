@@ -1,5 +1,13 @@
 # Deferred Work
 
+## Deferred from: code review of 5-1-api-key-management-settings-view (2026-04-26)
+
+- **Hardcoded vault password** [`keychain_service.rs:5`] — `VAULT_PASSWORD = b"lebo-vault-password"` is a static app-level constant; documented in story dev notes as "standard practice for desktop app credential vaults." Vault is still encrypted; threat model accepts this for MVP. Revisit in a future security-hardening story using OS keychain or per-device secret.
+- **Debug env var override bypasses Stronghold** [`claude_commands.rs:18-19`] — `#[cfg(debug_assertions)] let api_key = std::env::var("ANTHROPIC_API_KEY").unwrap_or(api_key)` is intentional per story spec Task 4 dev ergonomics. Remove or scope-limit before any public release build.
+- **Double-emit pattern in invoke_claude_api** [`claude_commands.rs`] — Command emits `optimization:error` event AND returns `Err(err)`, causing two sequential `setStreamError` calls in the frontend. Pre-existing; benign for identical errors. Address when error handling infrastructure is consolidated in Story 5.4.
+- **hash_vault_password() blocks async executor** [`keychain_service.rs`] — 64 MB Argon2id KDF runs synchronously on every vault open, blocking the Tokio executor thread. Should be `spawn_blocking`-wrapped. Pre-existing perf concern; address in Story 5.4 or a dedicated perf pass.
+- **API key String not zeroized after use** [`keychain_service.rs:get_api_key`] — The key lives in heap memory without the `zeroize` crate. Out of scope for this story; address in a future security hardening pass.
+
 ## Deferred from: code review of 3-1-scoring-engine-research-implementation (2026-04-24)
 
 - **ScoreGauge hover tooltip absent in comparison mode** [`ScoreGauge.tsx:88`] — `title` attribute only on single-value span; comparison mode spans have no tooltip. AC2 says "hovering the gauge shows a breakdown tooltip." Low impact for MVP — comparison mode is primarily a Story 3.5 concern. Address when building out suggestion preview in 3.5.
