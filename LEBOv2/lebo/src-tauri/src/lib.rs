@@ -21,14 +21,12 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(
-            tauri_plugin_stronghold::Builder::new(|password| {
-                use argon2::{Argon2, Params};
-                let params = Params::new(65536, 2, 1, Some(32)).expect("invalid argon2 params");
-                let mut output = vec![0u8; 32];
-                Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params)
-                    .hash_password_into(password.as_bytes(), b"lebo-stronghold-salt", &mut output)
-                    .expect("argon2 hash failed");
-                output
+            // KDF closure is only invoked by the plugin's frontend command layer,
+            // which this app does not use — backend vault access goes through
+            // keychain_service directly. Delegate to the same function so params
+            // stay in one place and can never drift.
+            tauri_plugin_stronghold::Builder::new(|_password| {
+                services::keychain_service::hash_vault_password()
             })
             .build(),
         )

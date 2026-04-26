@@ -16,10 +16,10 @@ export function ApiKeyInput() {
     invokeCommand<boolean>('check_api_key_configured')
       .then((result) => setApiKeyConfigured(result))
       .catch(() => setApiKeyConfigured(false))
-  }, [setApiKeyConfigured])
+  }, [])
 
   async function handleSave() {
-    if (!localKeyValue) return
+    if (!localKeyValue.trim()) return
     setInlineError(null)
     setIsSaving(true)
     try {
@@ -71,10 +71,10 @@ export function ApiKeyInput() {
       <button
         onClick={handleSave}
         data-testid="save-key-btn"
-        disabled={!localKeyValue || isSaving}
+        disabled={!localKeyValue.trim() || isSaving}
         className="px-4 py-2 rounded text-sm font-semibold w-fit"
         style={
-          !localKeyValue || isSaving
+          !localKeyValue.trim() || isSaving
             ? {
                 backgroundColor: 'var(--color-bg-elevated)',
                 color: 'var(--color-text-muted)',
