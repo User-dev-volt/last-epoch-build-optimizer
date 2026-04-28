@@ -379,9 +379,9 @@ claude-sonnet-4-6
 
 #### Decision Needed
 
-- [ ] [Review][Decision] Two ErrorBoundary instances vs "single top-level one" scope constraint — App.tsx uses an early-return conditional for Settings vs Main view, resulting in two sibling ErrorBoundary instances. The scope boundary says "No error boundaries around individual components beyond the single top-level one." This could mean (a) don't wrap individual leaf components — satisfied; or (b) there must be exactly one ErrorBoundary in the app — violated. Needs clarification: consolidate to a single boundary above the view conditional (Toaster would need to move outside that), or accept two sibling top-level boundaries as compliant.
+- [x] [Review][Decision] Two ErrorBoundary instances vs "single top-level one" scope constraint — accepted as-is. Two sibling top-level boundaries (one per view branch) satisfies the intent of "no boundaries around leaf components." No change needed.
 
-- [ ] [Review][Decision] AC2 coverage for non-retryable, non-AUTH_ERROR types — AC2 requires "actionable next steps" for all non-retryable errors (PARSE_ERROR, DATA_STALE, UNKNOWN). The banner only renders a "Go to Settings" navigation button for AUTH_ERROR; all other types show only `streamError.message`. The `USER_MESSAGES` map in errorNormalizer provides user-friendly text, so the message itself is actionable — but no UI action link exists for PARSE_ERROR or UNKNOWN. Clarify: is the normalized message text alone sufficient to satisfy AC2, or do other non-retryable types need explicit action links?
+- [x] [Review][Decision] AC2 coverage for non-retryable, non-AUTH_ERROR types — accepted as-is. Normalized message text from USER_MESSAGES is sufficient as an actionable step. AUTH_ERROR earns a button because the fix is a direct navigation; PARSE_ERROR/UNKNOWN do not have a screen to navigate to.
 
 #### Patches
 
