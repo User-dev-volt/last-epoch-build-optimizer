@@ -1,6 +1,6 @@
 # Story 5.4: Error Handling Infrastructure & Reliability
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -44,57 +44,57 @@ So that I'm never left wondering if the app is broken — I always know what wen
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `isRetryable()` helper to error types (AC: 1, 2)
-  - [ ] In `lebo/src/shared/types/errors.ts`, export `RETRYABLE_ERROR_TYPES: ErrorType[]` = `['API_ERROR', 'NETWORK_ERROR', 'TIMEOUT']`
-  - [ ] Export `isRetryable(type: ErrorType): boolean` function
+- [x] Task 1: Add `isRetryable()` helper to error types (AC: 1, 2)
+  - [x] In `lebo/src/shared/types/errors.ts`, export `RETRYABLE_ERROR_TYPES: ErrorType[]` = `['API_ERROR', 'NETWORK_ERROR', 'TIMEOUT']`
+  - [x] Export `isRetryable(type: ErrorType): boolean` function
 
-- [ ] Task 2: Create `Toast.tsx` styled wrapper (AC: 3)
-  - [ ] Create `lebo/src/shared/components/Toast.tsx`
-  - [ ] Export `showErrorToast(message: string): void` — calls `toast.error(message, { style: { borderLeft: '3px solid var(--color-data-negative)' } })`
-  - [ ] Export `showSuccessToast(message: string): void` — calls `toast.success(message)` (TOASTER_OPTS in App.tsx already handles base styles)
-  - [ ] Export `showInfoToast(message: string, opts?: object): void` — calls `toast(message, opts)` (replaces direct `toast()` calls)
+- [x] Task 2: Create `Toast.tsx` styled wrapper (AC: 3)
+  - [x] Create `lebo/src/shared/components/Toast.tsx`
+  - [x] Export `showErrorToast(message: string): void` — calls `toast.error(message, { style: { borderLeft: '3px solid var(--color-data-negative)' } })`
+  - [x] Export `showSuccessToast(message: string): void` — calls `toast.success(message)` (TOASTER_OPTS in App.tsx already handles base styles)
+  - [x] Export `showInfoToast(message: string, opts?: object): void` — calls `toast(message, opts)` (replaces direct `toast()` calls)
 
-- [ ] Task 3: Add Retry button to optimization error banner in `SuggestionsList.tsx` (AC: 1, 2)
-  - [ ] Add `onRetry: () => void` prop to `SuggestionsList`
-  - [ ] Import `isRetryable` from `shared/types/errors`
-  - [ ] When `streamError && isRetryable(streamError.type)`: render a "Retry" button inside the error banner alongside the dismiss (×) button
-  - [ ] "Retry" button `data-testid="retry-optimization-button"` — calls `onRetry()` on click
-  - [ ] `RightPanel.tsx`: pass `startOptimization` as `onRetry` to `<SuggestionsList onRetry={startOptimization} />`
+- [x] Task 3: Add Retry button to optimization error banner in `SuggestionsList.tsx` (AC: 1, 2)
+  - [x] Add `onRetry: () => void` prop to `SuggestionsList`
+  - [x] Import `isRetryable` from `shared/types/errors`
+  - [x] When `streamError && isRetryable(streamError.type)`: render a "Retry" button inside the error banner alongside the dismiss (×) button
+  - [x] "Retry" button `data-testid="retry-optimization-button"` — calls `onRetry()` on click
+  - [x] `RightPanel.tsx`: pass `startOptimization` as `onRetry` to `<SuggestionsList onRetry={startOptimization} />`
 
-- [ ] Task 4: Add storage error toasts in `buildPersistence.ts` (AC: 3)
-  - [ ] In `saveBuild()`: wrap `invokeCommand` call in try/catch; on catch call `showErrorToast('Failed to save build. Your work is safe in memory — try again.')` and re-throw
-  - [ ] In `loadBuild()`: on catch call `showErrorToast('Failed to load build. Please try again.')` and re-throw
-  - [ ] In `deleteBuild()`: on catch call `showErrorToast('Failed to delete build. Please try again.')` and re-throw
-  - [ ] In `renameBuild()`: on catch call `showErrorToast('Failed to rename build. Please try again.')` and re-throw
-  - [ ] Replace all raw `toast(...)` calls in `buildPersistence.ts` with `showInfoToast(...)` from `Toast.tsx`
+- [x] Task 4: Add storage error toasts in `buildPersistence.ts` (AC: 3)
+  - [x] In `saveBuild()`: wrap `invokeCommand` call in try/catch; on catch call `showErrorToast('Failed to save build. Your work is safe in memory — try again.')` and re-throw
+  - [x] In `loadBuild()`: on catch call `showErrorToast('Failed to load build. Please try again.')` and re-throw
+  - [x] In `deleteBuild()`: on catch call `showErrorToast('Failed to delete build. Please try again.')` and re-throw
+  - [x] In `renameBuild()`: on catch call `showErrorToast('Failed to rename build. Please try again.')` and re-throw
+  - [x] Replace all raw `toast(...)` calls in `buildPersistence.ts` with `showInfoToast(...)` from `Toast.tsx`
 
-- [ ] Task 5: Migrate `SavedBuildsList.tsx` toast calls to `Toast.tsx` wrappers (AC: 3)
-  - [ ] Replace direct `toast(...)` / `toast.dismiss(...)` calls with `showInfoToast()` where applicable (the unsaved-build confirmation toast uses a render function — leave it as `toast(fn)` since it needs custom JSX)
+- [x] Task 5: Migrate `SavedBuildsList.tsx` toast calls to `Toast.tsx` wrappers (AC: 3)
+  - [x] Replace direct `toast(...)` / `toast.dismiss(...)` calls with `showInfoToast()` where applicable (the unsaved-build confirmation toast uses a render function — leave it as `toast(fn)` since it needs custom JSX)
 
-- [ ] Task 6: Create `ErrorBoundary.tsx` (AC: 6)
-  - [ ] Create `lebo/src/shared/components/ErrorBoundary.tsx` — React class component
-  - [ ] State: `{ hasError: boolean }`; implement `static getDerivedStateFromError()` → `{ hasError: true }`
-  - [ ] Fallback render: full-panel centered layout with "Something went wrong." heading + "Reload App" button → `window.location.reload()`
-  - [ ] Style fallback using design tokens: `bg-surface` background, `text-primary` heading, accent-gold button
-  - [ ] Props: `{ children: React.ReactNode }`
-  - [ ] Wrap the main layout content in `App.tsx` with `<ErrorBoundary>` (see Dev Notes for placement)
+- [x] Task 6: Create `ErrorBoundary.tsx` (AC: 6)
+  - [x] Create `lebo/src/shared/components/ErrorBoundary.tsx` — React class component
+  - [x] State: `{ hasError: boolean }`; implement `static getDerivedStateFromError()` → `{ hasError: true }`
+  - [x] Fallback render: full-panel centered layout with "Something went wrong." heading + "Reload App" button → `window.location.reload()`
+  - [x] Style fallback using design tokens: `bg-surface` background, `text-primary` heading, accent-gold button
+  - [x] Props: `{ children: React.ReactNode }`
+  - [x] Wrap the main layout content in `App.tsx` with `<ErrorBoundary>` (see Dev Notes for placement)
 
-- [ ] Task 7: Tests (AC: 1–6)
-  - [ ] Update `lebo/src/shared/types/errors.test.ts` (or `errorNormalizer.test.ts`) — add tests for `isRetryable()`:
-    - [ ] `API_ERROR`, `NETWORK_ERROR`, `TIMEOUT` return `true`
-    - [ ] `AUTH_ERROR`, `PARSE_ERROR`, `STORAGE_ERROR`, `DATA_STALE`, `UNKNOWN` return `false`
-  - [ ] Create `lebo/src/shared/components/ErrorBoundary.test.tsx`:
-    - [ ] When a child throws: fallback renders with "Something went wrong"
-    - [ ] "Reload App" button is present
-  - [ ] Update `lebo/src/features/optimization/SuggestionsList.test.tsx`:
-    - [ ] When `streamError` is retryable (API_ERROR): "Retry" button renders with `data-testid="retry-optimization-button"`
-    - [ ] When `streamError` is non-retryable (AUTH_ERROR): "Retry" button does NOT render
-    - [ ] Clicking "Retry" button calls `onRetry` prop
-  - [ ] Update `lebo/src/features/build-manager/buildPersistence.test.ts`:
-    - [ ] When `invokeCommand('save_build')` rejects: `showErrorToast` is called
-    - [ ] Error is re-thrown (so callers can handle if needed)
-  - [ ] `pnpm tsc --noEmit` — clean
-  - [ ] `pnpm vitest run` — all tests pass
+- [x] Task 7: Tests (AC: 1–6)
+  - [x] Update `lebo/src/shared/types/errors.test.ts` (or `errorNormalizer.test.ts`) — add tests for `isRetryable()`:
+    - [x] `API_ERROR`, `NETWORK_ERROR`, `TIMEOUT` return `true`
+    - [x] `AUTH_ERROR`, `PARSE_ERROR`, `STORAGE_ERROR`, `DATA_STALE`, `UNKNOWN` return `false`
+  - [x] Create `lebo/src/shared/components/ErrorBoundary.test.tsx`:
+    - [x] When a child throws: fallback renders with "Something went wrong"
+    - [x] "Reload App" button is present
+  - [x] Update `lebo/src/features/optimization/SuggestionsList.test.tsx`:
+    - [x] When `streamError` is retryable (API_ERROR): "Retry" button renders with `data-testid="retry-optimization-button"`
+    - [x] When `streamError` is non-retryable (AUTH_ERROR): "Retry" button does NOT render
+    - [x] Clicking "Retry" button calls `onRetry` prop
+  - [x] Update `lebo/src/features/build-manager/buildPersistence.test.ts`:
+    - [x] When `invokeCommand('save_build')` rejects: `showErrorToast` is called
+    - [x] Error is re-thrown (so callers can handle if needed)
+  - [x] `pnpm tsc --noEmit` — clean
+  - [x] `pnpm vitest run` — all tests pass
 
 ## Dev Notes
 
@@ -349,20 +349,37 @@ it('renders fallback when child throws', () => {
 
 ### Agent Model Used
 
-_to be filled on implementation_
+claude-sonnet-4-6
 
 ### Completion Notes List
 
-_to be filled on implementation_
+- Added `RETRYABLE_ERROR_TYPES` constant and `isRetryable()` helper to `errors.ts` — no changes to existing types
+- Created `Toast.tsx` wrapper centralizing `showErrorToast`, `showSuccessToast`, `showInfoToast` — error toasts get left-border data-negative style, info/success use TOASTER_OPTS globals
+- Added `onRetry` prop to `SuggestionsList`; Retry button renders for retryable errors (API_ERROR, NETWORK_ERROR, TIMEOUT), hidden for non-retryable; `RightPanel` passes `startOptimization` as `onRetry`
+- Wrapped `saveBuild`, `loadBuild`, `deleteBuild`, `renameBuild` in try/catch — each shows a specific `showErrorToast` message and re-throws so callers (e.g., `useAutoSave`) still handle the error
+- `SavedBuildsList.tsx` unchanged — its only toast is a render-function form (`toast((t) => ...)`) which cannot be migrated
+- Wrapped main layout content in `App.tsx` with `<ErrorBoundary>`; `<Toaster>` remains outside the boundary so toasts work during error recovery; both settings and main views are wrapped
+- 409 tests passing (0 regressions); TypeScript clean
 
 ### File List
 
-_to be filled on implementation_
+- `lebo/src/shared/types/errors.ts` — added `RETRYABLE_ERROR_TYPES` + `isRetryable()`
+- `lebo/src/shared/components/Toast.tsx` — new file
+- `lebo/src/shared/components/ErrorBoundary.tsx` — new file
+- `lebo/src/shared/components/ErrorBoundary.test.tsx` — new file
+- `lebo/src/features/optimization/SuggestionsList.tsx` — added `onRetry` prop + Retry button
+- `lebo/src/features/optimization/SuggestionsList.test.tsx` — added `onRetry={vi.fn()}` to all renders + 3 Retry button tests
+- `lebo/src/features/layout/RightPanel.tsx` — pass `startOptimization` as `onRetry` to `<SuggestionsList>`
+- `lebo/src/features/build-manager/buildPersistence.ts` — error toasts on all catch paths; `showInfoToast` for success
+- `lebo/src/features/build-manager/buildPersistence.test.ts` — mock Toast module; added error toast test for `saveBuild`
+- `lebo/src/shared/utils/errorNormalizer.test.ts` — added `isRetryable()` test suite (8 tests)
+- `lebo/src/App.tsx` — wrapped layout with `<ErrorBoundary>`, `<Toaster>` outside
 
 ### Review Findings
 
-_to be filled on implementation_
+_to be filled on review_
 
 ## Change Log
 
 - 2026-04-28: Story 5.4 created — Error Handling Infrastructure & Reliability
+- 2026-04-28: Implementation complete — added isRetryable() helper, Toast.tsx wrappers, Retry button on retryable errors, storage error toasts in buildPersistence, ErrorBoundary in App.tsx. All ACs satisfied. 409 tests passing.

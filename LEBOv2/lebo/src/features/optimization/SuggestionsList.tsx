@@ -3,6 +3,7 @@ import { useOptimizationStore } from '../../shared/stores/optimizationStore'
 import { useBuildStore } from '../../shared/stores/buildStore'
 import { useGameDataStore } from '../../shared/stores/gameDataStore'
 import { useAppStore } from '../../shared/stores/appStore'
+import { isRetryable } from '../../shared/types/errors'
 import type { GameData, GameNode } from '../../shared/types/gameData'
 import type { SuggestionResult } from '../../shared/types/optimization'
 import { SuggestionCard } from './SuggestionCard'
@@ -55,7 +56,11 @@ function mapApplyError(err: string | undefined): string {
   return `Cannot apply: ${err}`
 }
 
-export function SuggestionsList() {
+interface SuggestionsListProps {
+  onRetry: () => void
+}
+
+export function SuggestionsList({ onRetry }: SuggestionsListProps) {
   const suggestions = useOptimizationStore((s) => s.suggestions)
   const skippedSuggestions = useOptimizationStore((s) => s.skippedSuggestions)
   const appliedRanks = useOptimizationStore((s) => s.appliedRanks)
@@ -247,6 +252,16 @@ export function SuggestionsList() {
               style={{ color: 'var(--color-accent-gold)' }}
             >
               Go to Settings
+            </button>
+          )}
+          {isRetryable(streamError.type) && (
+            <button
+              onClick={onRetry}
+              data-testid="retry-optimization-button"
+              className="text-xs shrink-0 underline"
+              style={{ color: 'var(--color-accent-gold)' }}
+            >
+              Retry
             </button>
           )}
           <button

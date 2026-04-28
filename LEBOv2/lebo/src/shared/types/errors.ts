@@ -13,3 +13,9 @@ export interface AppError {
   message: string
   detail?: string
 }
+
+export const RETRYABLE_ERROR_TYPES: ErrorType[] = ['API_ERROR', 'NETWORK_ERROR', 'TIMEOUT']
+
+export function isRetryable(type: ErrorType): boolean {
+  return RETRYABLE_ERROR_TYPES.includes(type)
+}

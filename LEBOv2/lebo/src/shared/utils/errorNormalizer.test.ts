@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { normalizeAppError } from './errorNormalizer'
+import { isRetryable } from '../types/errors'
 
 describe('normalizeAppError', () => {
   it('wraps unknown string errors as UNKNOWN type', () => {
@@ -63,5 +64,39 @@ describe('normalizeAppError', () => {
         expect(result.message.length).toBeGreaterThan(0)
       }
     }
+  })
+})
+
+describe('isRetryable', () => {
+  it('returns true for API_ERROR', () => {
+    expect(isRetryable('API_ERROR')).toBe(true)
+  })
+
+  it('returns true for NETWORK_ERROR', () => {
+    expect(isRetryable('NETWORK_ERROR')).toBe(true)
+  })
+
+  it('returns true for TIMEOUT', () => {
+    expect(isRetryable('TIMEOUT')).toBe(true)
+  })
+
+  it('returns false for AUTH_ERROR', () => {
+    expect(isRetryable('AUTH_ERROR')).toBe(false)
+  })
+
+  it('returns false for PARSE_ERROR', () => {
+    expect(isRetryable('PARSE_ERROR')).toBe(false)
+  })
+
+  it('returns false for STORAGE_ERROR', () => {
+    expect(isRetryable('STORAGE_ERROR')).toBe(false)
+  })
+
+  it('returns false for DATA_STALE', () => {
+    expect(isRetryable('DATA_STALE')).toBe(false)
+  })
+
+  it('returns false for UNKNOWN', () => {
+    expect(isRetryable('UNKNOWN')).toBe(false)
   })
 })

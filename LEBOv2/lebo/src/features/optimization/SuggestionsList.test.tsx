@@ -53,20 +53,20 @@ describe('SuggestionsList', () => {
   })
 
   it('renders root with data-testid', () => {
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.getByTestId('suggestions-list')).toBeInTheDocument()
   })
 
   it('shows empty state when no suggestions and not optimizing', () => {
     useOptimizationStore.setState({ suggestions: [], isOptimizing: false, streamError: null })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.getByTestId('suggestions-empty-state')).toBeInTheDocument()
     expect(screen.getByText(/Select an optimization goal/)).toBeInTheDocument()
   })
 
   it('does not show empty state when optimizing', () => {
     useOptimizationStore.setState({ suggestions: [], isOptimizing: true, streamError: null })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.queryByTestId('suggestions-empty-state')).toBeNull()
   })
 
@@ -76,13 +76,13 @@ describe('SuggestionsList', () => {
       isOptimizing: false,
       streamError: { message: 'Something broke', type: 'UNKNOWN' },
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.queryByTestId('suggestions-empty-state')).toBeNull()
   })
 
   it('shows skeleton when isOptimizing and no suggestions yet', () => {
     useOptimizationStore.setState({ suggestions: [], isOptimizing: true, streamError: null })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.getByTestId('suggestion-skeletons')).toBeInTheDocument()
   })
 
@@ -92,7 +92,7 @@ describe('SuggestionsList', () => {
       isOptimizing: true,
       streamError: null,
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.queryByTestId('suggestion-skeletons')).toBeNull()
   })
 
@@ -102,7 +102,7 @@ describe('SuggestionsList', () => {
       isOptimizing: false,
       streamError: null,
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.getByTestId('suggestions-count')).toHaveTextContent('3 suggestions found')
   })
 
@@ -112,13 +112,13 @@ describe('SuggestionsList', () => {
       isOptimizing: false,
       streamError: null,
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.getByTestId('suggestions-count')).toHaveTextContent('1 suggestion found')
   })
 
   it('does not show count header during skeleton phase', () => {
     useOptimizationStore.setState({ suggestions: [], isOptimizing: true, streamError: null })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.queryByTestId('suggestions-count')).toBeNull()
   })
 
@@ -128,7 +128,7 @@ describe('SuggestionsList', () => {
       isOptimizing: false,
       streamError: null,
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.getByTestId('suggestion-card-1')).toBeInTheDocument()
     expect(screen.getByTestId('suggestion-card-2')).toBeInTheDocument()
   })
@@ -139,7 +139,7 @@ describe('SuggestionsList', () => {
       isOptimizing: false,
       streamError: { message: 'Could not reach AI engine.', type: 'NETWORK_ERROR' },
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.getByTestId('stream-error-banner')).toBeInTheDocument()
     expect(screen.getByText('Could not reach AI engine.')).toBeInTheDocument()
   })
@@ -150,7 +150,7 @@ describe('SuggestionsList', () => {
       isOptimizing: false,
       streamError: { message: 'Oops', type: 'UNKNOWN' },
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.getByTestId('stream-error-banner')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss error' }))
     expect(useOptimizationStore.getState().streamError).toBeNull()
@@ -211,7 +211,7 @@ describe('SuggestionsList', () => {
       isOptimizing: false,
       streamError: null,
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.getByTestId('suggestion-node-name')).toHaveTextContent('Void Cleave')
   })
 
@@ -222,7 +222,7 @@ describe('SuggestionsList', () => {
       isOptimizing: false,
       streamError: null,
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.getByTestId('suggestion-node-name')).toHaveTextContent('unknown-node-xyz')
   })
 
@@ -235,7 +235,7 @@ describe('SuggestionsList', () => {
       streamError: null,
       previewSuggestionRank: 1,
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.getByTestId('preview-banner')).toBeInTheDocument()
     expect(screen.getByTestId('preview-banner')).toHaveTextContent('Previewing suggestion #1')
   })
@@ -247,7 +247,7 @@ describe('SuggestionsList', () => {
       streamError: null,
       previewSuggestionRank: null,
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.queryByTestId('preview-banner')).toBeNull()
   })
 
@@ -258,7 +258,7 @@ describe('SuggestionsList', () => {
       streamError: null,
       previewSuggestionRank: 1,
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     fireEvent.click(screen.getByTestId('preview-cancel-btn'))
     expect(useOptimizationStore.getState().previewSuggestionRank).toBeNull()
   })
@@ -270,7 +270,7 @@ describe('SuggestionsList', () => {
       streamError: null,
       skippedSuggestions: [],
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     fireEvent.click(screen.getByTestId('suggestion-skip-btn'))
     expect(useOptimizationStore.getState().skippedSuggestions).toHaveLength(1)
     expect(useOptimizationStore.getState().suggestions).toHaveLength(0)
@@ -283,7 +283,7 @@ describe('SuggestionsList', () => {
       streamError: null,
       skippedSuggestions: [],
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.queryByTestId('skipped-section')).toBeNull()
   })
 
@@ -294,7 +294,7 @@ describe('SuggestionsList', () => {
       streamError: null,
       skippedSuggestions: [makeSuggestion(1)],
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.getByTestId('skipped-section')).toBeInTheDocument()
   })
 
@@ -305,7 +305,7 @@ describe('SuggestionsList', () => {
       streamError: null,
       previewSuggestionRank: null,
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     fireEvent.click(screen.getByTestId('suggestion-preview-btn'))
     expect(useOptimizationStore.getState().previewSuggestionRank).toBe(1)
   })
@@ -316,7 +316,7 @@ describe('SuggestionsList', () => {
       isOptimizing: false,
       streamError: null,
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     fireEvent.mouseEnter(screen.getByTestId('suggestion-card-1'))
     const highlighted = useOptimizationStore.getState().highlightedNodeIds
     expect(highlighted?.glowing.has('target-node')).toBe(true)
@@ -328,7 +328,7 @@ describe('SuggestionsList', () => {
       isOptimizing: false,
       streamError: null,
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     fireEvent.mouseEnter(screen.getByTestId('suggestion-card-1'))
     fireEvent.mouseLeave(screen.getByTestId('suggestion-card-1'))
     expect(useOptimizationStore.getState().highlightedNodeIds).toBeNull()
@@ -343,7 +343,7 @@ describe('SuggestionsList', () => {
       streamError: null,
       hasOptimizationCompleted: false,
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.getByTestId('suggestions-empty-state')).toBeInTheDocument()
     expect(screen.getByText(/Select an optimization goal/)).toBeInTheDocument()
     expect(screen.queryByTestId('suggestions-well-optimized')).toBeNull()
@@ -357,7 +357,7 @@ describe('SuggestionsList', () => {
       hasOptimizationCompleted: true,
       goal: 'balanced',
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.getByTestId('suggestions-well-optimized')).toBeInTheDocument()
     expect(screen.getByText(/well-optimized for Balanced/)).toBeInTheDocument()
     expect(screen.queryByTestId('suggestions-empty-state')).toBeNull()
@@ -371,8 +371,42 @@ describe('SuggestionsList', () => {
       hasOptimizationCompleted: true,
       goal: 'maximize_damage',
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.getByText(/well-optimized for Maximize Damage/)).toBeInTheDocument()
+  })
+
+  // Story 5.4: Retry button for retryable errors
+
+  it('shows Retry button when streamError is retryable (API_ERROR)', () => {
+    useOptimizationStore.setState({
+      suggestions: [],
+      isOptimizing: false,
+      streamError: { message: 'API error', type: 'API_ERROR' },
+    })
+    render(<SuggestionsList onRetry={vi.fn()} />)
+    expect(screen.getByTestId('retry-optimization-button')).toBeInTheDocument()
+  })
+
+  it('does not show Retry button when streamError is non-retryable (AUTH_ERROR)', () => {
+    useOptimizationStore.setState({
+      suggestions: [],
+      isOptimizing: false,
+      streamError: { message: 'No API key', type: 'AUTH_ERROR' },
+    })
+    render(<SuggestionsList onRetry={vi.fn()} />)
+    expect(screen.queryByTestId('retry-optimization-button')).toBeNull()
+  })
+
+  it('clicking Retry button calls onRetry prop', () => {
+    const onRetry = vi.fn()
+    useOptimizationStore.setState({
+      suggestions: [],
+      isOptimizing: false,
+      streamError: { message: 'Network error', type: 'NETWORK_ERROR' },
+    })
+    render(<SuggestionsList onRetry={onRetry} />)
+    fireEvent.click(screen.getByTestId('retry-optimization-button'))
+    expect(onRetry).toHaveBeenCalledTimes(1)
   })
 
   // Story 5.1: AUTH_ERROR "Go to Settings" link
@@ -385,7 +419,7 @@ describe('SuggestionsList', () => {
         type: 'AUTH_ERROR',
       },
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.getByTestId('auth-error-settings-link')).toBeInTheDocument()
     expect(screen.getByText('Go to Settings')).toBeInTheDocument()
   })
@@ -396,7 +430,7 @@ describe('SuggestionsList', () => {
       isOptimizing: false,
       streamError: { message: 'Something broke', type: 'NETWORK_ERROR' },
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     expect(screen.queryByTestId('auth-error-settings-link')).toBeNull()
   })
 
@@ -407,7 +441,7 @@ describe('SuggestionsList', () => {
       isOptimizing: false,
       streamError: { message: 'No API key', type: 'AUTH_ERROR' },
     })
-    render(<SuggestionsList />)
+    render(<SuggestionsList onRetry={vi.fn()} />)
     fireEvent.click(screen.getByTestId('auth-error-settings-link'))
     expect(useAppStore.getState().currentView).toBe('settings')
   })

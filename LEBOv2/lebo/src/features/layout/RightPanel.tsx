@@ -119,7 +119,7 @@ export function RightPanel() {
             </div>
           )}
 
-          <SuggestionsList />
+          <SuggestionsList onRetry={startOptimization} />
         </div>
       )}
     </aside>

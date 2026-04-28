@@ -16,6 +16,7 @@ import { LeftPanel } from './features/layout/LeftPanel'
 import { RightPanel } from './features/layout/RightPanel'
 import { CenterCanvas } from './features/layout/CenterCanvas'
 import { Settings } from './features/settings/Settings'
+import { ErrorBoundary } from './shared/components/ErrorBoundary'
 
 const TOASTER_OPTS = {
   style: {
@@ -84,49 +85,54 @@ export function App() {
   if (currentView === 'settings') {
     return (
       <>
-        <Settings />
+        <ErrorBoundary>
+          <Settings />
+        </ErrorBoundary>
         <Toaster position="bottom-center" toastOptions={TOASTER_OPTS} />
       </>
     )
   }
 
   return (
-    <div
-      className="flex flex-col overflow-hidden"
-      style={{ height: '100dvh', minWidth: '1280px', minHeight: '720px' }}
-    >
-      {/* Skip links — UX-DR15 accessibility */}
-      <a
-        href="#skill-tree-canvas"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50 focus:px-3 focus:py-2 focus:text-sm"
-        style={{ backgroundColor: 'var(--color-accent-gold)', color: 'var(--color-bg-base)' }}
-      >
-        Skip to tree
-      </a>
-      <a
-        href="#suggestion-panel"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-16 focus:z-50 focus:px-3 focus:py-2 focus:text-sm"
-        style={{ backgroundColor: 'var(--color-accent-gold)', color: 'var(--color-bg-base)' }}
-      >
-        Skip to suggestions
-      </a>
+    <>
+      <ErrorBoundary>
+        <div
+          className="flex flex-col overflow-hidden"
+          style={{ height: '100dvh', minWidth: '1280px', minHeight: '720px' }}
+        >
+          {/* Skip links — UX-DR15 accessibility */}
+          <a
+            href="#skill-tree-canvas"
+            className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50 focus:px-3 focus:py-2 focus:text-sm"
+            style={{ backgroundColor: 'var(--color-accent-gold)', color: 'var(--color-bg-base)' }}
+          >
+            Skip to tree
+          </a>
+          <a
+            href="#suggestion-panel"
+            className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-16 focus:z-50 focus:px-3 focus:py-2 focus:text-sm"
+            style={{ backgroundColor: 'var(--color-accent-gold)', color: 'var(--color-bg-base)' }}
+          >
+            Skip to suggestions
+          </a>
 
-      {/* ARIA live regions — UX-DR15 */}
-      <div aria-live="polite" aria-atomic="true" className="sr-only" id="import-progress-region" />
-      <div aria-live="polite" aria-atomic="true" className="sr-only" id="ai-status-region" />
-      <div aria-live="assertive" aria-atomic="true" className="sr-only" id="critical-error-region" />
+          {/* ARIA live regions — UX-DR15 */}
+          <div aria-live="polite" aria-atomic="true" className="sr-only" id="import-progress-region" />
+          <div aria-live="polite" aria-atomic="true" className="sr-only" id="ai-status-region" />
+          <div aria-live="assertive" aria-atomic="true" className="sr-only" id="critical-error-region" />
 
-      <AppHeader />
+          <AppHeader />
 
-      <div className="flex flex-1 overflow-hidden">
-        <LeftPanel />
-        <CenterCanvas />
-        <RightPanel />
-      </div>
+          <div className="flex flex-1 overflow-hidden">
+            <LeftPanel />
+            <CenterCanvas />
+            <RightPanel />
+          </div>
 
-      <StatusBar />
-
+          <StatusBar />
+        </div>
+      </ErrorBoundary>
       <Toaster position="bottom-center" toastOptions={TOASTER_OPTS} />
-    </div>
+    </>
   )
 }

@@ -5,11 +5,14 @@ vi.mock('../../shared/utils/invokeCommand', () => ({
   invokeCommand: vi.fn(),
 }))
 
-vi.mock('react-hot-toast', () => ({
-  default: Object.assign(vi.fn(), { dismiss: vi.fn() }),
+vi.mock('../../shared/components/Toast', () => ({
+  showErrorToast: vi.fn(),
+  showInfoToast: vi.fn(),
+  showSuccessToast: vi.fn(),
 }))
 
 import { invokeCommand } from '../../shared/utils/invokeCommand'
+import { showErrorToast } from '../../shared/components/Toast'
 import {
   migrateBuildState,
   saveBuild,
@@ -21,6 +24,7 @@ import {
 import { useBuildStore } from '../../shared/stores/buildStore'
 
 const mockInvoke = vi.mocked(invokeCommand)
+const mockShowErrorToast = vi.mocked(showErrorToast)
 
 const mockBuild: BuildState = {
   schemaVersion: 1,
@@ -87,6 +91,7 @@ describe('migrateBuildState', () => {
 describe('saveBuild', () => {
   beforeEach(() => {
     mockInvoke.mockReset()
+    mockShowErrorToast.mockReset()
     useBuildStore.setState(initialBuildState, true)
     mockInvoke.mockResolvedValue(undefined)
   })
@@ -125,6 +130,14 @@ describe('saveBuild', () => {
     const { savedBuilds } = useBuildStore.getState()
     expect(savedBuilds).toHaveLength(1)
     expect(savedBuilds[0].name).toBe('Renamed VK')
+  })
+
+  it('calls showErrorToast and re-throws when invokeCommand rejects', async () => {
+    mockInvoke.mockRejectedValue(new Error('db write failed'))
+    await expect(saveBuild(mockBuild)).rejects.toThrow('db write failed')
+    expect(mockShowErrorToast).toHaveBeenCalledWith(
+      'Failed to save build. Your work is safe in memory — try again.'
+    )
   })
 })
 
