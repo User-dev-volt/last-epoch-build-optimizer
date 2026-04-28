@@ -12,6 +12,13 @@ export function useAutoSave() {
       const build = state.activeBuild
       if (!build?.isPersisted) return
       if (state.activeBuild === prev.activeBuild) return
+
+      // Ignore changes where only isPersisted changed (happens after setActiveBuildPersisted)
+      const buildDataChanged =
+        JSON.stringify({ ...build, isPersisted: false }) !==
+        JSON.stringify({ ...prev.activeBuild, isPersisted: false })
+      if (!buildDataChanged) return
+
       if (timerRef.current) clearTimeout(timerRef.current)
       const buildId = build.id
       timerRef.current = setTimeout(async () => {
