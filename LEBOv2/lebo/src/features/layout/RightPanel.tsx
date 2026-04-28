@@ -12,6 +12,7 @@ import { SuggestionsList } from '../optimization/SuggestionsList'
 export function RightPanel() {
   const isCollapsed = useAppStore((s) => s.activePanel.right === 'collapsed')
   const isOnline = useAppStore((s) => s.isOnline)
+  const isOnlineChecked = useAppStore((s) => s.isOnlineChecked)
   const setPanelState = useAppStore((s) => s.setPanelState)
   const activeBuild = useBuildStore((s) => s.activeBuild)
   const scores = useOptimizationStore((s) => s.scores)
@@ -85,7 +86,7 @@ export function RightPanel() {
             isOptimizing={isOptimizing}
           />
 
-          {!isOnline && (
+          {isOnlineChecked && !isOnline && (
             <p
               className="text-xs"
               style={{ color: 'var(--color-text-muted)' }}

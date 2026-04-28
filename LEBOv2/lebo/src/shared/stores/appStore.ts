@@ -9,6 +9,7 @@ interface PanelState {
 
 interface AppStore {
   isOnline: boolean
+  isOnlineChecked: boolean
   currentView: 'main' | 'settings'
   activePanel: PanelState
   isApiKeyConfigured: boolean | null
@@ -20,10 +21,11 @@ interface AppStore {
 
 export const useAppStore = create<AppStore>()((set) => ({
   isOnline: false,
+  isOnlineChecked: false,
   currentView: 'main',
   activePanel: { left: 'expanded', right: 'expanded' },
   isApiKeyConfigured: null,
-  setOnline: (online) => set({ isOnline: online }),
+  setOnline: (online) => set({ isOnline: online, isOnlineChecked: true }),
   setCurrentView: (view) => set({ currentView: view }),
   setPanelState: (panel, state) =>
     set((s) => ({ activePanel: { ...s.activePanel, [panel]: state } })),

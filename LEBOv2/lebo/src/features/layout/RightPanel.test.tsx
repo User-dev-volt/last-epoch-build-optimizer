@@ -46,7 +46,7 @@ describe('RightPanel', () => {
   beforeEach(() => {
     useBuildStore.setState(initialBuildState, true)
     useOptimizationStore.setState(initialOptState, true)
-    useAppStore.setState({ ...initialAppState, isOnline: true }, true)
+    useAppStore.setState({ ...initialAppState, isOnline: true, isOnlineChecked: true }, true)
     vi.clearAllMocks()
   })
 
@@ -174,7 +174,7 @@ describe('RightPanel', () => {
 
   it('shows offline note when offline (AC4)', () => {
     useBuildStore.setState({ activeBuild: MOCK_BUILD })
-    useAppStore.setState({ isOnline: false })
+    useAppStore.setState({ isOnline: false, isOnlineChecked: true })
     render(<RightPanel />)
     expect(screen.getByTestId('offline-note')).toBeInTheDocument()
     expect(screen.getByText(/AI optimization requires internet connectivity/)).toBeInTheDocument()
@@ -196,9 +196,16 @@ describe('RightPanel', () => {
 
   it('offline note is visible when offline and no activeBuild', () => {
     useBuildStore.setState({ activeBuild: null })
-    useAppStore.setState({ isOnline: false })
+    useAppStore.setState({ isOnline: false, isOnlineChecked: true })
     render(<RightPanel />)
     expect(screen.getByTestId('offline-note')).toBeInTheDocument()
+  })
+
+  it('offline note is hidden while connectivity check is pending (isOnlineChecked=false)', () => {
+    useBuildStore.setState({ activeBuild: MOCK_BUILD })
+    useAppStore.setState({ isOnline: false, isOnlineChecked: false })
+    render(<RightPanel />)
+    expect(screen.queryByTestId('offline-note')).toBeNull()
   })
 
   it('ScoreGauge shows single score when no preview active', () => {
