@@ -377,7 +377,33 @@ claude-sonnet-4-6
 
 ### Review Findings
 
-_to be filled on review_
+#### Decision Needed
+
+- [ ] [Review][Decision] Two ErrorBoundary instances vs "single top-level one" scope constraint — App.tsx uses an early-return conditional for Settings vs Main view, resulting in two sibling ErrorBoundary instances. The scope boundary says "No error boundaries around individual components beyond the single top-level one." This could mean (a) don't wrap individual leaf components — satisfied; or (b) there must be exactly one ErrorBoundary in the app — violated. Needs clarification: consolidate to a single boundary above the view conditional (Toaster would need to move outside that), or accept two sibling top-level boundaries as compliant.
+
+- [ ] [Review][Decision] AC2 coverage for non-retryable, non-AUTH_ERROR types — AC2 requires "actionable next steps" for all non-retryable errors (PARSE_ERROR, DATA_STALE, UNKNOWN). The banner only renders a "Go to Settings" navigation button for AUTH_ERROR; all other types show only `streamError.message`. The `USER_MESSAGES` map in errorNormalizer provides user-friendly text, so the message itself is actionable — but no UI action link exists for PARSE_ERROR or UNKNOWN. Clarify: is the normalized message text alone sufficient to satisfy AC2, or do other non-retryable types need explicit action links?
+
+#### Patches
+
+- [ ] [Review][Patch] SavedBuildsList delete/rename callers don't catch re-thrown errors — story 5.4 introduced re-throw in deleteBuild and renameBuild, but the callers in SavedBuildsList.tsx (lines 54–60 rename, 203–205 delete) have no try/catch, causing unhandled promise rejections on DB failure [lebo/src/features/build-manager/SavedBuildsList.tsx:54-60,203-205]
+
+- [ ] [Review][Patch] SavedBuildsList loadBuild caller doesn't catch re-thrown error — story 5.4 introduced re-throw in loadBuild, but the handleLoad caller (line ~44) has no try/catch; error toast fires but rejection propagates unhandled [lebo/src/features/build-manager/SavedBuildsList.tsx:23-46]
+
+- [ ] [Review][Patch] RETRYABLE_ERROR_TYPES is a mutable exported array — any consumer can push to it and silently corrupt retry logic; change to `as const` and type as `readonly ErrorType[]` [lebo/src/shared/types/errors.ts]
+
+- [ ] [Review][Patch] Missing test: ErrorBoundary "Reload App" click not verified — AC6 specifies "clicking 'Reload App' calls window.location.reload()" but the test only checks button presence; add a click test with window.location.reload mocked [lebo/src/shared/components/ErrorBoundary.test.tsx]
+
+#### Deferred
+
+- [x] [Review][Defer] ErrorBoundary has no componentDidCatch — render errors are caught but never logged or reported; no monitoring hook [lebo/src/shared/components/ErrorBoundary.tsx] — deferred, pre-existing design decision; no error reporting infrastructure in scope
+- [x] [Review][Defer] Stale closure over savedBuilds/activeBuild in deleteBuild/renameBuild — store state captured before await may be stale by resolution time [lebo/src/features/build-manager/buildPersistence.ts] — deferred, pre-existing pattern introduced before story 5.4
+- [x] [Review][Defer] Toaster is unguarded outside ErrorBoundary — a third-party throw in react-hot-toast itself would be uncaught [lebo/src/App.tsx] — deferred, pre-existing architectural choice
+- [x] [Review][Defer] showInfoToast exposes react-hot-toast parameter types in public API surface [lebo/src/shared/components/Toast.tsx] — deferred, internal module only; acceptable until toast library is swapped
+- [x] [Review][Defer] saveBuild stale destructure of savedBuilds before await — concurrent saves could produce stale list updates [lebo/src/features/build-manager/buildPersistence.ts] — deferred, pre-existing pattern
+- [x] [Review][Defer] useAutoSave catch behavior on saveBuild re-throw — toast fires before throw so user is informed, but re-throw is swallowed [lebo/src/features/build-manager/useAutoSave.ts] — deferred, pre-existing
+- [x] [Review][Defer] Toast accumulation on rapid bulk failures — no deduplication or coalescing in showErrorToast [lebo/src/shared/components/Toast.tsx] — deferred, pre-existing react-hot-toast default behavior
+- [x] [Review][Defer] loadBuild/deleteBuild/renameBuild error toast paths untested — Task 7 only required saveBuild error test; the other three have no test coverage [lebo/src/features/build-manager/buildPersistence.test.ts] — deferred, beyond story 5.4 task scope
+- [x] [Review][Defer] Task 5 completion claim unverified — dev note states SavedBuildsList had no simple string toasts to migrate, only a render-function toast — deferred, verified implicitly by clean TypeScript + 409 passing tests
 
 ## Change Log
 

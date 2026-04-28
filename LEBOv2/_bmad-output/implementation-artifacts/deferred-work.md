@@ -2,6 +2,18 @@
 
 ## Deferred from: code review of 5-1-api-key-management-settings-view (2026-04-26)
 
+## Deferred from: code review of 5-4-error-handling-infrastructure-reliability (2026-04-28)
+
+- **ErrorBoundary has no componentDidCatch** — render errors are caught but never logged or reported; no monitoring or console hook. No error reporting infrastructure exists in scope for MVP. Add logging when/if error analytics are introduced.
+- **Stale closure over savedBuilds/activeBuild in deleteBuild/renameBuild** — store state is destructured before the await; mutations between call and resolution are silently ignored. Pre-existing pattern in buildPersistence.ts; address if concurrent save/delete scenarios are observed in practice.
+- **Toaster unguarded outside ErrorBoundary** — react-hot-toast throwing would propagate to the root uncaught. Pre-existing architectural choice; acceptable given react-hot-toast is a stable dependency.
+- **showInfoToast exposes react-hot-toast parameter types in public API** — `opts?: Parameters<typeof toast>[1]` leaks the internal library shape. Internal module only; acceptable until toast library is replaced.
+- **saveBuild stale destructure of savedBuilds before await** — concurrent saves could produce stale list updates. Pre-existing pattern; revisit if concurrent save scenarios are observed.
+- **useAutoSave catch swallows saveBuild re-throw** — toast fires before the throw so user is informed; catch is swallowing only the error propagation. Pre-existing; acceptable given the toast feedback loop.
+- **Toast accumulation on rapid bulk failures** — no deduplication or coalescing in showErrorToast; react-hot-toast default behavior. Address if UX testing reveals noisy stacking.
+- **loadBuild/deleteBuild/renameBuild error toast paths untested** — Task 7 only required saveBuild error test; the other three functions' error paths have no test coverage. Beyond story 5.4 task scope; add in a future test hardening pass.
+- **Task 5 completion unverified** — dev agent claims SavedBuildsList had no simple string toasts to migrate (only a render-function toast). Verified implicitly by 409 passing tests; no action needed unless a regression surfaces.
+
 ## Deferred from: code review of 5-2-connectivity-detection-offline-mode (2026-04-28)
 
 - **In-flight optimization not aborted when connectivity drops mid-stream** — `useOptimizationStream` has no connectivity guard; if `isOnline` flips to false during an active Claude API stream, the button disables but the call continues with contradictory UI (offline note + active spinner). Out of scope for 5.2; candidate for story 5.4 (error handling infrastructure).
