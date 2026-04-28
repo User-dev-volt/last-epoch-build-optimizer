@@ -4,6 +4,7 @@ import { initGameData } from './features/game-data/gameDataLoader'
 import { loadBuildsOnStartup, saveBuild } from './features/build-manager/buildPersistence'
 import { useAutoSave } from './features/build-manager/useAutoSave'
 import { useConnectivity } from './shared/hooks/useConnectivity'
+import { useUpdateCheck } from './shared/hooks/useUpdateCheck'
 import { useBuildStore } from './shared/stores/buildStore'
 import { useGameDataStore } from './shared/stores/gameDataStore'
 import { useOptimizationStore } from './shared/stores/optimizationStore'
@@ -28,6 +29,7 @@ const TOASTER_OPTS = {
 export function App() {
   useAutoSave()
   useConnectivity()
+  useUpdateCheck()
   const currentView = useAppStore((s) => s.currentView)
 
   useEffect(() => {

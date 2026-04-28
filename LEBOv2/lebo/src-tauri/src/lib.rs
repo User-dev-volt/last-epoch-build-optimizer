@@ -3,7 +3,7 @@ pub mod db;
 pub mod models;
 pub mod services;
 
-use commands::app_commands::{check_api_key_configured, check_connectivity, set_api_key};
+use commands::app_commands::{check_api_key_configured, check_connectivity, restart_app, set_api_key};
 use commands::build_commands::{
     delete_build, load_build, load_builds_list, rename_build, save_build,
 };
@@ -25,6 +25,7 @@ pub fn run() {
         .plugin(tauri_plugin_sql::Builder::default().build())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_store::Builder::default().build())
+        .plugin(tauri_plugin_updater::Builder::default().build())
         .plugin(
             // KDF closure is only invoked by the plugin's frontend command layer,
             // which this app does not use — backend vault access goes through
@@ -50,6 +51,7 @@ pub fn run() {
             set_api_key,
             check_api_key_configured,
             check_connectivity,
+            restart_app,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

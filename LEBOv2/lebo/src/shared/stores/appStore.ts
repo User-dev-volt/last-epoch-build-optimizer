@@ -13,10 +13,18 @@ interface AppStore {
   currentView: 'main' | 'settings'
   activePanel: PanelState
   isApiKeyConfigured: boolean | null
+  updateInfo: { version: string; body: string | null } | null
+  updateStatus: 'idle' | 'downloading' | 'ready' | 'error'
+  updateProgress: number
+  updateDismissed: boolean
   setOnline: (online: boolean) => void
   setCurrentView: (view: 'main' | 'settings') => void
   setPanelState: (panel: 'left' | 'right', state: PanelCollapseState) => void
   setApiKeyConfigured: (v: boolean | null) => void
+  setUpdateInfo: (info: { version: string; body: string | null } | null) => void
+  setUpdateStatus: (status: 'idle' | 'downloading' | 'ready' | 'error') => void
+  setUpdateProgress: (progress: number) => void
+  setUpdateDismissed: (dismissed: boolean) => void
 }
 
 export const useAppStore = create<AppStore>()((set) => ({
@@ -25,9 +33,17 @@ export const useAppStore = create<AppStore>()((set) => ({
   currentView: 'main',
   activePanel: { left: 'expanded', right: 'expanded' },
   isApiKeyConfigured: null,
+  updateInfo: null,
+  updateStatus: 'idle',
+  updateProgress: 0,
+  updateDismissed: false,
   setOnline: (online) => set({ isOnline: online, isOnlineChecked: true }),
   setCurrentView: (view) => set({ currentView: view }),
   setPanelState: (panel, state) =>
     set((s) => ({ activePanel: { ...s.activePanel, [panel]: state } })),
   setApiKeyConfigured: (v) => set({ isApiKeyConfigured: v }),
+  setUpdateInfo: (info) => set({ updateInfo: info }),
+  setUpdateStatus: (status) => set({ updateStatus: status }),
+  setUpdateProgress: (progress) => set({ updateProgress: progress }),
+  setUpdateDismissed: (dismissed) => set({ updateDismissed: dismissed }),
 }))

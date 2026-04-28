@@ -15,3 +15,8 @@ pub async fn check_api_key_configured(app_handle: tauri::AppHandle) -> Result<bo
 pub async fn check_connectivity() -> bool {
     connectivity_service::check_once().await
 }
+
+#[tauri::command]
+pub async fn restart_app(app_handle: tauri::AppHandle) {
+    app_handle.restart();
+}

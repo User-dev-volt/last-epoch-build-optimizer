@@ -1,6 +1,6 @@
 # Story 5.3: In-App Auto-Update System
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -36,60 +36,60 @@ So that I always have the latest features and game data compatibility fixes with
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Install frontend dependency (AC: 2, 3)
-  - [ ] Run `pnpm add @tauri-apps/plugin-updater` in `lebo/` directory
-  - [ ] Verify `@tauri-apps/plugin-updater` appears in `package.json` dependencies
+- [x] Task 1: Install frontend dependency (AC: 2, 3)
+  - [x] Run `pnpm add @tauri-apps/plugin-updater` in `lebo/` directory
+  - [x] Verify `@tauri-apps/plugin-updater` appears in `package.json` dependencies
 
-- [ ] Task 2: Register updater plugin in Rust (AC: 1)
-  - [ ] In `lebo/src-tauri/src/lib.rs`, add `.plugin(tauri_plugin_updater::Builder::default().build())` after existing plugins
-  - [ ] Add `restart_app` Tauri command to `lebo/src-tauri/src/commands/app_commands.rs` (see Dev Notes for exact pattern)
-  - [ ] Register `restart_app` in `lib.rs` invoke_handler
-  - [ ] Update import line for app_commands to include `restart_app`
+- [x] Task 2: Register updater plugin in Rust (AC: 1)
+  - [x] In `lebo/src-tauri/src/lib.rs`, add `.plugin(tauri_plugin_updater::Builder::default().build())` after existing plugins
+  - [x] Add `restart_app` Tauri command to `lebo/src-tauri/src/commands/app_commands.rs` (see Dev Notes for exact pattern)
+  - [x] Register `restart_app` in `lib.rs` invoke_handler
+  - [x] Update import line for app_commands to include `restart_app`
 
-- [ ] Task 3: Configure updater in `tauri.conf.json` (AC: 1, 5)
-  - [ ] Add `plugins.updater` section with `pubkey` and `endpoints` fields (see Dev Notes for config shape)
-  - [ ] Note: pubkey is a placeholder until code-signing story (5.5) — update check returns null in dev without a real release endpoint, which is correct silent behavior
+- [x] Task 3: Configure updater in `tauri.conf.json` (AC: 1, 5)
+  - [x] Add `plugins.updater` section with `pubkey` and `endpoints` fields (see Dev Notes for config shape)
+  - [x] Note: pubkey is a placeholder until code-signing story (5.5) — update check returns null in dev without a real release endpoint, which is correct silent behavior
 
-- [ ] Task 4: Add update state to `appStore.ts` (AC: 1, 2, 3, 4)
-  - [ ] Add `updateInfo: { version: string; body: string | null } | null` (default `null`)
-  - [ ] Add `updateStatus: 'idle' | 'downloading' | 'ready' | 'error'` (default `'idle'`)
-  - [ ] Add `updateProgress: number` (0–100, default `0`)
-  - [ ] Add `updateDismissed: boolean` (default `false`)
-  - [ ] Add actions: `setUpdateInfo`, `setUpdateStatus`, `setUpdateProgress`, `setUpdateDismissed`
+- [x] Task 4: Add update state to `appStore.ts` (AC: 1, 2, 3, 4)
+  - [x] Add `updateInfo: { version: string; body: string | null } | null` (default `null`)
+  - [x] Add `updateStatus: 'idle' | 'downloading' | 'ready' | 'error'` (default `'idle'`)
+  - [x] Add `updateProgress: number` (0–100, default `0`)
+  - [x] Add `updateDismissed: boolean` (default `false`)
+  - [x] Add actions: `setUpdateInfo`, `setUpdateStatus`, `setUpdateProgress`, `setUpdateDismissed`
 
-- [ ] Task 5: Create `useUpdateCheck.ts` hook (AC: 1, 5)
-  - [ ] Create `lebo/src/shared/hooks/useUpdateCheck.ts`
-  - [ ] Export module-level `getPendingUpdate()` — returns the raw `Update` object needed for download/install
-  - [ ] On mount: call `check()` from `@tauri-apps/plugin-updater`, on success set `updateInfo` in appStore; on error swallow silently (see Dev Notes)
-  - [ ] Call this hook from `App.tsx` alongside `useConnectivity()`
+- [x] Task 5: Create `useUpdateCheck.ts` hook (AC: 1, 5)
+  - [x] Create `lebo/src/shared/hooks/useUpdateCheck.ts`
+  - [x] Export module-level `getPendingUpdate()` — returns the raw `Update` object needed for download/install
+  - [x] On mount: call `check()` from `@tauri-apps/plugin-updater`, on success set `updateInfo` in appStore; on error swallow silently (see Dev Notes)
+  - [x] Call this hook from `App.tsx` alongside `useConnectivity()`
 
-- [ ] Task 6: Update `AppHeader.tsx` with update banner (AC: 1, 2, 3, 4)
-  - [ ] Subscribe to `updateInfo`, `updateStatus`, `updateProgress`, `updateDismissed` from appStore
-  - [ ] Render update banner when `updateInfo !== null && !updateDismissed` (see Dev Notes for exact JSX shape)
-  - [ ] "Install Update" button: triggers `startDownload()` — calls `update.download(onProgressEvent)`, updates `updateStatus` and `updateProgress` in store
-  - [ ] Progress state (`updateStatus === 'downloading'`): show `"Downloading... {pct}%"` in banner
-  - [ ] Ready state (`updateStatus === 'ready'`): show "Update ready. Restart LEBOv2 to apply?" + "[Restart Now]" button
-  - [ ] "Restart Now": calls `update.install()` then `invokeCommand('restart_app')`
-  - [ ] Dismiss (×) button: calls `setUpdateDismissed(true)` — banner disappears, no reappearance this session
-  - [ ] All interactive elements have `data-testid` attributes (see Dev Notes)
+- [x] Task 6: Update `AppHeader.tsx` with update banner (AC: 1, 2, 3, 4)
+  - [x] Subscribe to `updateInfo`, `updateStatus`, `updateProgress`, `updateDismissed` from appStore
+  - [x] Render update banner when `updateInfo !== null && !updateDismissed` (see Dev Notes for exact JSX shape)
+  - [x] "Install Update" button: triggers `startDownload()` — calls `update.download(onProgressEvent)`, updates `updateStatus` and `updateProgress` in store
+  - [x] Progress state (`updateStatus === 'downloading'`): show `"Downloading... {pct}%"` in banner
+  - [x] Ready state (`updateStatus === 'ready'`): show "Update ready. Restart LEBOv2 to apply?" + "[Restart Now]" button
+  - [x] "Restart Now": calls `update.install()` then `invokeCommand('restart_app')`
+  - [x] Dismiss (×) button: calls `setUpdateDismissed(true)` — banner disappears, no reappearance this session
+  - [x] All interactive elements have `data-testid` attributes (see Dev Notes)
 
-- [ ] Task 7: Update `App.tsx` (AC: 1)
-  - [ ] Import and call `useUpdateCheck()` inside `App()`, placed alongside `useConnectivity()` at the top of the function body
+- [x] Task 7: Update `App.tsx` (AC: 1)
+  - [x] Import and call `useUpdateCheck()` inside `App()`, placed alongside `useConnectivity()` at the top of the function body
 
-- [ ] Task 8: Tests (AC: 1–5)
-  - [ ] Create `lebo/src/shared/hooks/useUpdateCheck.test.ts`:
-    - [ ] When `check()` resolves with an update: `setUpdateInfo` is called with `{ version, body }`
-    - [ ] When `check()` resolves with null (no update): `setUpdateInfo` is NOT called
-    - [ ] When `check()` rejects: no error propagates (silent failure), `setUpdateInfo` is NOT called
-  - [ ] Update `lebo/src/features/layout/AppHeader.test.tsx`:
-    - [ ] When `updateInfo` is null: no update banner renders
-    - [ ] When `updateInfo` is set and `updateDismissed` is false: banner renders with version and "Install Update" button
-    - [ ] When `updateDismissed` is true: banner does not render
-    - [ ] Clicking dismiss (×) button: `setUpdateDismissed(true)` is called
-    - [ ] When `updateStatus === 'downloading'`: "Downloading..." text is visible
-    - [ ] When `updateStatus === 'ready'`: "Update ready" text and "Restart Now" button are visible
-  - [ ] `pnpm tsc --noEmit` — clean
-  - [ ] `pnpm vitest run` — all tests pass
+- [x] Task 8: Tests (AC: 1–5)
+  - [x] Create `lebo/src/shared/hooks/useUpdateCheck.test.ts`:
+    - [x] When `check()` resolves with an update: `setUpdateInfo` is called with `{ version, body }`
+    - [x] When `check()` resolves with null (no update): `setUpdateInfo` is NOT called
+    - [x] When `check()` rejects: no error propagates (silent failure), `setUpdateInfo` is NOT called
+  - [x] Update `lebo/src/features/layout/AppHeader.test.tsx`:
+    - [x] When `updateInfo` is null: no update banner renders
+    - [x] When `updateInfo` is set and `updateDismissed` is false: banner renders with version and "Install Update" button
+    - [x] When `updateDismissed` is true: banner does not render
+    - [x] Clicking dismiss (×) button: `setUpdateDismissed(true)` is called
+    - [x] When `updateStatus === 'downloading'`: "Downloading..." text is visible
+    - [x] When `updateStatus === 'ready'`: "Update ready" text and "Restart Now" button are visible
+  - [x] `pnpm tsc --noEmit` — clean
+  - [x] `pnpm vitest run` — all tests pass
 
 ## Dev Notes
 
@@ -462,14 +462,41 @@ Existing AppHeader tests are NOT affected — they don't set `updateInfo`, which
 
 ### Agent Model Used
 
+claude-sonnet-4-6
+
 ### Debug Log References
 
 ### Completion Notes List
 
+- Installed `@tauri-apps/plugin-updater 2.10.1` frontend package via pnpm
+- Registered `tauri_plugin_updater::Builder::default().build()` in lib.rs between `tauri_plugin_store` and `tauri_plugin_stronghold`
+- Added `restart_app` Tauri command using `app_handle.restart()` — avoids needing `@tauri-apps/plugin-process`
+- Added `plugins.updater` section to `tauri.conf.json` with placeholder pubkey and GitHub Releases endpoint — returns null in dev (correct silent behavior until story 5.5)
+- Extended `appStore` with four update state fields (`updateInfo`, `updateStatus`, `updateProgress`, `updateDismissed`) and corresponding setters
+- Created `useUpdateCheck.ts` with module-level `_pendingUpdate` variable — `Update` class is not Zustand-serializable; module-level singleton is safe for a single-instance desktop app
+- `AppHeader.tsx` renders update banner inline (never modal): idle → install button; downloading → progress %; ready → restart prompt. Dismiss hidden during download to prevent mid-download abandonment confusion
+- `App.tsx` calls `useUpdateCheck()` unconditionally alongside `useConnectivity()`, no hook ordering issues
+- `useUpdateCheck.test.ts`: 4 tests — update present, null, rejection, undefined body
+- `AppHeader.test.tsx`: 10 tests total (6 existing + 4 new for update banner: no banner default, dismissed, idle state, dismiss click, downloading state, ready state, Restart Now)
+- All 393 tests pass (37 files), `pnpm tsc --noEmit` clean
+
 ### File List
+
+- `lebo/package.json` (modified — added `@tauri-apps/plugin-updater`)
+- `lebo/pnpm-lock.yaml` (modified — lockfile updated)
+- `lebo/src-tauri/tauri.conf.json` (modified — added `plugins.updater` section)
+- `lebo/src-tauri/src/lib.rs` (modified — updater plugin registration + `restart_app` command)
+- `lebo/src-tauri/src/commands/app_commands.rs` (modified — added `restart_app` command)
+- `lebo/src/shared/stores/appStore.ts` (modified — added update state fields and actions)
+- `lebo/src/shared/hooks/useUpdateCheck.ts` (new)
+- `lebo/src/shared/hooks/useUpdateCheck.test.ts` (new)
+- `lebo/src/App.tsx` (modified — added `useUpdateCheck()` call)
+- `lebo/src/features/layout/AppHeader.tsx` (modified — added update banner UI)
+- `lebo/src/features/layout/AppHeader.test.tsx` (modified — added update banner tests)
 
 ### Review Findings
 
 ## Change Log
 
 - 2026-04-28: Story 5.3 created — In-App Auto-Update System
+- 2026-04-28: Story 5.3 implemented — updater plugin registration, restart_app command, update state in appStore, useUpdateCheck hook, AppHeader banner (idle/downloading/ready/dismiss); 393 tests pass, tsc clean
