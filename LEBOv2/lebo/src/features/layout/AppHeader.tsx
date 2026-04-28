@@ -19,17 +19,21 @@ export function AppHeader() {
     setUpdateStatus('downloading')
     let downloaded = 0
     let contentLength = 0
-    await update.download((event) => {
-      if (event.event === 'Started') {
-        contentLength = event.data.contentLength ?? 0
-      } else if (event.event === 'Progress') {
-        downloaded += event.data.chunkLength
-        const pct = contentLength > 0 ? Math.round((downloaded / contentLength) * 100) : 0
-        setUpdateProgress(pct)
-      } else if (event.event === 'Finished') {
-        setUpdateStatus('ready')
-      }
-    })
+    try {
+      await update.download((event) => {
+        if (event.event === 'Started') {
+          contentLength = event.data.contentLength ?? 0
+        } else if (event.event === 'Progress') {
+          downloaded += event.data.chunkLength
+          const pct = contentLength > 0 ? Math.round((downloaded / contentLength) * 100) : 0
+          setUpdateProgress(pct)
+        } else if (event.event === 'Finished') {
+          setUpdateStatus('ready')
+        }
+      })
+    } catch {
+      setUpdateStatus('error')
+    }
   }
 
   async function installAndRestart() {
@@ -80,6 +84,11 @@ export function AppHeader() {
               Downloading... {updateProgress}%
             </span>
           )}
+          {updateStatus === 'error' && (
+            <span data-testid="update-error-text">
+              Update failed.
+            </span>
+          )}
           {updateStatus === 'ready' && (
             <>
               <span data-testid="update-ready-text">
@@ -98,7 +107,7 @@ export function AppHeader() {
               </button>
             </>
           )}
-          {(updateStatus === 'idle' || updateStatus === 'ready') && (
+          {(updateStatus === 'idle' || updateStatus === 'ready' || updateStatus === 'error') && (
             <button
               onClick={() => setUpdateDismissed(true)}
               data-testid="dismiss-update-button"

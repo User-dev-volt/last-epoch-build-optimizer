@@ -156,4 +156,19 @@ describe('AppHeader', () => {
       expect(invokeCommand).toHaveBeenCalledWith('restart_app')
     })
   })
+
+  // ── Update banner: error state ───────────────────────────────────────────
+
+  it('shows error text and dismiss button when updateStatus is error', () => {
+    useAppStore.setState({
+      updateInfo: { version: '1.2.0', body: null },
+      updateStatus: 'error',
+      updateDismissed: false,
+    })
+    render(<AppHeader />)
+    expect(screen.getByTestId('update-error-text')).toBeInTheDocument()
+    expect(screen.getByTestId('dismiss-update-button')).toBeInTheDocument()
+    expect(screen.queryByTestId('install-update-button')).toBeNull()
+    expect(screen.queryByTestId('download-progress-text')).toBeNull()
+  })
 })
