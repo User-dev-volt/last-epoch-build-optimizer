@@ -1,5 +1,5 @@
-use crate::services::keychain_service;
 use crate::services::connectivity_service;
+use crate::services::keychain_service;
 
 #[tauri::command]
 pub async fn set_api_key(app_handle: tauri::AppHandle, key: String) -> Result<(), String> {
@@ -12,10 +12,6 @@ pub async fn check_api_key_configured(app_handle: tauri::AppHandle) -> Result<bo
 }
 
 #[tauri::command]
-pub async fn check_connectivity(app_handle: tauri::AppHandle) -> Result<bool, String> {
-    let is_online = connectivity_service::check_once().await;
-    app_handle
-        .emit("app:connectivity-changed", serde_json::json!({ "is_online": is_online }))
-        .map_err(|e| format!("UNKNOWN: emit failed: {e}"))?;
-    Ok(is_online)
+pub async fn check_connectivity() -> bool {
+    connectivity_service::check_once().await
 }

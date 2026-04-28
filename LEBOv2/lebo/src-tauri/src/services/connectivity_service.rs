@@ -1,16 +1,22 @@
 use crate::services::game_data_service::REMOTE_DATA_BASE_URL;
+use std::sync::OnceLock;
 use tauri::Emitter;
 use tauri_plugin_http::reqwest;
 
+static HTTP_CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
+
+fn get_client() -> &'static reqwest::Client {
+    HTTP_CLIENT.get_or_init(|| {
+        reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(5))
+            .build()
+            .expect("failed to build connectivity reqwest client")
+    })
+}
+
 pub async fn check_once() -> bool {
     let url = format!("{}/manifest.json", REMOTE_DATA_BASE_URL);
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(5))
-        .build();
-    match client {
-        Err(_) => false,
-        Ok(c) => c.head(&url).send().await.is_ok(),
-    }
+    get_client().head(&url).send().await.is_ok()
 }
 
 pub async fn start_watcher(app_handle: tauri::AppHandle) {

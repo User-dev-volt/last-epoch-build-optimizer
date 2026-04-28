@@ -1,6 +1,6 @@
 # Story 5.2: Connectivity Detection & Offline Mode
 
-Status: review
+Status: done
 
 ## Story
 
@@ -332,10 +332,10 @@ claude-sonnet-4-6
 ### Review Findings
 
 - [x] [Review][Decision→Patch] Startup offline flash — resolved: added `isOnlineChecked: boolean` (default `false`) to `appStore`; `setOnline()` now also sets `isOnlineChecked: true`; offline note in `RightPanel` gated on `isOnlineChecked && !isOnline`; button stays disabled during pending (correct fail-closed behavior). 381 tests pass.
-- [ ] [Review][Patch] `check_connectivity` command emits `app:connectivity-changed` as unspecced side effect — the command should only return the boolean; the hook already calls `setOnline()` via the return value; the extra emit creates a double-write and a race with the listener registration window. [`app_commands.rs:15`]
-- [ ] [Review][Patch] `reqwest::Client` rebuilt on every `check_once()` call — a new client with its own connection pool and TLS context is allocated every 30 s and on every explicit command invocation; use a lazily-initialized static `OnceLock<Client>` instead. [`connectivity_service.rs:6`]
-- [ ] [Review][Patch] `useConnectivity` listener teardown race — the `listen(...)` promise is not awaited before the cleanup function is returned; if the component unmounts or Strict Mode double-invokes before the promise settles, `unlisten` is still `undefined` and the Tauri event listener leaks permanently. [`useConnectivity.ts:15`]
-- [ ] [Review][Patch] `"UNKNOWN:"` prefix in IPC error string leaks internal Tauri emitter detail to the renderer process via the `Result<_, String>` serialization path. [`app_commands.rs:16`]
+- [x] [Review][Patch] `check_connectivity` command emits `app:connectivity-changed` as unspecced side effect — fixed: removed `app_handle` param and emit; command now returns `bool` directly. [`app_commands.rs`]
+- [x] [Review][Patch] `reqwest::Client` rebuilt on every `check_once()` call — fixed: `OnceLock<reqwest::Client>` static; client built once, reused for all probes. [`connectivity_service.rs`]
+- [x] [Review][Patch] `useConnectivity` listener teardown race — fixed: `cancelled` flag set in cleanup; if promise settles after unmount, `fn()` called immediately. [`useConnectivity.ts`]
+- [x] [Review][Patch] `"UNKNOWN:"` prefix in IPC error string — auto-resolved by P1 (command no longer returns `Result`). [`app_commands.rs`]
 - [x] [Review][Defer] In-flight optimization not aborted when connectivity drops mid-stream — `useOptimizationStream` has no connectivity guard; if `isOnline` flips during a stream the button disables but the API call continues with contradictory UI — deferred, out of scope for story 5.2
 - [x] [Review][Defer] Test asserts `invoke` called with `(check_connectivity, undefined)` — may not match `invokeCommand`'s actual signature if it omits undefined args — deferred, low-confidence without running test in isolation
 

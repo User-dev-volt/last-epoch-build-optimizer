@@ -12,13 +12,19 @@ export function useConnectivity() {
       .catch(() => setOnline(false))
 
     let unlisten: (() => void) | undefined
+    let cancelled = false
     listen<{ is_online: boolean }>('app:connectivity-changed', (event) => {
       setOnline(event.payload.is_online)
     }).then((fn) => {
-      unlisten = fn
+      if (cancelled) {
+        fn()
+      } else {
+        unlisten = fn
+      }
     })
 
     return () => {
+      cancelled = true
       unlisten?.()
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps

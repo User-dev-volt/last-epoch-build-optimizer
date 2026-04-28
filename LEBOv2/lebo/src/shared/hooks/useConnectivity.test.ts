@@ -85,4 +85,16 @@ describe('useConnectivity', () => {
     unmount()
     expect(unlisten).toHaveBeenCalled()
   })
+
+  it('calls unlisten immediately when component unmounts before listen resolves', async () => {
+    mockInvoke.mockResolvedValueOnce(true)
+    const unlisten = vi.fn()
+    let resolveListen!: (fn: () => void) => void
+    vi.mocked(listen).mockReturnValueOnce(new Promise((res) => { resolveListen = res }))
+
+    const { unmount } = renderHook(() => useConnectivity())
+    unmount() // unmount before listen promise settles
+    resolveListen(unlisten) // now the promise settles
+    await vi.waitFor(() => expect(unlisten).toHaveBeenCalled())
+  })
 })
