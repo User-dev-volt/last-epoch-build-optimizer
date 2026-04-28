@@ -329,6 +329,16 @@ claude-sonnet-4-6
 - `lebo/src/features/layout/RightPanel.tsx` (modified)
 - `lebo/src/features/layout/RightPanel.test.tsx` (modified)
 
+### Review Findings
+
+- [ ] [Review][Decision] Startup offline flash — `isOnline` defaults to `false` in the store, so every cold start briefly shows the button disabled and the offline note visible even on a healthy connection. Options: (a) default `isOnline: true` (online-optimistic, wrong for true-offline users until first check resolves), (b) add a `null`/pending state to suppress UI until the first check settles, (c) accept the fail-safe fail-closed behavior as intentional. Need your call on which UX is correct.
+- [ ] [Review][Patch] `check_connectivity` command emits `app:connectivity-changed` as unspecced side effect — the command should only return the boolean; the hook already calls `setOnline()` via the return value; the extra emit creates a double-write and a race with the listener registration window. [`app_commands.rs:15`]
+- [ ] [Review][Patch] `reqwest::Client` rebuilt on every `check_once()` call — a new client with its own connection pool and TLS context is allocated every 30 s and on every explicit command invocation; use a lazily-initialized static `OnceLock<Client>` instead. [`connectivity_service.rs:6`]
+- [ ] [Review][Patch] `useConnectivity` listener teardown race — the `listen(...)` promise is not awaited before the cleanup function is returned; if the component unmounts or Strict Mode double-invokes before the promise settles, `unlisten` is still `undefined` and the Tauri event listener leaks permanently. [`useConnectivity.ts:15`]
+- [ ] [Review][Patch] `"UNKNOWN:"` prefix in IPC error string leaks internal Tauri emitter detail to the renderer process via the `Result<_, String>` serialization path. [`app_commands.rs:16`]
+- [x] [Review][Defer] In-flight optimization not aborted when connectivity drops mid-stream — `useOptimizationStream` has no connectivity guard; if `isOnline` flips during a stream the button disables but the API call continues with contradictory UI — deferred, out of scope for story 5.2
+- [x] [Review][Defer] Test asserts `invoke` called with `(check_connectivity, undefined)` — may not match `invokeCommand`'s actual signature if it omits undefined args — deferred, low-confidence without running test in isolation
+
 ## Change Log
 
 - 2026-04-26: Story 5.2 created — Connectivity Detection & Offline Mode

@@ -2,6 +2,13 @@
 
 ## Deferred from: code review of 5-1-api-key-management-settings-view (2026-04-26)
 
+## Deferred from: code review of 5-2-connectivity-detection-offline-mode (2026-04-28)
+
+- **In-flight optimization not aborted when connectivity drops mid-stream** — `useOptimizationStream` has no connectivity guard; if `isOnline` flips to false during an active Claude API stream, the button disables but the call continues with contradictory UI (offline note + active spinner). Out of scope for 5.2; candidate for story 5.4 (error handling infrastructure).
+- **Test asserts invoke called with `(check_connectivity, undefined)` args** — `invokeCommand` may omit `undefined` when calling Tauri's `invoke`; assertion passes via mock but may diverge from runtime behavior. Low-confidence without running the test against the real Tauri IPC. Verify when integration testing is possible.
+
+## Deferred from: code review of 5-1-api-key-management-settings-view (2026-04-26)
+
 - **Hardcoded vault password** [`keychain_service.rs:5`] — `VAULT_PASSWORD = b"lebo-vault-password"` is a static app-level constant; documented in story dev notes as "standard practice for desktop app credential vaults." Vault is still encrypted; threat model accepts this for MVP. Revisit in a future security-hardening story using OS keychain or per-device secret.
 - **Debug env var override bypasses Stronghold** [`claude_commands.rs:18-19`] — `#[cfg(debug_assertions)] let api_key = std::env::var("ANTHROPIC_API_KEY").unwrap_or(api_key)` is intentional per story spec Task 4 dev ergonomics. Remove or scope-limit before any public release build.
 - **Double-emit pattern in invoke_claude_api** [`claude_commands.rs`] — Command emits `optimization:error` event AND returns `Err(err)`, causing two sequential `setStreamError` calls in the frontend. Pre-existing; benign for identical errors. Address when error handling infrastructure is consolidated in Story 5.4.
