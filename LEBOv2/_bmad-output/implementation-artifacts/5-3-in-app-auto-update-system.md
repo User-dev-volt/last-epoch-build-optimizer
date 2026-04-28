@@ -1,6 +1,6 @@
 # Story 5.3: In-App Auto-Update System
 
-Status: review
+Status: done
 
 ## Story
 
@@ -495,6 +495,11 @@ claude-sonnet-4-6
 - `lebo/src/features/layout/AppHeader.test.tsx` (modified — added update banner tests)
 
 ### Review Findings
+
+- Download error handling: `startDownload()` had no try/catch — wrapped in try/catch with `setUpdateStatus('error')` fallback; added error banner state with dismiss button restored
+- Repeated save notifications: `useAutoSave` was re-triggering on `setActiveBuildPersisted()` calls (reference change with only `isPersisted` differing); fixed by comparing build data excluding `isPersisted`
+- `tokio` added as explicit Cargo.toml dependency (was implicit transitive via reqwest, required by `connectivity_service::start_watcher`)
+- `restart_app` unguarded command and placeholder pubkey noted; both deferred to story 5.5
 
 ## Change Log
 

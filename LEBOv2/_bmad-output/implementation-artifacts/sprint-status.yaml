@@ -166,7 +166,7 @@ development_status:
   5-2-connectivity-detection-offline-mode: done
 
   # Story 5.3: Depends on 1.1 (Tauri scaffold + tauri-plugin-updater installed)
-  5-3-in-app-auto-update-system: review
+  5-3-in-app-auto-update-system: done
 
   # Story 5.4: Depends on all prior epics having error surface points to standardize
   5-4-error-handling-infrastructure-reliability: backlog
