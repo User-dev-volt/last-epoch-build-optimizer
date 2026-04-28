@@ -52,7 +52,7 @@
 #   - 4.1 (Context Panel — needs item/affix/idol data from game data)
 
 generated: 2026-04-18
-last_updated: 2026-04-28 # 2.3 → done; 2.4 → done; 3.1 → done; 3.2 → done; 3.3 → done; 3.4 → done; 3.5 → done; 3.6 → done; 4.1 → done; 4.2 → done; 5.1 → done; 5.2 → done
+last_updated: 2026-04-28 # 2.3 → done; 2.4 → done; 3.1 → done; 3.2 → done; 3.3 → done; 3.4 → done; 3.5 → done; 3.6 → done; 4.1 → done; 4.2 → done; 5.1 → done; 5.2 → done; 5.3 → ready-for-dev
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -166,7 +166,7 @@ development_status:
   5-2-connectivity-detection-offline-mode: done
 
   # Story 5.3: Depends on 1.1 (Tauri scaffold + tauri-plugin-updater installed)
-  5-3-in-app-auto-update-system: backlog
+  5-3-in-app-auto-update-system: ready-for-dev
 
   # Story 5.4: Depends on all prior epics having error surface points to standardize
   5-4-error-handling-infrastructure-reliability: backlog
