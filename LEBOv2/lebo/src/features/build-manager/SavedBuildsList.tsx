@@ -31,7 +31,7 @@ export function SavedBuildsList() {
               className="underline font-medium"
               onClick={async () => {
                 toast.dismiss(t.id)
-                await saveBuild(capturedBuild)
+                await saveBuild(capturedBuild).catch(() => {})
               }}
             >
               Save Now
@@ -41,7 +41,11 @@ export function SavedBuildsList() {
         { duration: 4000 }
       )
     }
-    await loadBuild(id)
+    try {
+      await loadBuild(id)
+    } catch {
+      // error toast already shown by loadBuild
+    }
     setMenuOpenId(null)
   }
 
@@ -54,7 +58,11 @@ export function SavedBuildsList() {
   async function submitRename(id: string) {
     const trimmed = renameValue.trim()
     if (trimmed) {
-      await renameBuild(id, trimmed)
+      try {
+        await renameBuild(id, trimmed)
+      } catch {
+        // error toast already shown by renameBuild
+      }
     }
     setRenamingId(null)
   }
@@ -201,7 +209,11 @@ export function SavedBuildsList() {
         <DeleteConfirmDialog
           buildName={deleteTarget.name}
           onConfirm={async () => {
-            await deleteBuildFromDb(deleteTarget.id)
+            try {
+              await deleteBuildFromDb(deleteTarget.id)
+            } catch {
+              // error toast already shown by deleteBuild
+            }
             setDeleteTarget(null)
           }}
           onCancel={() => setDeleteTarget(null)}

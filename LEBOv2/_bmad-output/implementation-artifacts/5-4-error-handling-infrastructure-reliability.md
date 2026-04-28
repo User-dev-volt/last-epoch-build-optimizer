@@ -1,6 +1,6 @@
 # Story 5.4: Error Handling Infrastructure & Reliability
 
-Status: review
+Status: done
 
 ## Story
 
@@ -385,13 +385,13 @@ claude-sonnet-4-6
 
 #### Patches
 
-- [ ] [Review][Patch] SavedBuildsList delete/rename callers don't catch re-thrown errors — story 5.4 introduced re-throw in deleteBuild and renameBuild, but the callers in SavedBuildsList.tsx (lines 54–60 rename, 203–205 delete) have no try/catch, causing unhandled promise rejections on DB failure [lebo/src/features/build-manager/SavedBuildsList.tsx:54-60,203-205]
+- [x] [Review][Patch] SavedBuildsList delete/rename callers don't catch re-thrown errors — added try/catch to submitRename and onConfirm delete handler [lebo/src/features/build-manager/SavedBuildsList.tsx:54-60,203-205]
 
-- [ ] [Review][Patch] SavedBuildsList loadBuild caller doesn't catch re-thrown error — story 5.4 introduced re-throw in loadBuild, but the handleLoad caller (line ~44) has no try/catch; error toast fires but rejection propagates unhandled [lebo/src/features/build-manager/SavedBuildsList.tsx:23-46]
+- [x] [Review][Patch] SavedBuildsList loadBuild caller doesn't catch re-thrown error — added try/catch to handleLoad; also added .catch(() => {}) to inline saveBuild call in toast [lebo/src/features/build-manager/SavedBuildsList.tsx:23-46]
 
-- [ ] [Review][Patch] RETRYABLE_ERROR_TYPES is a mutable exported array — any consumer can push to it and silently corrupt retry logic; change to `as const` and type as `readonly ErrorType[]` [lebo/src/shared/types/errors.ts]
+- [x] [Review][Patch] RETRYABLE_ERROR_TYPES is a mutable exported array — changed type to `readonly ErrorType[]` [lebo/src/shared/types/errors.ts]
 
-- [ ] [Review][Patch] Missing test: ErrorBoundary "Reload App" click not verified — AC6 specifies "clicking 'Reload App' calls window.location.reload()" but the test only checks button presence; add a click test with window.location.reload mocked [lebo/src/shared/components/ErrorBoundary.test.tsx]
+- [x] [Review][Patch] Missing test: ErrorBoundary "Reload App" click not verified — added click test mocking window.location.reload [lebo/src/shared/components/ErrorBoundary.test.tsx]
 
 #### Deferred
 

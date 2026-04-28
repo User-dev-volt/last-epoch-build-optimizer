@@ -1,6 +1,6 @@
 import React from 'react'
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { ErrorBoundary } from './ErrorBoundary'
 
 function ThrowingComponent(): React.ReactNode {
@@ -37,6 +37,23 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     )
     expect(screen.getByTestId('reload-app-button')).toBeInTheDocument()
+    consoleSpy.mockRestore()
+  })
+
+  it('clicking Reload App calls window.location.reload', () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const reloadSpy = vi.fn()
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, reload: reloadSpy },
+      writable: true,
+    })
+    render(
+      <ErrorBoundary>
+        <ThrowingComponent />
+      </ErrorBoundary>
+    )
+    fireEvent.click(screen.getByTestId('reload-app-button'))
+    expect(reloadSpy).toHaveBeenCalledTimes(1)
     consoleSpy.mockRestore()
   })
 })

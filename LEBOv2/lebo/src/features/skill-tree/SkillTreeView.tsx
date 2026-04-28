@@ -181,7 +181,7 @@ export function SkillTreeView() {
         onChange={setActiveTabIndex}
       />
 
-      <div className="flex-1 min-h-0 relative" onMouseMove={handleMouseMove}>
+      <div className="flex-1 min-h-0 relative" onMouseMove={handleMouseMove} onMouseLeave={() => handleNodeHover(null)}>
         {isPassiveTab ? (
           <>
             <SkillTreeCanvas

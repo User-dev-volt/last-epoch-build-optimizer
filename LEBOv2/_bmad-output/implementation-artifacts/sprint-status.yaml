@@ -52,7 +52,7 @@
 #   - 4.1 (Context Panel — needs item/affix/idol data from game data)
 
 generated: 2026-04-18
-last_updated: 2026-04-28 # 2.3 → done; 2.4 → done; 3.1 → done; 3.2 → done; 3.3 → done; 3.4 → done; 3.5 → done; 3.6 → done; 4.1 → done; 4.2 → done; 5.1 → done; 5.2 → done; 5.3 → done; 5.4 → review
+last_updated: 2026-04-28 # 2.3 → done; 2.4 → done; 3.1 → done; 3.2 → done; 3.3 → done; 3.4 → done; 3.5 → done; 3.6 → done; 4.1 → done; 4.2 → done; 5.1 → done; 5.2 → done; 5.3 → done; 5.4 → done
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -169,7 +169,7 @@ development_status:
   5-3-in-app-auto-update-system: done
 
   # Story 5.4: Depends on all prior epics having error surface points to standardize
-  5-4-error-handling-infrastructure-reliability: review
+  5-4-error-handling-infrastructure-reliability: done
 
   # Story 5.5: Prerequisites: code signing certificates + Apple Dev enrollment must be purchased
   # before this story can begin (see prerequisites section in story dev notes)
