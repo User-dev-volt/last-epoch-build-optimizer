@@ -31,7 +31,8 @@
       "Bash(curl -s -o /tmp/freellmapi_readme.md -w \"%{http_code}\" https://raw.githubusercontent.com/tashfeenahmed/freellmapi/main/README.md)",
       "Bash(curl -s https://raw.githubusercontent.com/tashfeenahmed/freellmapi/main/README.md)",
       "WebFetch(domain:openrouter.ai)",
-      "Bash(cargo test *)"
+      "Bash(cargo test *)",
+      "Bash(git -C \"d:/Obsidian Brain/Brain/10_Active_Projects/LastEpochBuildOptimizer/LEBOv2\" log --oneline -8)"
     ]
   }
 }

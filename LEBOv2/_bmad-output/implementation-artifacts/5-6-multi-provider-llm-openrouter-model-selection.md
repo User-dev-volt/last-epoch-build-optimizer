@@ -1,6 +1,6 @@
 # Story 5.6: Multi-Provider LLM Settings — OpenRouter + Model Selection
 
-Status: review
+Status: done
 
 ## Story
 
