@@ -176,7 +176,7 @@ development_status:
   # Requires provider abstraction in Rust (trait or enum) + vault storing provider type + key.
   # OpenRouter is OpenAI-compatible — base URL swap; no new streaming logic needed.
   # Door left open for additional providers (Groq, Gemini) in future stories.
-  5-6-multi-provider-llm-openrouter-model-selection: review
+  5-6-multi-provider-llm-openrouter-model-selection: done
 
   # Story 5.5: Prerequisites: code signing certificates + Apple Dev enrollment must be purchased
   # before this story can begin (see prerequisites section in story dev notes)
