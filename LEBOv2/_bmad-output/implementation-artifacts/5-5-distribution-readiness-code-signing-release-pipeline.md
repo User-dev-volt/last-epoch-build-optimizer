@@ -65,8 +65,8 @@ so that I can install the tool without clicking through security prompts or disa
   - [x] Add Windows signing config under `bundle.windows` (see Dev Notes for exact shape)
 
 - [x] Task 3: Create GitHub Actions release workflow (AC: 1, 2, 3)
-  - [x] Create directory `lebo/.github/workflows/`
-  - [x] Create `lebo/.github/workflows/release.yml` (see Dev Notes for full file)
+  - [x] Create directory `.github/workflows/` (repo root — GitHub only reads workflows from here)
+  - [x] Create `.github/workflows/release.yml` (see Dev Notes for full file)
   - [x] Verify the workflow triggers on `v*` tag pushes only
   - [x] Verify Windows job runs on `windows-latest`
   - [x] Verify macOS job runs on `macos-latest` with both `aarch64-apple-darwin` and `x86_64-apple-darwin` targets (universal binary)
@@ -286,7 +286,7 @@ pnpm tauri signer generate -w ~/.tauri/lebo.key
 ### File Locations
 
 **New files:**
-- `lebo/.github/workflows/release.yml`
+- `.github/workflows/release.yml` (repo root — moved from `lebo/.github/workflows/` which GitHub does not read)
 
 **Modified files:**
 - `lebo/src-tauri/tauri.conf.json` — replace pubkey placeholder + OWNER/REPO endpoint + add bundle.windows signing config
@@ -305,7 +305,7 @@ claude-sonnet-4-6
 
 - Task 1: Ran `pnpm tauri signer generate -w ~/.tauri/lebo.key -p ""` from `lebo/`. Keypair generated at `C:\Users\MD_Ki\.tauri\lebo.key` (private) and `.lebo.key.pub` (public). Empty password used — see GitHub Secrets section below.
 - Task 2: `tauri.conf.json` updated with real pubkey, correct endpoint (`User-dev-volt/last-epoch-build-optimizer`), and `bundle.windows` Authenticode config (`digestAlgorithm: sha256`, `timestampUrl: http://timestamp.digicert.com`).
-- Task 3: `lebo/.github/workflows/release.yml` created. Triggers on `v*` tags. Matrix: `windows-latest` (unsigned build) + `macos-latest --target universal-apple-darwin`. Uses `tauri-apps/tauri-action@v0` with `includeUpdaterJson: true` for `latest.json` generation.
+- Task 3: `.github/workflows/release.yml` created at repo root (moved from `lebo/.github/workflows/` — GitHub only reads workflows at repo root). Triggers on `v*` tags. Matrix: `windows-latest` (unsigned build) + `macos-latest --target universal-apple-darwin`. Uses `tauri-apps/tauri-action@v0` with `includeUpdaterJson: true` for `latest.json` generation. pnpm pinned to `9.15.0`.
 - Task 4: `pnpm tauri build` succeeded locally on Windows. Output: `bundle/msi/lebo_0.1.0_x64_en-US.msi` and `bundle/nsis/lebo_0.1.0_x64-setup.exe`. Build uses the generated Tauri signing keypair (set via env vars).
 
 **Tasks 5 & 6 — Intentionally deferred to pre-launch milestone:**
@@ -321,7 +321,7 @@ Tasks 5 (CI tag test) and 6 (smoke-test signed installers) require Windows Authe
 ### File List
 
 - `lebo/src-tauri/tauri.conf.json` — replaced pubkey placeholder, updated endpoint URL, added bundle.windows signing config
-- `lebo/.github/workflows/release.yml` — new file, Tauri release pipeline
+- `.github/workflows/release.yml` — Tauri release pipeline (repo root; moved from `lebo/.github/workflows/` which GitHub ignores)
 
 ### Change Log
 
