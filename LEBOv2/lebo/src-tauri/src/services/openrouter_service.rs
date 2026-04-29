@@ -6,7 +6,7 @@ use crate::services::claude_service::{SuggestionEvent, SuggestionReceivedPayload
 use crate::services::prompts::OPTIMIZATION_SYSTEM_PROMPT;
 
 const BASE_URL: &str = "https://openrouter.ai/api/v1/chat/completions";
-const TIMEOUT_SECS: u64 = 60;
+const TIMEOUT_SECS: u64 = 45;
 const MAX_NDJSON_LINE_BYTES: usize = 65_536;
 
 // ── Request structs ──────────────────────────────────────────────────────────
@@ -154,6 +154,10 @@ pub async fn stream_optimization(
                 }
             }
 
+            if stream_done {
+                break;
+            }
+
             // Parse complete NDJSON lines
             while let Some(nl) = ndjson_buffer.find('\n') {
                 let suggestion_line = ndjson_buffer[..nl].trim().to_string();
@@ -202,6 +206,11 @@ pub async fn stream_optimization(
                         error_type: "PARSE_ERROR".to_string(),
                         message: err_msg.clone(),
                     },
+                );
+                // Emit complete so the frontend stream listener is not left hanging
+                let _ = app_handle.emit(
+                    "optimization:complete",
+                    &OptimizationCompletePayload { suggestion_count },
                 );
                 return Err(err_msg);
             }

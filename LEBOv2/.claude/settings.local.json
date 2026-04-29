@@ -30,7 +30,8 @@
       "PowerShell(Stop-Process *)",
       "Bash(curl -s -o /tmp/freellmapi_readme.md -w \"%{http_code}\" https://raw.githubusercontent.com/tashfeenahmed/freellmapi/main/README.md)",
       "Bash(curl -s https://raw.githubusercontent.com/tashfeenahmed/freellmapi/main/README.md)",
-      "WebFetch(domain:openrouter.ai)"
+      "WebFetch(domain:openrouter.ai)",
+      "Bash(cargo test *)"
     ]
   }
 }

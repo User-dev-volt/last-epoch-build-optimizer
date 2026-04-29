@@ -57,6 +57,13 @@ describe('ProviderSelector', () => {
     expect(screen.getByText('AI Provider')).toBeInTheDocument()
   })
 
+  it('shows neither provider input during null loading state', () => {
+    useAppStore.setState({ llmProvider: null })
+    render(<ProviderSelector />)
+    expect(screen.queryByTestId('api-key-input')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('openrouter-key-input')).not.toBeInTheDocument()
+  })
+
   it('shows ApiKeyInput when Claude is selected', async () => {
     useAppStore.setState({ llmProvider: 'claude' })
     render(<ProviderSelector />)

@@ -1,6 +1,6 @@
 # Story 5.6: Multi-Provider LLM Settings — OpenRouter + Model Selection
 
-Status: in-progress
+Status: review
 
 ## Story
 
@@ -304,6 +304,15 @@ Model string for free-first: used `"openrouter/auto"` (OpenRouter's auto-routing
 - `ProviderSelector` renders `ApiKeyInput` (unchanged) for Claude and `OpenRouterInput` (new) for OpenRouter; provider toggle persists to vault immediately with success toast
 - `OpenRouterInput` Save button disabled only when unconfigured AND key input empty (existing configured users can update model preference without re-entering their key)
 - All 432 tests pass; tsc clean
+- ✅ Resolved review finding [CRITICAL] P1: Emitting `optimization:complete` before returning in flush PARSE_ERROR branch — frontend stream listener no longer hangs on final-chunk parse failure
+- ✅ Resolved review finding [HIGH] P2: Added `if stream_done { break; }` after the choices loop in inner SSE-line while — stops processing stale lines after `finish_reason: "stop"`
+- ✅ Resolved review finding [HIGH] P3: Added `validate_provider()` allowlist in `keychain_service.rs`; unknown provider strings return VALIDATION_ERROR before vault write; 2 new Rust unit tests added
+- ✅ Resolved review finding [MEDIUM] P4: `ProviderSelector` renders `null` when `llmProvider === null`; button active styles now use explicit `=== 'claude'` / `=== 'openrouter'` checks; 1 new frontend test added
+- ✅ Resolved review finding [MEDIUM] P5: `get_llm_provider` error in `claude_commands.rs` now emits STORAGE_ERROR and returns `Err` instead of silently falling back to `"claude"`
+- ✅ Resolved review finding [MEDIUM] P6: `setIsConfigured(true)` and `setKeyValue('')` deferred to after both `set_openrouter_api_key` and `set_model_preference` succeed; 1 new frontend test added
+- ✅ Resolved review finding [MEDIUM] P7: `TIMEOUT_SECS` changed from 60 to 45 to match NFR12 and Claude service
+- ✅ Resolved review finding [MEDIUM] P8: Removed `openrouter/auto` entry from `MODELS` list — "Use free models first" radio already covers that routing path
+- All 434 tests pass (2 new frontend tests); 15 Rust unit tests pass (2 new); tsc clean; cargo check clean
 
 ### File List
 
@@ -339,14 +348,14 @@ Model string for free-first: used `"openrouter/auto"` (OpenRouter's auto-routing
 
 #### Patch Findings
 
-- [ ] [Review][Patch] P1 CRITICAL: `optimization:complete` never emitted on flush PARSE_ERROR — final ndjson flush error returns `Err(...)` before the `optimization:complete` emit, leaving the frontend stream listener hanging indefinitely [`openrouter_service.rs` flush block]
-- [ ] [Review][Patch] P2 HIGH: `stream_done = true` inside inner SSE-line loop does not break that loop — remaining lines in the same HTTP chunk are still processed after a `finish_reason: "stop"`, and a malformed subsequent line triggers PARSE_ERROR before `optimization:complete` is emitted [`openrouter_service.rs` inner `while let Some(newline_pos)` loop]
-- [ ] [Review][Patch] P3 HIGH: No allowlist validation on `llm_provider` string — Rust `set_llm_provider` accepts any arbitrary string; frontend casts with `p as 'claude' | 'openrouter'` bypassing runtime checks; any unrecognised value silently falls to the Claude path with no error signal [`keychain_service.rs`, `app_commands.rs`, `ProviderSelector.tsx`]
-- [ ] [Review][Patch] P4 MEDIUM: `ProviderSelector` shows `<ApiKeyInput />` during `null` loading state — `llmProvider !== 'openrouter'` is `true` for `null`, so the Claude key input flashes before the vault read resolves; user interactions during this window target the wrong provider UI [`ProviderSelector.tsx`]
-- [ ] [Review][Patch] P5 MEDIUM: Vault read error in provider routing is silently swallowed — `.unwrap_or_else(|_| "claude")` discards the vault error with no log or signal; a corrupted vault then produces a confusing AUTH_ERROR about a missing Claude key rather than a STORAGE_ERROR [`claude_commands.rs` provider routing block]
-- [ ] [Review][Patch] P6 MEDIUM: `setIsConfigured(true)` and `setKeyValue('')` mutate state before model preference is confirmed saved — if `set_model_preference` fails, the UI shows "configured" and the key field is cleared but the preference was not persisted [`OpenRouterInput.tsx` `handleSave`]
-- [ ] [Review][Patch] P7 MEDIUM: `TIMEOUT_SECS = 60` exceeds NFR12's 45s timeout ceiling — change to 45 to match the Claude service and the project NFR [`openrouter_service.rs:8`]
-- [ ] [Review][Patch] P8 MEDIUM: `MODELS[0] = { label: 'Auto (best free)', value: 'openrouter/auto' }` in the "Always use this model" dropdown is semantically identical to the free-first routing path — remove this entry from `MODELS` to avoid ambiguity; "Auto" is already covered by the "Use free models first" radio option [`OpenRouterInput.tsx` `MODELS` const]
+- [x] [Review][Patch] P1 CRITICAL: `optimization:complete` never emitted on flush PARSE_ERROR — final ndjson flush error returns `Err(...)` before the `optimization:complete` emit, leaving the frontend stream listener hanging indefinitely [`openrouter_service.rs` flush block]
+- [x] [Review][Patch] P2 HIGH: `stream_done = true` inside inner SSE-line loop does not break that loop — remaining lines in the same HTTP chunk are still processed after a `finish_reason: "stop"`, and a malformed subsequent line triggers PARSE_ERROR before `optimization:complete` is emitted [`openrouter_service.rs` inner `while let Some(newline_pos)` loop]
+- [x] [Review][Patch] P3 HIGH: No allowlist validation on `llm_provider` string — Rust `set_llm_provider` accepts any arbitrary string; frontend casts with `p as 'claude' | 'openrouter'` bypassing runtime checks; any unrecognised value silently falls to the Claude path with no error signal [`keychain_service.rs`, `app_commands.rs`, `ProviderSelector.tsx`]
+- [x] [Review][Patch] P4 MEDIUM: `ProviderSelector` shows `<ApiKeyInput />` during `null` loading state — `llmProvider !== 'openrouter'` is `true` for `null`, so the Claude key input flashes before the vault read resolves; user interactions during this window target the wrong provider UI [`ProviderSelector.tsx`]
+- [x] [Review][Patch] P5 MEDIUM: Vault read error in provider routing is silently swallowed — `.unwrap_or_else(|_| "claude")` discards the vault error with no log or signal; a corrupted vault then produces a confusing AUTH_ERROR about a missing Claude key rather than a STORAGE_ERROR [`claude_commands.rs` provider routing block]
+- [x] [Review][Patch] P6 MEDIUM: `setIsConfigured(true)` and `setKeyValue('')` mutate state before model preference is confirmed saved — if `set_model_preference` fails, the UI shows "configured" and the key field is cleared but the preference was not persisted [`OpenRouterInput.tsx` `handleSave`]
+- [x] [Review][Patch] P7 MEDIUM: `TIMEOUT_SECS = 60` exceeds NFR12's 45s timeout ceiling — change to 45 to match the Claude service and the project NFR [`openrouter_service.rs:8`]
+- [x] [Review][Patch] P8 MEDIUM: `MODELS[0] = { label: 'Auto (best free)', value: 'openrouter/auto' }` in the "Always use this model" dropdown is semantically identical to the free-first routing path — remove this entry from `MODELS` to avoid ambiguity; "Auto" is already covered by the "Use free models first" radio option [`OpenRouterInput.tsx` `MODELS` const]
 
 #### Deferred Findings
 
@@ -362,3 +371,4 @@ Model string for free-first: used `"openrouter/auto"` (OpenRouter's auto-routing
 
 - 2026-04-28: Story 5.6 created — Multi-Provider LLM Settings (OpenRouter + Model Selection)
 - 2026-04-28: Story 5.6 implemented — all 9 tasks complete, 40 test files / 432 tests passing, status → review
+- 2026-04-28: Addressed code review findings — 8 patch items resolved (P1-P8); 434 tests passing, 15 Rust unit tests passing; status → review

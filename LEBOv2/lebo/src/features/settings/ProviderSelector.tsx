@@ -40,7 +40,7 @@ export function ProviderSelector() {
           onClick={() => handleProviderChange('claude')}
           className="px-3 py-1.5 rounded text-xs font-medium"
           style={
-            llmProvider !== 'openrouter'
+            llmProvider === 'claude'
               ? { backgroundColor: 'var(--color-accent-gold)', color: 'var(--color-bg-base)' }
               : { backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-bg-hover)' }
           }
@@ -61,7 +61,7 @@ export function ProviderSelector() {
         </button>
       </div>
 
-      {llmProvider === 'openrouter' ? <OpenRouterInput /> : <ApiKeyInput />}
+      {llmProvider === null ? null : llmProvider === 'openrouter' ? <OpenRouterInput /> : <ApiKeyInput />}
     </div>
   )
 }

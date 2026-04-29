@@ -87,7 +87,20 @@ pub async fn invoke_claude_api(
     .map_err(|e| format!("PARSE_ERROR: failed to serialize context: {}", e))?;
 
     // ── Route by provider ────────────────────────────────────────────────────
-    let provider = keychain_service::get_llm_provider(&app_handle).await.unwrap_or_else(|_| "claude".to_string());
+    let provider = match keychain_service::get_llm_provider(&app_handle).await {
+        Ok(p) => p,
+        Err(e) => {
+            let err = format!("STORAGE_ERROR: failed to read provider setting: {e}");
+            let _ = app_handle.emit(
+                "optimization:error",
+                &claude_service::OptimizationErrorPayload {
+                    error_type: "STORAGE_ERROR".to_string(),
+                    message: err.clone(),
+                },
+            );
+            return Err(err);
+        }
+    };
 
     let stream_result = if provider == "openrouter" {
         let or_key = match keychain_service::get_openrouter_api_key(&app_handle).await {

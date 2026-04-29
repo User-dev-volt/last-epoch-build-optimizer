@@ -123,6 +123,29 @@ describe('OpenRouterInput', () => {
     expect(toast.success).not.toHaveBeenCalled()
   })
 
+  it('does not clear key field or set configured when model preference save fails', async () => {
+    mockInvoke.mockImplementation((cmd: string) => {
+      if (cmd === 'check_openrouter_configured') return Promise.resolve(false)
+      if (cmd === 'get_model_preference') return Promise.resolve('free-first')
+      if (cmd === 'set_openrouter_api_key') return Promise.resolve(undefined)
+      if (cmd === 'set_model_preference') return Promise.reject({ type: 'STORAGE_ERROR', message: 'Vault full' })
+      return Promise.resolve(undefined)
+    })
+    render(<OpenRouterInput />)
+    await waitFor(() => expect(mockInvoke).toHaveBeenCalled())
+
+    fireEvent.change(screen.getByTestId('openrouter-key-input'), { target: { value: 'sk-or-test' } })
+    fireEvent.click(screen.getByTestId('save-openrouter-btn'))
+
+    await waitFor(() => {
+      expect(screen.getByText('Vault full')).toBeInTheDocument()
+    })
+    const input = screen.getByTestId('openrouter-key-input') as HTMLInputElement
+    expect(input.value).toBe('sk-or-test')
+    expect(input.placeholder).toBe('sk-or-...')
+    expect(toast.success).not.toHaveBeenCalled()
+  })
+
   it('"free-first" radio is selected by default', async () => {
     render(<OpenRouterInput />)
     await waitFor(() => expect(mockInvoke).toHaveBeenCalled())

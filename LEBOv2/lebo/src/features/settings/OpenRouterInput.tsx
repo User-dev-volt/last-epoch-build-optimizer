@@ -4,7 +4,6 @@ import { invokeCommand } from '../../shared/utils/invokeCommand'
 import type { AppError } from '../../shared/types/errors'
 
 const MODELS = [
-  { label: 'Auto (best free)', value: 'openrouter/auto' },
   { label: 'Gemini 2.0 Flash (free)', value: 'google/gemini-2.0-flash-exp:free' },
   { label: 'Llama 3.3 70B (free)', value: 'meta-llama/llama-3.3-70b-instruct:free' },
   { label: 'Mistral 7B (free)', value: 'mistralai/mistral-7b-instruct:free' },
@@ -41,14 +40,18 @@ export function OpenRouterInput() {
   async function handleSave() {
     setInlineError(null)
     setIsSaving(true)
+    const keyProvided = keyValue.trim().length > 0
     try {
-      if (keyValue.trim()) {
+      if (keyProvided) {
         await invokeCommand('set_openrouter_api_key', { key: keyValue })
-        setIsConfigured(true)
-        setKeyValue('')
       }
       const preference = modelMode === 'free-first' ? 'free-first' : selectedModel
       await invokeCommand('set_model_preference', { preference })
+      // Mutate UI state only after both saves succeed
+      if (keyProvided) {
+        setIsConfigured(true)
+        setKeyValue('')
+      }
       toast.success('OpenRouter settings saved')
     } catch (err) {
       const appErr = err as AppError

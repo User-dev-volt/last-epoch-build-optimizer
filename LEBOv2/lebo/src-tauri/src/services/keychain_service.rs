@@ -147,7 +147,15 @@ fn vault_key_exists(app: &tauri::AppHandle, key: &[u8]) -> Result<bool, String> 
 
 // ── LLM provider ─────────────────────────────────────────────────────────────
 
+fn validate_provider(provider: &str) -> Result<(), String> {
+    match provider {
+        "claude" | "openrouter" => Ok(()),
+        other => Err(format!("VALIDATION_ERROR: unknown provider '{}'. Must be 'claude' or 'openrouter'.", other)),
+    }
+}
+
 pub async fn set_llm_provider(app: &tauri::AppHandle, provider: &str) -> Result<(), String> {
+    validate_provider(provider)?;
     vault_write(app, LLM_PROVIDER_KEY, provider)
 }
 
@@ -182,4 +190,21 @@ pub async fn set_model_preference(app: &tauri::AppHandle, preference: &str) -> R
 
 pub async fn get_model_preference(app: &tauri::AppHandle) -> Result<String, String> {
     vault_read(app, MODEL_PREFERENCE_KEY, Some("free-first"), None)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn accepts_valid_providers() {
+        assert!(validate_provider("claude").is_ok());
+        assert!(validate_provider("openrouter").is_ok());
+    }
+
+    #[test]
+    fn rejects_unknown_provider() {
+        let err = validate_provider("groq").unwrap_err();
+        assert!(err.starts_with("VALIDATION_ERROR:"));
+    }
 }
