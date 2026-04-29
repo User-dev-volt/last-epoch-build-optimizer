@@ -52,7 +52,7 @@
 #   - 4.1 (Context Panel — needs item/affix/idol data from game data)
 
 generated: 2026-04-18
-last_updated: 2026-04-29 # 2.3 → done; 2.4 → done; 3.1 → done; 3.2 → done; 3.3 → done; 3.4 → done; 3.5 → done; 3.6 → done; 4.1 → done; 4.2 → done; 5.1 → done; 5.2 → done; 5.3 → done; 5.4 → done; 5.6 added (multi-provider LLM / OpenRouter); 5.6 review → in-progress (8 patch items found: 1 CRITICAL, 2 HIGH, 5 MEDIUM); 5.5 → done (Tasks 5-6 deferred pre-launch; blocked on cert purchase)
+last_updated: 2026-04-29 # 2.3 → done; 2.4 → done; 3.1 → done; 3.2 → done; 3.3 → done; 3.4 → done; 3.5 → done; 3.6 → done; 4.1 → done; 4.2 → done; 5.1 → done; 5.2 → done; 5.3 → done; 5.4 → done; 5.6 added (multi-provider LLM / OpenRouter); 5.6 review → in-progress (8 patch items found: 1 CRITICAL, 2 HIGH, 5 MEDIUM); 5.5 → done (Tasks 5-6 deferred pre-launch; blocked on cert purchase); epic-6 → in-progress; 6.1 → ready-for-dev
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -187,10 +187,10 @@ development_status:
   # ─────────────────────────────────────────────────────────────────
   # EPIC 6: Accessibility & Polish
   # ─────────────────────────────────────────────────────────────────
-  epic-6: backlog
+  epic-6: in-progress
 
   # Story 6.1: Depends on Epics 1–4 (keyboard nav covers all primary interactions)
-  6-1-keyboard-navigation-global-shortcuts: backlog
+  6-1-keyboard-navigation-global-shortcuts: ready-for-dev
 
   # Story 6.2: Depends on 6.1 + all view components existing (ARIA audit requires complete UI)
   6-2-screen-reader-support-aria-infrastructure-accessibility-ci: backlog
