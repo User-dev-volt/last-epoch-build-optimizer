@@ -180,7 +180,7 @@ development_status:
 
   # Story 5.5: Prerequisites: code signing certificates + Apple Dev enrollment must be purchased
   # before this story can begin (see prerequisites section in story dev notes)
-  5-5-distribution-readiness-code-signing-release-pipeline: in-progress
+  5-5-distribution-readiness-code-signing-release-pipeline: review
 
   epic-5-retrospective: optional
 

@@ -1,6 +1,6 @@
 # Story 5.5: Distribution Readiness — Code Signing & Release Pipeline
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -76,13 +76,13 @@ so that I can install the tool without clicking through security prompts or disa
   - [x] Confirm output artifacts are in `lebo/src-tauri/target/release/bundle/`
   - [x] On Windows: `.msi` and NSIS `.exe` present; on macOS: `.dmg` and `.app` present
 
-- [ ] Task 5: Tag a test release and verify CI (AC: 3, 4)
+- [ ] Task 5: Tag a test release and verify CI (AC: 3, 4) — **DEFERRED: pre-launch**
   - [ ] Push a test tag: `git tag v0.1.0-rc1 && git push origin v0.1.0-rc1`
   - [ ] Monitor GitHub Actions — both Windows and macOS jobs must pass
   - [ ] Confirm `latest.json` is present in release assets (required by 5.3 updater)
   - [ ] Confirm `.msi` and `.dmg` assets are present and named correctly
 
-- [ ] Task 6: Smoke-test signed installers (AC: 1, 2)
+- [ ] Task 6: Smoke-test signed installers (AC: 1, 2) — **DEFERRED: pre-launch**
   - [ ] Download `.msi` from GitHub Release and install on a clean Windows 10/11 machine (or VM). Confirm no SmartScreen dialog.
   - [ ] Download `.dmg` from GitHub Release and run `.app` on a clean macOS 12+ machine. Confirm no Gatekeeper block.
   - [ ] If SmartScreen appears on EV cert (shouldn't) or Gatekeeper blocks (shouldn't): document exact error and do NOT merge — re-check signing config.
@@ -308,17 +308,15 @@ claude-sonnet-4-6
 - Task 3: `lebo/.github/workflows/release.yml` created. Triggers on `v*` tags. Matrix: `windows-latest` (unsigned build) + `macos-latest --target universal-apple-darwin`. Uses `tauri-apps/tauri-action@v0` with `includeUpdaterJson: true` for `latest.json` generation.
 - Task 4: `pnpm tauri build` succeeded locally on Windows. Output: `bundle/msi/lebo_0.1.0_x64_en-US.msi` and `bundle/nsis/lebo_0.1.0_x64-setup.exe`. Build uses the generated Tauri signing keypair (set via env vars).
 
-**⛔ HALTED — Tasks 5 & 6 blocked on external prerequisites:**
+**Tasks 5 & 6 — Intentionally deferred to pre-launch milestone:**
 
-Tasks 5 (CI verification) and 6 (smoke-test signed installers) require:
-1. **Windows Authenticode certificate** (DigiCert OV/EV, ~$300–700/yr) → encode as `WINDOWS_CERTIFICATE` + `WINDOWS_CERTIFICATE_PASSWORD` secrets in GitHub repo settings
-2. **Apple Developer Program membership** ($99/yr) → generate Developer ID cert → encode as `APPLE_CERTIFICATE` + related secrets
-3. **GitHub Actions secrets configured** — all 10 secrets from the Prerequisites table must be present before pushing a test tag
+Tasks 5 (CI tag test) and 6 (smoke-test signed installers) require Windows Authenticode and Apple Developer ID certificates (~$300–700/yr + $99/yr). These are only needed for public distribution. Deferred until the app is validated through local testing and ready for public release.
 
-Once certificates are purchased and GitHub secrets are configured:
-- Push `TAURI_SIGNING_PRIVATE_KEY` = content of `C:\Users\MD_Ki\.tauri\lebo.key`
-- Push `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` = `""` (empty — or regenerate with a password: `pnpm tauri signer generate -w ~/.tauri/lebo.key` and choose a password)
-- Then proceed with Task 5: `git tag v0.1.0-rc1 && git push origin v0.1.0-rc1`
+**GitHub secrets to add now** (repo: `User-dev-volt/last-epoch-build-optimizer` → Settings → Secrets → Actions):
+- `TAURI_SIGNING_PRIVATE_KEY` = contents of `C:\Users\MD_Ki\.tauri\lebo.key`
+- `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` = password set during key generation
+
+**When ready to go public**, complete Tasks 5 & 6 by purchasing certs and configuring the remaining 8 secrets from the Prerequisites table.
 
 ### File List
 
