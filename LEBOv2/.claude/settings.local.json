@@ -32,7 +32,8 @@
       "Bash(curl -s https://raw.githubusercontent.com/tashfeenahmed/freellmapi/main/README.md)",
       "WebFetch(domain:openrouter.ai)",
       "Bash(cargo test *)",
-      "Bash(git -C \"d:/Obsidian Brain/Brain/10_Active_Projects/LastEpochBuildOptimizer/LEBOv2\" log --oneline -8)"
+      "Bash(git -C \"d:/Obsidian Brain/Brain/10_Active_Projects/LastEpochBuildOptimizer/LEBOv2\" log --oneline -8)",
+      "Bash(TAURI_SIGNING_PRIVATE_KEY=$\\(cat \"C:/Users/MD_Ki/.tauri/lebo.key\"\\) TAURI_SIGNING_PRIVATE_KEY_PASSWORD=\"\" pnpm tauri build)"
     ]
   }
 }
