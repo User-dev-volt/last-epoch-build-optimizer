@@ -1,6 +1,6 @@
 # Story 5.6: Multi-Provider LLM Settings — OpenRouter + Model Selection
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -329,7 +329,34 @@ Model string for free-first: used `"openrouter/auto"` (OpenRouter's auto-routing
 
 ### Review Findings
 
-_To be filled after code review_
+**Reviewed:** 2026-04-28 | **Sources:** blind hunter + edge case hunter + acceptance auditor | **Diff:** HEAD~1..HEAD (17 files, +1124/-117)
+
+#### Decision-Needed (resolved in review)
+
+- [x] [Review][Decision] D1: Provider toggle persists `llm_provider` to vault on click, not on Save — resolved: **defer** — AC7 AUTH_ERROR covers the missing-key case gracefully; immediate persistence is the correct UX for a settings toggle. No change needed.
+- [x] [Review][Decision] D2: `TIMEOUT_SECS = 60` in OpenRouter service exceeds NFR12's 45s ceiling — resolved: **patch** → P7 below.
+- [x] [Review][Decision] D3: `MODELS[0] = 'openrouter/auto'` ("Auto (best free)") in the "Always use this model" dropdown creates semantic ambiguity with free-first mode — resolved: **patch** → P8 below.
+
+#### Patch Findings
+
+- [ ] [Review][Patch] P1 CRITICAL: `optimization:complete` never emitted on flush PARSE_ERROR — final ndjson flush error returns `Err(...)` before the `optimization:complete` emit, leaving the frontend stream listener hanging indefinitely [`openrouter_service.rs` flush block]
+- [ ] [Review][Patch] P2 HIGH: `stream_done = true` inside inner SSE-line loop does not break that loop — remaining lines in the same HTTP chunk are still processed after a `finish_reason: "stop"`, and a malformed subsequent line triggers PARSE_ERROR before `optimization:complete` is emitted [`openrouter_service.rs` inner `while let Some(newline_pos)` loop]
+- [ ] [Review][Patch] P3 HIGH: No allowlist validation on `llm_provider` string — Rust `set_llm_provider` accepts any arbitrary string; frontend casts with `p as 'claude' | 'openrouter'` bypassing runtime checks; any unrecognised value silently falls to the Claude path with no error signal [`keychain_service.rs`, `app_commands.rs`, `ProviderSelector.tsx`]
+- [ ] [Review][Patch] P4 MEDIUM: `ProviderSelector` shows `<ApiKeyInput />` during `null` loading state — `llmProvider !== 'openrouter'` is `true` for `null`, so the Claude key input flashes before the vault read resolves; user interactions during this window target the wrong provider UI [`ProviderSelector.tsx`]
+- [ ] [Review][Patch] P5 MEDIUM: Vault read error in provider routing is silently swallowed — `.unwrap_or_else(|_| "claude")` discards the vault error with no log or signal; a corrupted vault then produces a confusing AUTH_ERROR about a missing Claude key rather than a STORAGE_ERROR [`claude_commands.rs` provider routing block]
+- [ ] [Review][Patch] P6 MEDIUM: `setIsConfigured(true)` and `setKeyValue('')` mutate state before model preference is confirmed saved — if `set_model_preference` fails, the UI shows "configured" and the key field is cleared but the preference was not persisted [`OpenRouterInput.tsx` `handleSave`]
+- [ ] [Review][Patch] P7 MEDIUM: `TIMEOUT_SECS = 60` exceeds NFR12's 45s timeout ceiling — change to 45 to match the Claude service and the project NFR [`openrouter_service.rs:8`]
+- [ ] [Review][Patch] P8 MEDIUM: `MODELS[0] = { label: 'Auto (best free)', value: 'openrouter/auto' }` in the "Always use this model" dropdown is semantically identical to the free-first routing path — remove this entry from `MODELS` to avoid ambiguity; "Auto" is already covered by the "Use free models first" radio option [`OpenRouterInput.tsx` `MODELS` const]
+
+#### Deferred Findings
+
+- [x] [Review][Defer] W1: Tautological unit tests in `openrouter_service.rs` — tests assert hardcoded string equality instead of exercising production functions; streaming function has no unit test coverage [`openrouter_service.rs` `#[cfg(test)]` block] — deferred, test infrastructure needed for HTTP mock
+- [x] [Review][Defer] W2: `sse_buffer` O(n²) string re-allocation — `sse_buffer = sse_buffer[newline_pos+1..].to_string()` inside the inner loop creates a new heap allocation per SSE line [`openrouter_service.rs` SSE loop] — deferred, performance optimization
+- [x] [Review][Defer] W3: Model ID not in `MODELS` list restored into dropdown — `setSelectedModel(pref)` with no membership check; stale/removed model IDs produce a blank or incorrect dropdown selection on load [`OpenRouterInput.tsx` `useEffect`] — deferred, acceptable for current model set
+- [x] [Review][Defer] W4: `vault_write` reopens and re-flushes vault on every call — three sequential OpenRouter saves open/lock/flush three times with no transaction grouping [`keychain_service.rs` `vault_write`] — deferred, pre-existing vault pattern
+- [x] [Review][Defer] W5: Raw vault error strings propagated to toast/UI — `format!("STORAGE_ERROR: failed to store value: {e}")` may expose file paths or library internals [`keychain_service.rs` helpers] — deferred, pre-existing pattern across all vault functions
+- [x] [Review][Defer] W6: `saveDisabled` uses local React `isConfigured` state, not live vault state — external vault wipe would leave `isConfigured = false` only after next mount, not immediately [`OpenRouterInput.tsx`] — deferred, extreme edge case
+- [x] [Review][Defer] W7: Provider toggle persists to vault on click rather than on Save — technically breaks AC4 atomicity but AUTH_ERROR (AC7) covers the missing-key case; deferring UX redesign until user feedback indicates a problem [`ProviderSelector.tsx`]
 
 ## Change Log
 

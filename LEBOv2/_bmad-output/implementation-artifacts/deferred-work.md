@@ -1,5 +1,15 @@
 # Deferred Work
 
+## Deferred from: code review of 5-6-multi-provider-llm-openrouter-model-selection (2026-04-28)
+
+- **W1 — Tautological unit tests in `openrouter_service.rs`** — tests assert hardcoded string equality rather than calling production functions; streaming function has no unit test coverage. HTTP mock infrastructure needed; defer until test tooling expands.
+- **W2 — `sse_buffer` O(n²) re-allocation in SSE loop** — `sse_buffer = sse_buffer[newline_pos+1..].to_string()` allocates a new `String` on every SSE line; use `drain()` or a cursor for O(n). Performance optimization; not a correctness bug.
+- **W3 — Model ID not in `MODELS` list restored into dropdown** — `setSelectedModel(pref)` with no membership check; stale or removed model IDs produce a blank dropdown on load. Acceptable for the current curated list; add guard if model list is made dynamic.
+- **W4 — `vault_write` reopens vault on every call** — three sequential OpenRouter saves open/lock/flush three times; no transaction grouping. Pre-existing vault interaction pattern; optimize if Stronghold lock contention is observed.
+- **W5 — Raw vault error strings may surface in toasts** — `format!("STORAGE_ERROR: failed to store value: {e}")` may expose file paths or library internals. Pre-existing pattern across all keychain_service functions.
+- **W6 — `saveDisabled` uses local React state, not live vault state** — external vault wipe leaves `isConfigured = false` only after next mount. Extreme edge case; not a practical security concern.
+- **W7 — Provider toggle persists `llm_provider` on click, not on Save** — breaks AC4 atomicity intent but AC7 AUTH_ERROR covers the missing-key case. Defer UX redesign until user feedback indicates a problem.
+
 ## Deferred from: code review of 5-1-api-key-management-settings-view (2026-04-26)
 
 ## Deferred from: code review of 5-4-error-handling-infrastructure-reliability (2026-04-28)
