@@ -1,4 +1,4 @@
-use crate::services::{claude_service, game_data_service, keychain_service};
+use crate::services::{claude_service, game_data_service, keychain_service, openrouter_service};
 use serde_json::{json, Value};
 use tauri::Emitter;
 
@@ -13,10 +13,7 @@ pub async fn invoke_claude_api(
     build_state: Value,
     goal: String,
 ) -> Result<(), String> {
-    // ── API key ───────────────────────────────────────────────────────────────
-    let api_key = keychain_service::get_api_key(&app_handle).await?;
-    #[cfg(debug_assertions)]
-    let api_key = std::env::var("ANTHROPIC_API_KEY").unwrap_or(api_key);
+    // API key is fetched per-branch below based on the active provider.
 
     // ── Extract class/mastery IDs from build state ────────────────────────────
     let class_id = build_state["classId"]
@@ -89,10 +86,34 @@ pub async fn invoke_claude_api(
     }))
     .map_err(|e| format!("PARSE_ERROR: failed to serialize context: {}", e))?;
 
-    // ── Stream optimization ───────────────────────────────────────────────────
-    if let Err(err) = claude_service::stream_optimization(&app_handle, &api_key, user_message).await {
-        // Emit the error as a Tauri event so the frontend hook picks it up,
-        // then also return the error string so invokeCommand can surface it.
+    // ── Route by provider ────────────────────────────────────────────────────
+    let provider = keychain_service::get_llm_provider(&app_handle).await.unwrap_or_else(|_| "claude".to_string());
+
+    let stream_result = if provider == "openrouter" {
+        let or_key = match keychain_service::get_openrouter_api_key(&app_handle).await {
+            Ok(k) => k,
+            Err(e) => {
+                let err = format!("AUTH_ERROR: No OpenRouter API key configured. Add your key in Settings. ({})", e);
+                let _ = app_handle.emit(
+                    "optimization:error",
+                    &claude_service::OptimizationErrorPayload {
+                        error_type: "AUTH_ERROR".to_string(),
+                        message: "No OpenRouter API key configured. Add your key in Settings.".to_string(),
+                    },
+                );
+                return Err(err);
+            }
+        };
+        let model_pref = keychain_service::get_model_preference(&app_handle).await.unwrap_or_else(|_| "free-first".to_string());
+        openrouter_service::stream_optimization(&app_handle, &or_key, &model_pref, user_message).await
+    } else {
+        let api_key = keychain_service::get_api_key(&app_handle).await?;
+        #[cfg(debug_assertions)]
+        let api_key = std::env::var("ANTHROPIC_API_KEY").unwrap_or(api_key);
+        claude_service::stream_optimization(&app_handle, &api_key, user_message).await
+    };
+
+    if let Err(err) = stream_result {
         let _ = app_handle.emit(
             "optimization:error",
             &claude_service::OptimizationErrorPayload {

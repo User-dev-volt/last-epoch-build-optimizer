@@ -3,7 +3,12 @@ pub mod db;
 pub mod models;
 pub mod services;
 
-use commands::app_commands::{check_api_key_configured, check_connectivity, restart_app, set_api_key};
+use commands::app_commands::{
+    check_api_key_configured, check_connectivity, restart_app, set_api_key,
+    set_llm_provider, get_llm_provider,
+    set_openrouter_api_key, check_openrouter_configured,
+    set_model_preference, get_model_preference,
+};
 use commands::build_commands::{
     delete_build, load_build, load_builds_list, rename_build, save_build,
 };
@@ -52,6 +57,12 @@ pub fn run() {
             check_api_key_configured,
             check_connectivity,
             restart_app,
+            set_llm_provider,
+            get_llm_provider,
+            set_openrouter_api_key,
+            check_openrouter_configured,
+            set_model_preference,
+            get_model_preference,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

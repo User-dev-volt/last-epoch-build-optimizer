@@ -4,7 +4,18 @@ import { useAppStore } from '../../shared/stores/appStore'
 import { Settings } from './Settings'
 
 vi.mock('@tauri-apps/api/core', () => ({
-  invoke: vi.fn(() => Promise.resolve(false)),
+  invoke: vi.fn((cmd: string) => {
+    if (cmd === 'get_llm_provider') return Promise.resolve('claude')
+    if (cmd === 'check_api_key_configured') return Promise.resolve(false)
+    if (cmd === 'check_openrouter_configured') return Promise.resolve(false)
+    if (cmd === 'get_model_preference') return Promise.resolve('free-first')
+    return Promise.resolve(undefined)
+  }),
+}))
+
+vi.mock('react-hot-toast', () => ({
+  default: { success: vi.fn(), error: vi.fn() },
+  Toaster: () => null,
 }))
 
 describe('Settings', () => {
@@ -25,9 +36,14 @@ describe('Settings', () => {
     expect(screen.getByText('← Back')).toBeInTheDocument()
   })
 
-  it('renders the Claude API Key section', () => {
+  it('renders the ProviderSelector (AI Provider section)', () => {
     render(<Settings />)
-    expect(screen.getByText('AI API Key')).toBeInTheDocument()
+    expect(screen.getByTestId('provider-selector')).toBeInTheDocument()
+  })
+
+  it('renders the AI Provider heading', () => {
+    render(<Settings />)
+    expect(screen.getByText('AI Provider')).toBeInTheDocument()
   })
 
   it('Back button calls setCurrentView("main")', () => {

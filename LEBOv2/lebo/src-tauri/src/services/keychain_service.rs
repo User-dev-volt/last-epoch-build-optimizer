@@ -5,6 +5,9 @@ use tauri_plugin_stronghold::stronghold::Stronghold as SHVault;
 const VAULT_PASSWORD: &[u8] = b"lebo-vault-password";
 const CLIENT_NAME: &[u8] = b"lebo";
 const VAULT_KEY: &[u8] = b"anthropic_api_key";
+const LLM_PROVIDER_KEY: &[u8] = b"llm_provider";
+const OPENROUTER_API_KEY: &[u8] = b"openrouter_api_key";
+const MODEL_PREFERENCE_KEY: &[u8] = b"openrouter_model_preference";
 
 pub fn hash_vault_password() -> Vec<u8> {
     let params = Params::new(65536, 2, 1, Some(32)).expect("invalid argon2 params");
@@ -86,4 +89,97 @@ pub async fn is_api_key_configured(app: &tauri::AppHandle) -> Result<bool, Strin
         .map(|v| v.is_some())
         .unwrap_or(false);
     Ok(exists)
+}
+
+// ── Generic vault helpers ────────────────────────────────────────────────────
+
+fn vault_write(app: &tauri::AppHandle, key: &[u8], value: &str) -> Result<(), String> {
+    let vault_path = get_vault_path(app);
+    let sh = open_vault(&vault_path)?;
+    let client = match sh.load_client(CLIENT_NAME) {
+        Ok(c) => c,
+        Err(_) => sh
+            .create_client(CLIENT_NAME)
+            .map_err(|e| format!("STORAGE_ERROR: failed to create client: {e}"))?,
+    };
+    client
+        .store()
+        .insert(key.to_vec(), value.as_bytes().to_vec(), None)
+        .map_err(|e| format!("STORAGE_ERROR: failed to store value: {e}"))?;
+    sh.save()
+        .map_err(|e| format!("STORAGE_ERROR: failed to save vault: {e}"))
+}
+
+fn vault_read(app: &tauri::AppHandle, key: &[u8], default: Option<&str>, absent_err: Option<&str>) -> Result<String, String> {
+    let vault_path = get_vault_path(app);
+    if !vault_path.exists() {
+        if let Some(d) = default { return Ok(d.to_string()); }
+        return Err(absent_err.unwrap_or("AUTH_ERROR: key not found").to_string());
+    }
+    let sh = open_vault(&vault_path)?;
+    let client = match sh.load_client(CLIENT_NAME) {
+        Ok(c) => c,
+        Err(_) => {
+            if let Some(d) = default { return Ok(d.to_string()); }
+            return Err(absent_err.unwrap_or("AUTH_ERROR: key not found").to_string());
+        }
+    };
+    match client.store().get(key) {
+        Ok(Some(data)) => String::from_utf8(data).map_err(|_| "AUTH_ERROR: value corrupted in vault".to_string()),
+        Ok(None) => {
+            if let Some(d) = default { Ok(d.to_string()) }
+            else { Err(absent_err.unwrap_or("AUTH_ERROR: key not found").to_string()) }
+        }
+        Err(e) => Err(format!("STORAGE_ERROR: failed to read from vault: {e}")),
+    }
+}
+
+fn vault_key_exists(app: &tauri::AppHandle, key: &[u8]) -> Result<bool, String> {
+    let vault_path = get_vault_path(app);
+    if !vault_path.exists() { return Ok(false); }
+    let sh = open_vault(&vault_path).map_err(|e| format!("STORAGE_ERROR: {e}"))?;
+    let client = match sh.load_client(CLIENT_NAME) {
+        Ok(c) => c,
+        Err(_) => return Ok(false),
+    };
+    Ok(client.store().get(key).map(|v| v.is_some()).unwrap_or(false))
+}
+
+// ── LLM provider ─────────────────────────────────────────────────────────────
+
+pub async fn set_llm_provider(app: &tauri::AppHandle, provider: &str) -> Result<(), String> {
+    vault_write(app, LLM_PROVIDER_KEY, provider)
+}
+
+pub async fn get_llm_provider(app: &tauri::AppHandle) -> Result<String, String> {
+    vault_read(app, LLM_PROVIDER_KEY, Some("claude"), None)
+}
+
+// ── OpenRouter API key ────────────────────────────────────────────────────────
+
+pub async fn set_openrouter_api_key(app: &tauri::AppHandle, key: &str) -> Result<(), String> {
+    vault_write(app, OPENROUTER_API_KEY, key)
+}
+
+pub async fn get_openrouter_api_key(app: &tauri::AppHandle) -> Result<String, String> {
+    vault_read(
+        app,
+        OPENROUTER_API_KEY,
+        None,
+        Some("AUTH_ERROR: No OpenRouter API key configured. Add your key in Settings."),
+    )
+}
+
+pub async fn is_openrouter_configured(app: &tauri::AppHandle) -> Result<bool, String> {
+    vault_key_exists(app, OPENROUTER_API_KEY)
+}
+
+// ── Model preference ──────────────────────────────────────────────────────────
+
+pub async fn set_model_preference(app: &tauri::AppHandle, preference: &str) -> Result<(), String> {
+    vault_write(app, MODEL_PREFERENCE_KEY, preference)
+}
+
+pub async fn get_model_preference(app: &tauri::AppHandle) -> Result<String, String> {
+    vault_read(app, MODEL_PREFERENCE_KEY, Some("free-first"), None)
 }

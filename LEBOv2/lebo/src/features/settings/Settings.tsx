@@ -1,5 +1,5 @@
 import { useAppStore } from '../../shared/stores/appStore'
-import { ApiKeyInput } from './ApiKeyInput'
+import { ProviderSelector } from './ProviderSelector'
 
 export function Settings() {
   const setCurrentView = useAppStore((s) => s.setCurrentView)
@@ -30,7 +30,7 @@ export function Settings() {
         </span>
       </header>
       <div className="flex-1 overflow-y-auto p-6 max-w-lg">
-        <ApiKeyInput />
+        <ProviderSelector />
       </div>
     </div>
   )
