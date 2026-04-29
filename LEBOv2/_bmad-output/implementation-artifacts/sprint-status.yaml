@@ -52,7 +52,7 @@
 #   - 4.1 (Context Panel — needs item/affix/idol data from game data)
 
 generated: 2026-04-18
-last_updated: 2026-04-28 # 2.3 → done; 2.4 → done; 3.1 → done; 3.2 → done; 3.3 → done; 3.4 → done; 3.5 → done; 3.6 → done; 4.1 → done; 4.2 → done; 5.1 → done; 5.2 → done; 5.3 → done; 5.4 → done
+last_updated: 2026-04-28 # 2.3 → done; 2.4 → done; 3.1 → done; 3.2 → done; 3.3 → done; 3.4 → done; 3.5 → done; 3.6 → done; 4.1 → done; 4.2 → done; 5.1 → done; 5.2 → done; 5.3 → done; 5.4 → done; 5.6 added (multi-provider LLM / OpenRouter)
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -170,6 +170,13 @@ development_status:
 
   # Story 5.4: Depends on all prior epics having error surface points to standardize
   5-4-error-handling-infrastructure-reliability: done
+
+  # Story 5.6: Depends on 5.1 (api-key-management done). Extends settings to support OpenRouter
+  # as an alternative to Claude. Adds model picker with presets (free-first, always-use-model).
+  # Requires provider abstraction in Rust (trait or enum) + vault storing provider type + key.
+  # OpenRouter is OpenAI-compatible — base URL swap; no new streaming logic needed.
+  # Door left open for additional providers (Groq, Gemini) in future stories.
+  5-6-multi-provider-llm-openrouter-model-selection: backlog
 
   # Story 5.5: Prerequisites: code signing certificates + Apple Dev enrollment must be purchased
   # before this story can begin (see prerequisites section in story dev notes)
