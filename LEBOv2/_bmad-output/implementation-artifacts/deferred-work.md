@@ -1,5 +1,10 @@
 # Deferred Work
 
+## Deferred from: 5-5-distribution-readiness-code-signing-release-pipeline (2026-04-29)
+
+- **Task 5 — CI tag test** — Push `v0.1.0-rc1` tag, verify GitHub Actions Windows + macOS jobs pass, confirm `latest.json` and `.msi`/`.dmg` assets are present. Blocked on code signing certificate purchase.
+- **Task 6 — Smoke-test signed installers** — Install `.msi` on clean Windows 10/11 (no SmartScreen dialog); run `.app` on clean macOS 12+ (no Gatekeeper block). Blocked on certificate purchase. Prerequisites: Windows Authenticode EV cert (~$300–700/yr, DigiCert/Sectigo) + Apple Developer Program ($99/yr). Once certs are purchased, store 8 secrets in GitHub Actions (see Prerequisites table in story file) and run both tasks before publishing the first public release.
+
 ## Deferred from: code review of 5-6-multi-provider-llm-openrouter-model-selection (2026-04-28)
 
 - **W1 — Tautological unit tests in `openrouter_service.rs`** — tests assert hardcoded string equality rather than calling production functions; streaming function has no unit test coverage. HTTP mock infrastructure needed; defer until test tooling expands.

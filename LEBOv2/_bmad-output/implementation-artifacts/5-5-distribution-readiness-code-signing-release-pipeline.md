@@ -1,6 +1,6 @@
 # Story 5.5: Distribution Readiness — Code Signing & Release Pipeline
 
-Status: review
+Status: done
 
 ## Story
 
