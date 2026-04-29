@@ -61,6 +61,12 @@ so that I can use the optimization engine without paying for Claude API credits 
    **And** future optimization requests use `claude_service` again
    **And** the previously stored OpenRouter key is retained in the vault (not deleted)
 
+9. **Given** the user clicks "Optimize" with an invalid or expired OpenRouter API key
+   **When** the optimization request fires and OpenRouter returns 401 or 403
+   **Then** an `AUTH_ERROR` surfaces with message: "invalid OpenRouter API key"
+   **And** the "Go to Settings" link appears in the error banner (existing pattern from 5.1)
+   *(Rate-limit / 429 surfaces as `API_ERROR: rate limit reached — wait a moment and retry`)*
+
 ## Tasks / Subtasks
 
 - [x] Task 1: Extend vault with provider preference keys (AC: 1, 4, 5, 6, 8)
@@ -148,14 +154,16 @@ so that I can use the optimization engine without paying for Claude API credits 
 ```
 Authorization: Bearer {api_key}
 Content-Type: application/json
-HTTP-Referer: https://github.com/lebo
+HTTP-Referer: https://github.com/lebo   ← update to actual repo URL once published
 X-Title: Last Epoch Build Optimizer
 ```
+
+> **Note:** `HTTP-Referer` is extracted as `SITE_URL` constant in `openrouter_service.rs`. Update it to the published repository URL when the project goes public — OpenRouter uses this header for attribution and monitoring.
 
 **Request body (streaming):**
 ```json
 {
-  "model": "openrouter/free",
+  "model": "openrouter/auto",
   "messages": [
     { "role": "system", "content": "..." },
     { "role": "user", "content": "..." }
@@ -164,7 +172,7 @@ X-Title: Last Epoch Build Optimizer
 }
 ```
 
-**Model `"openrouter/free"`** — OpenRouter's free router; automatically selects the best available free model for each request. This is the "Use free models first" implementation — no curated list needed.
+**Model `"openrouter/auto"`** — OpenRouter's auto-routing alias; automatically selects the best available model for each request. This is the "Auto-select best free model" implementation — no curated list needed. (`"openrouter/free"` is a different alias and was not used in the implementation.)
 
 **SSE delta format (OpenAI-style, NOT Anthropic-style):**
 ```
@@ -230,11 +238,13 @@ All keys share the same Stronghold vault file (`lebo.stronghold`) and CLIENT_NAM
 ### Event Contract — Frontend Must Stay Identical
 
 The frontend optimization flow (`optimizationStore`, `SuggestionsList`) listens to:
-- `optimization-stream-chunk` — `{ content: string }`
-- `optimization-stream-end` — no payload
-- `optimization-stream-error` — `{ message: string, type: string }`
+- `optimization:suggestion-received` — `{ title: string, body: string, priority: number, ... }`
+- `optimization:complete` — `{ suggestion_count: number }`
+- `optimization:error` — `{ message: string, error_type: string }`
 
 `openrouter_service` MUST emit these exact event names with the same payload shapes. The frontend must require zero changes to handle OpenRouter responses — the provider abstraction is entirely in Rust.
+
+> **Note:** Event names use the colon-separated form (`optimization:suggestion-received` etc.), not the hyphenated form. The Dev Agent Record notes that the hyphenated names do not exist in the codebase.
 
 ---
 
@@ -270,6 +280,12 @@ Follow 5.1 patterns throughout:
 - `lebo/src/features/settings/Settings.test.tsx` — update for ProviderSelector
 - `lebo/src/shared/stores/appStore.ts` — add llmProvider state
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — 5.6 → in-progress when started
+
+---
+
+### Security Note — No `get_openrouter_api_key` Tauri Command
+
+`get_openrouter_api_key` is intentionally **not** exposed as a Tauri command. The frontend only needs `check_openrouter_configured` (boolean) to decide whether to show the "key saved ✓" placeholder. Exposing the raw key to the JS layer would create a path for key exfiltration via XSS or Tauri IPC. Future stories must not add a `get_openrouter_api_key` command — the key is Rust-only.
 
 ---
 
@@ -361,7 +377,7 @@ Model string for free-first: used `"openrouter/auto"` (OpenRouter's auto-routing
 
 - [x] [Review][Defer] W1: Tautological unit tests in `openrouter_service.rs` — tests assert hardcoded string equality instead of exercising production functions; streaming function has no unit test coverage [`openrouter_service.rs` `#[cfg(test)]` block] — deferred, test infrastructure needed for HTTP mock
 - [x] [Review][Defer] W2: `sse_buffer` O(n²) string re-allocation — `sse_buffer = sse_buffer[newline_pos+1..].to_string()` inside the inner loop creates a new heap allocation per SSE line [`openrouter_service.rs` SSE loop] — deferred, performance optimization
-- [x] [Review][Defer] W3: Model ID not in `MODELS` list restored into dropdown — `setSelectedModel(pref)` with no membership check; stale/removed model IDs produce a blank or incorrect dropdown selection on load [`OpenRouterInput.tsx` `useEffect`] — deferred, acceptable for current model set
+- [x] [Review][Defer→Resolved] W3: Model ID not in `MODELS` list restored into dropdown — fixed: `useEffect` now checks `MODELS.some(m => m.value === pref)` and falls back to `MODELS[0].value` when the saved preference is not found; 1 new frontend test added [`OpenRouterInput.tsx`, `OpenRouterInput.test.tsx`]
 - [x] [Review][Defer] W4: `vault_write` reopens and re-flushes vault on every call — three sequential OpenRouter saves open/lock/flush three times with no transaction grouping [`keychain_service.rs` `vault_write`] — deferred, pre-existing vault pattern
 - [x] [Review][Defer] W5: Raw vault error strings propagated to toast/UI — `format!("STORAGE_ERROR: failed to store value: {e}")` may expose file paths or library internals [`keychain_service.rs` helpers] — deferred, pre-existing pattern across all vault functions
 - [x] [Review][Defer] W6: `saveDisabled` uses local React `isConfigured` state, not live vault state — external vault wipe would leave `isConfigured = false` only after next mount, not immediately [`OpenRouterInput.tsx`] — deferred, extreme edge case
@@ -372,3 +388,13 @@ Model string for free-first: used `"openrouter/auto"` (OpenRouter's auto-routing
 - 2026-04-28: Story 5.6 created — Multi-Provider LLM Settings (OpenRouter + Model Selection)
 - 2026-04-28: Story 5.6 implemented — all 9 tasks complete, 40 test files / 432 tests passing, status → review
 - 2026-04-28: Addressed code review findings — 8 patch items resolved (P1-P8); 434 tests passing, 15 Rust unit tests passing; status → review
+- 2026-04-29: Addressed second adversarial review findings:
+  - ✅ Finding 1 (doc): Corrected event names in Dev Notes "Event Contract" section — `optimization:suggestion-received` / `optimization:complete` / `optimization:error`
+  - ✅ Finding 2 (doc): Corrected `"openrouter/free"` → `"openrouter/auto"` throughout Dev Notes; added note clarifying the two aliases differ
+  - ✅ Finding 3 (code): Added `validate_model_preference()` in `keychain_service.rs` — rejects empty, >128 char, and invalid-character inputs; 4 new Rust unit tests
+  - ✅ Finding 4 (code+doc): Extracted `SITE_URL` constant in `openrouter_service.rs` with comment to update once repo is public; added note in Dev Notes
+  - ✅ Finding 5/W3 (code+test): Fixed stale model ID fallback in `OpenRouterInput.tsx` — unknown saved preference now falls back to `MODELS[0].value`; 1 new frontend test
+  - ✅ Finding 8 (doc): Added AC9 documenting 401/403 → AUTH_ERROR and 429 → API_ERROR behavior (implementation was already correct)
+  - ✅ Finding 9 (doc): Added Security Note explaining `get_openrouter_api_key` Tauri command is intentionally absent
+  - ✅ Finding 10 (code+doc): Updated radio labels — "Auto-select best free model" / "Pin to a specific model" — to clarify semantic distinction between the two options; noted in story
+  - ✅ Finding 11 (doc): Added note in Change Log that model IDs require re-verification on OpenRouter before release

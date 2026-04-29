@@ -29,7 +29,9 @@ export function OpenRouterInput() {
           setModelMode('free-first')
         } else {
           setModelMode('always')
-          setSelectedModel(pref)
+          // If the saved model ID is no longer in MODELS (removed or renamed), fall back to first entry.
+          const isKnown = MODELS.some((m) => m.value === pref)
+          setSelectedModel(isKnown ? pref : MODELS[0].value)
         }
       })
       .catch(() => {
@@ -107,7 +109,7 @@ export function OpenRouterInput() {
             onChange={() => setModelMode('free-first')}
           />
           <span className="text-xs" style={{ color: 'var(--color-text-primary)' }}>
-            Use free models first
+            Auto-select best free model
           </span>
         </label>
         <label className="flex items-center gap-2 cursor-pointer">
@@ -119,7 +121,7 @@ export function OpenRouterInput() {
             onChange={() => setModelMode('always')}
           />
           <span className="text-xs" style={{ color: 'var(--color-text-primary)' }}>
-            Always use this model
+            Pin to a specific model
           </span>
         </label>
 

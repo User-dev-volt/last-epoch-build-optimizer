@@ -8,6 +8,8 @@ use crate::services::prompts::OPTIMIZATION_SYSTEM_PROMPT;
 const BASE_URL: &str = "https://openrouter.ai/api/v1/chat/completions";
 const TIMEOUT_SECS: u64 = 45;
 const MAX_NDJSON_LINE_BYTES: usize = 65_536;
+// Update to the published repository URL once the repo is public — OpenRouter uses this for attribution.
+const SITE_URL: &str = "https://github.com/lebo";
 
 // ── Request structs ──────────────────────────────────────────────────────────
 
@@ -76,7 +78,7 @@ pub async fn stream_optimization(
         .post(BASE_URL)
         .header("Authorization", format!("Bearer {}", api_key))
         .header("Content-Type", "application/json")
-        .header("HTTP-Referer", "https://github.com/lebo")
+        .header("HTTP-Referer", SITE_URL)
         .header("X-Title", "Last Epoch Build Optimizer")
         .json(&request_body)
         .send()

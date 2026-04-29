@@ -184,7 +184,26 @@ pub async fn is_openrouter_configured(app: &tauri::AppHandle) -> Result<bool, St
 
 // ── Model preference ──────────────────────────────────────────────────────────
 
+fn validate_model_preference(preference: &str) -> Result<(), String> {
+    if preference.is_empty() {
+        return Err("VALIDATION_ERROR: model preference cannot be empty".to_string());
+    }
+    if preference.len() > 128 {
+        return Err(format!(
+            "VALIDATION_ERROR: model preference too long ({} chars, max 128)",
+            preference.len()
+        ));
+    }
+    // Allow "free-first" sentinel and model IDs like "google/gemini-2.0-flash-exp:free".
+    // Permitted chars: alphanumeric, /, -, :, ., _
+    if !preference.chars().all(|c| c.is_alphanumeric() || matches!(c, '/' | '-' | ':' | '.' | '_')) {
+        return Err("VALIDATION_ERROR: model preference contains invalid characters".to_string());
+    }
+    Ok(())
+}
+
 pub async fn set_model_preference(app: &tauri::AppHandle, preference: &str) -> Result<(), String> {
+    validate_model_preference(preference)?;
     vault_write(app, MODEL_PREFERENCE_KEY, preference)
 }
 
@@ -205,6 +224,32 @@ mod tests {
     #[test]
     fn rejects_unknown_provider() {
         let err = validate_provider("groq").unwrap_err();
+        assert!(err.starts_with("VALIDATION_ERROR:"));
+    }
+
+    #[test]
+    fn accepts_valid_model_preferences() {
+        assert!(validate_model_preference("free-first").is_ok());
+        assert!(validate_model_preference("google/gemini-2.0-flash-exp:free").is_ok());
+        assert!(validate_model_preference("meta-llama/llama-3.3-70b-instruct:free").is_ok());
+    }
+
+    #[test]
+    fn rejects_empty_model_preference() {
+        let err = validate_model_preference("").unwrap_err();
+        assert!(err.starts_with("VALIDATION_ERROR:"));
+    }
+
+    #[test]
+    fn rejects_model_preference_with_invalid_chars() {
+        let err = validate_model_preference("model; DROP TABLE users;").unwrap_err();
+        assert!(err.starts_with("VALIDATION_ERROR:"));
+    }
+
+    #[test]
+    fn rejects_model_preference_over_128_chars() {
+        let long = "a".repeat(129);
+        let err = validate_model_preference(&long).unwrap_err();
         assert!(err.starts_with("VALIDATION_ERROR:"));
     }
 }

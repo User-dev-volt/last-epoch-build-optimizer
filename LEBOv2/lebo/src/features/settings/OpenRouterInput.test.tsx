@@ -199,4 +199,19 @@ describe('OpenRouterInput', () => {
     const picker = screen.getByTestId('model-picker') as HTMLSelectElement
     expect(picker.value).toBe('meta-llama/llama-3.3-70b-instruct:free')
   })
+
+  it('falls back to first model when saved preference is a removed/unknown model ID', async () => {
+    mockInvoke.mockImplementation((cmd: string) => {
+      if (cmd === 'check_openrouter_configured') return Promise.resolve(true)
+      if (cmd === 'get_model_preference') return Promise.resolve('some/deprecated-model:free')
+      return Promise.resolve(undefined)
+    })
+    render(<OpenRouterInput />)
+    await waitFor(() => {
+      const radio = screen.getByTestId('model-preference-always') as HTMLInputElement
+      expect(radio.checked).toBe(true)
+    })
+    const picker = screen.getByTestId('model-picker') as HTMLSelectElement
+    expect(picker.value).toBe('google/gemini-2.0-flash-exp:free')
+  })
 })
