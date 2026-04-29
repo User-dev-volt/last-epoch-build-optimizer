@@ -27,7 +27,9 @@
       "Bash(awk '{print $5}')",
       "Bash(xargs -r taskkill /PID /F)",
       "Bash(taskkill /PID 5212 /F)",
-      "PowerShell(Stop-Process *)"
+      "PowerShell(Stop-Process *)",
+      "Bash(curl -s -o /tmp/freellmapi_readme.md -w \"%{http_code}\" https://raw.githubusercontent.com/tashfeenahmed/freellmapi/main/README.md)",
+      "Bash(curl -s https://raw.githubusercontent.com/tashfeenahmed/freellmapi/main/README.md)"
     ]
   }
 }
