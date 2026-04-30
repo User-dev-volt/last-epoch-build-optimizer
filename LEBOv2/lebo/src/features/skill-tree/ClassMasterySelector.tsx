@@ -33,6 +33,7 @@ export function ClassMasterySelector() {
 
       <Listbox value={selectedClassId ?? undefined} onChange={(id: string) => setSelectedClass(id)}>
         <ListboxButton
+          id="class-selector-btn"
           className="w-full px-3 py-2 text-sm text-left rounded flex justify-between items-center"
           style={{
             backgroundColor: 'var(--color-bg-elevated)',

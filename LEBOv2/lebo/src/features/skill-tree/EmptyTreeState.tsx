@@ -1,11 +1,15 @@
 import { useAppStore } from '../../shared/stores/appStore'
 
+function expandAndFocus(setPanelState: (panel: 'left' | 'right', state: 'expanded' | 'collapsed') => void, targetId: string) {
+  setPanelState('left', 'expanded')
+  // Wait for the 200ms panel expand transition before focusing
+  setTimeout(() => {
+    document.getElementById(targetId)?.focus()
+  }, 220)
+}
+
 export function EmptyTreeState() {
   const setPanelState = useAppStore((s) => s.setPanelState)
-
-  function handleCreateNewBuild() {
-    setPanelState('left', 'expanded')
-  }
 
   return (
     <div
@@ -31,7 +35,7 @@ export function EmptyTreeState() {
             color: 'var(--color-accent-gold)',
             backgroundColor: 'transparent',
           }}
-          onClick={() => {}}
+          onClick={() => expandAndFocus(setPanelState, 'build-import-input')}
         >
           Paste Build Code
         </button>
@@ -44,7 +48,7 @@ export function EmptyTreeState() {
             color: 'var(--color-text-primary)',
             border: '1px solid var(--color-bg-elevated)',
           }}
-          onClick={handleCreateNewBuild}
+          onClick={() => expandAndFocus(setPanelState, 'class-selector-btn')}
         >
           Create New Build
         </button>
