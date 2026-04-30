@@ -1,5 +1,13 @@
 # Deferred Work
 
+## Deferred from: code review of 6-2-screen-reader-support-aria-infrastructure-accessibility-ci (2026-04-30)
+
+- **Button positions at origin on zero-size container mount** — `syncButtonPositions` viewport equality check short-circuits on the initial tick if the container reports zero dimensions at mount; buttons are placed at the origin and stay there until the user pans or zooms. Production (Tauri) always provides a real layout; test mock overrides `getBoundingClientRect` correctly. Address if Playwright CI reports off-position overlays.
+- **BFS Tab order undefined on cyclic graphs** — The `bfsOrder` useMemo in `SkillTreeCanvas` assumes a DAG; cyclic connections (if ever introduced in game data) would produce an arbitrary Tab order that may jump backward visually. Not a real scenario for Last Epoch's current skill trees.
+- **Action buttons lack per-suggestion accessible names** — "Preview", "Apply", "Skip" buttons on `SuggestionCard` use only their text content as their accessible name; when listed in isolation by screen-reader browse mode, they are indistinguishable across cards. Pre-existing; `axe-core` passes because the buttons are non-empty and the parent `role="article"` aria-label provides context. Consider `aria-labelledby` or `aria-label` in a future a11y polish story.
+- **Live region elements absent from settings view** — `#ai-status-region` and `#critical-error-region` are only mounted in the main view branch of `App.tsx`; `useAccessibilityAnnouncer` silently drops announcements when the user navigates to settings. Structural design choice; optimization cannot be triggered from settings view so the gap is theoretical.
+- **`o`/`i` shortcuts silently no-op when target unmounted** — `document.getElementById('optimize-button')?.focus()` gives no feedback when the element isn't in the DOM. Pre-existing carry-over from Story 6.1 deferred list.
+
 ## Deferred from: 5-5-distribution-readiness-code-signing-release-pipeline (2026-04-29)
 
 - **Task 5 — CI tag test** — Push `v0.1.0-rc1` tag, verify GitHub Actions Windows + macOS jobs pass, confirm `latest.json` and `.msi`/`.dmg` assets are present. Blocked on code signing certificate purchase.

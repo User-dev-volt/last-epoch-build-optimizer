@@ -246,7 +246,29 @@ All 7 tasks implemented and verified. 459 tests pass, TypeScript clean.
 
 - 2026-04-29: Story 6.2 implemented — screen reader support, ARIA infrastructure, and accessibility CI (vitest-axe integration, live region announcements, focus ring fixes, SuggestionCard label enhancement, useReducedMotion hook)
 
+## Review Findings
+
+> **Code review complete.** 0 `decision-needed`, 6 `patch`, 5 `defer`, 6 dismissed as noise.
+> Acceptance Auditor layer failed (rate limit) — findings may be incomplete against spec.
+
+### Patch Items
+
+- [ ] [Review][Patch] `contextmenu` listener added to canvas in `initRenderer` is never removed in `destroy()` — memory leak / orphaned handler under StrictMode double-mount [`lebo/src/features/skill-tree/pixiRenderer.ts`]
+- [ ] [Review][Patch] `useReducedMotion` calls `window.matchMedia(...)` at the top of the hook body, creating a new `MediaQueryList` object on every render — use `useRef` to memoize across renders [`lebo/src/shared/hooks/useReducedMotion.ts`]
+- [ ] [Review][Patch] Reduced motion flag is not applied before the first `renderTree` call at init, and changing `reducedMotion` after mount does not trigger a re-render of the tree — call `renderTree` inside the `setReducedMotion` useEffect [`lebo/src/features/skill-tree/SkillTreeCanvas.tsx:174`]
+- [ ] [Review][Patch] `setRegion` clear→rAF→set pattern drops "Analyzing your build..." announcement when optimization completes before the rAF fires (rapid transitions) — cancel pending rAF or coalesce with a tracked rAF id [`lebo/src/shared/hooks/useAccessibilityAnnouncer.ts`]
+- [ ] [Review][Patch] Arrow-key navigation silently dead-ends when all connected nodes are outside the current viewport — no feedback to the user; add a screen-reader announcement or call `onKeyboardNavigate(null, 0, 0)` [`lebo/src/features/skill-tree/SkillTreeCanvas.tsx:237`]
+- [ ] [Review][Patch] `initialState` captured at `describe` scope (evaluated once at module load) — dirty baseline if prior tests mutate the store; move inside `beforeEach` [`lebo/src/App.a11y.test.tsx:52`]
+
+### Deferred Items
+
+- [x] [Review][Defer] Button positions stuck at origin if container has zero dimensions at mount [`lebo/src/features/skill-tree/SkillTreeCanvas.tsx:145`] — deferred, production always has a real layout; test mock correctly overrides getBoundingClientRect
+- [x] [Review][Defer] BFS Tab order is undefined on cyclic or bidirectional edge graphs [`lebo/src/features/skill-tree/SkillTreeCanvas.tsx:34`] — deferred, Last Epoch skill trees are DAGs; not a real scenario
+- [x] [Review][Defer] "Preview / Apply / Skip" action buttons have no per-suggestion accessible name [`lebo/src/features/optimization/SuggestionCard.tsx:212`] — deferred, pre-existing; axe audit passes; parent article aria-label provides context
+- [x] [Review][Defer] `#ai-status-region` and `#critical-error-region` DOM elements are absent when settings view is active [`lebo/src/App.tsx`] — deferred, pre-existing structural design; optimization cannot run from settings view
+- [x] [Review][Defer] `o`/`i` keyboard shortcuts silently no-op via optional chaining when target element is unmounted [`lebo/src/App.tsx:107,113`] — deferred, pre-existing (6.1 carry-over); intentional defensive pattern
+
 ## Story Completion Status
 
 Story created: 2026-04-29
-Status: review
+Status: in-progress
