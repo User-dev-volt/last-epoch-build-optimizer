@@ -280,11 +280,30 @@ All 6 tasks complete. 447/447 tests passing. `pnpm tsc --noEmit` clean.
 - `lebo/src/features/layout/LeftPanel.tsx` — added `BuildImportInput`
 - `lebo/src/features/settings/Settings.tsx` — keyboard shortcuts reference table
 
+## Review Findings
+
+- [ ] [Review][Decision] Tab traversal order: spec says "connection graph order (parent nodes before children)" but implementation uses visible-viewport-array order — dev notes document this as a deliberate simplification; confirm whether this deviation is accepted or must be corrected with BFS sorting [`SkillTreeCanvas.tsx`]
+- [ ] [Review][Patch] Escape key blocked by input guard — `if (isInputTarget) return` fires before the Escape handler, so pressing Escape while a textarea/input is focused silently does nothing instead of clearing tree preview / dispatching `keyboard:escape` (AC4 + Input Guard Constraint) [`App.tsx`]
+- [ ] [Review][Patch] O/I shortcuts intercept modifier combos — `e.key === 'O'` matches Ctrl+O/Alt+I, calling `e.preventDefault()` and suppressing native browser actions [`App.tsx`]
+- [ ] [Review][Patch] BuildImportInput removes focus outline with no replacement — `outline: 'none'` in style with no `focus:` Tailwind utility fails WCAG 2.4.7 (Focus Visible) [`BuildImportInput.tsx`]
+- [ ] [Review][Patch] `focusedCardIndex` stale after suggestions change — if suggestions are replaced/removed (e.g., re-run), `focusedCardIndex` points to the wrong card; needs a `useEffect` reset when `suggestions` changes [`SuggestionsList.tsx`]
+- [ ] [Review][Patch] Tab on single visible tree node causes blur+focus flicker — when `nodeButtons.length === 1`, Tab wraps to the same element, firing `onBlur`→`onFocus` and briefly dismissing the tooltip [`SkillTreeCanvas.tsx`]
+- [ ] [Review][Patch] Enter on focused suggestion card should apply when already expanded (AC5) — spec says "expands or applies"; implementation only toggles expansion and never calls `onApply` [`SuggestionsList.tsx`]
+- [x] [Review][Defer] `document.getElementById('optimize-button')?.focus()` gives no feedback when button not visible/mounted — deferred, pre-existing UX gap; toast/announcement out of scope for 6.1 [`App.tsx`]
+- [x] [Review][Defer] SuggestionCard child action buttons (Apply/Preview/Skip) remain in natural tab order — creates tab stops outside the managed card-nav model; deferred, spec silent on child button tabIndex [`SuggestionCard.tsx`]
+- [x] [Review][Defer] `aria-label` on SuggestionCard embeds full explanation text — may produce very long screen-reader announcements; deferred, no spec constraint on label length [`SuggestionCard.tsx`]
+- [x] [Review][Defer] `addTickerListener` wrapper `const cb = () => fn()` creates a new closure per call — if same `fn` passed twice, second subscription can't be removed; deferred, single-call usage in practice [`pixiRenderer.ts`]
+- [x] [Review][Defer] `cardRefs` keyed by `suggestion.rank` — reused rank numbers across optimizer re-runs could cause wrong ref; deferred, low risk with sequential rank assignment [`SuggestionsList.tsx`]
+- [x] [Review][Defer] Arrow key nav silently dead-ends when connected nodes are off-screen — intentional per dev notes (viewport-only rendering for performance); deferred, known design limitation [`SkillTreeCanvas.tsx`]
+- [x] [Review][Defer] `focusedCardIndex`/`expandedRank` desync on mouse apply/skip — mouse interactions don't reset keyboard focus state; deferred, minor cosmetic issue [`SuggestionsList.tsx`]
+- [x] [Review][Defer] `tabIndex={0}` entry point shifts to different node during pan — first visible node changes as viewport changes; deferred, acceptable limitation of viewport-array approach [`SkillTreeCanvas.tsx`]
+
 ## Change Log
 
 - 2026-04-29: Story 6.1 implemented — keyboard navigation & global shortcuts. All tasks complete, 447 tests passing.
+- 2026-04-29: Code review complete — 1 decision-needed, 6 patches, 8 deferred, 10 dismissed.
 
 ## Story Completion Status
 
 Story created: 2026-04-29
-Status: review
+Status: in-progress

@@ -3,6 +3,17 @@
 ## Deferred from: 5-5-distribution-readiness-code-signing-release-pipeline (2026-04-29)
 
 - **Task 5 — CI tag test** — Push `v0.1.0-rc1` tag, verify GitHub Actions Windows + macOS jobs pass, confirm `latest.json` and `.msi`/`.dmg` assets are present. Blocked on code signing certificate purchase.
+
+## Deferred from: code review of 6-1-keyboard-navigation-global-shortcuts (2026-04-29)
+
+- **O/I shortcut silent fail** — `document.getElementById('optimize-button')?.focus()` gives no user feedback when the button isn't visible or mounted. Would need a toast/announcement mechanism; out of scope for 6.1.
+- **SuggestionCard child button tab stops** — Apply/Preview/Skip buttons inside each card remain in the natural Tab order, creating unwanted tab stops outside the managed keyboard-nav model. Spec is silent on child button `tabIndex`; addressing this would require a more invasive interaction redesign.
+- **aria-label verbosity** — `SuggestionCard` embeds the full `suggestion.explanation` in its `aria-label`, which can be very long and verbose for screen readers. No spec constraint on label length; consider abbreviating in a future accessibility story (6.2).
+- **addTickerListener closure double-registration** — The `const cb = () => fn()` wrapper means passing the same `fn` reference twice registers two unremovable subscriptions. Single-call usage in practice makes this safe for now.
+- **cardRefs keyed by rank collision** — `SuggestionsList` `cardRefs` map uses `suggestion.rank` as key; reused rank numbers across optimizer re-runs could cause the ref to point to a stale card. Low risk with sequential rank assignment.
+- **Arrow key nav off-screen dead-end** — Arrow key navigation silently stops when connected nodes are outside the current viewport. Intentional per dev notes (viewport-only rendering for performance). Consider a pan-to-node behavior in a future story.
+- **focusedCardIndex/expandedRank mouse desync** — Mouse interactions (Apply/Skip) don't reset `focusedCardIndex` or `expandedRank`, leaving stale keyboard-focus state. Minor cosmetic issue.
+- **tabIndex={0} entry point shifts during pan** — The Tab-reachable entry node for the skill tree changes as the viewport pans (first visible node in array). Acceptable limitation of the viewport-array approach; could be fixed by designating a stable "root" node.
 - **Task 6 — Smoke-test signed installers** — Install `.msi` on clean Windows 10/11 (no SmartScreen dialog); run `.app` on clean macOS 12+ (no Gatekeeper block). Blocked on certificate purchase. Prerequisites: Windows Authenticode EV cert (~$300–700/yr, DigiCert/Sectigo) + Apple Developer Program ($99/yr). Once certs are purchased, store 8 secrets in GitHub Actions (see Prerequisites table in story file) and run both tasks before publishing the first public release.
 
 ## Deferred from: code review of 5-6-multi-provider-llm-openrouter-model-selection (2026-04-28)
