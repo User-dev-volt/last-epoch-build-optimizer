@@ -90,6 +90,16 @@ export function SuggestionsList({ onRetry }: SuggestionsListProps) {
   const count = suggestions.length
   const countLabel = count === 1 ? '1 suggestion found' : `${count} suggestions found`
 
+  // Reset keyboard focus when the suggestions array is replaced (e.g. after a re-run)
+  const prevSuggestionsRef = useRef(suggestions)
+  useEffect(() => {
+    if (prevSuggestionsRef.current !== suggestions) {
+      prevSuggestionsRef.current = suggestions
+      setFocusedCardIndex(null)
+      setExpandedRank(null)
+    }
+  }, [suggestions])
+
   // Focus card element when focusedCardIndex changes
   useEffect(() => {
     if (focusedCardIndex === null) return
@@ -137,7 +147,12 @@ export function SuggestionsList({ onRetry }: SuggestionsListProps) {
 
       if (e.key === 'Enter') {
         e.preventDefault()
-        setExpandedRank((prev) => (prev === focused.rank ? null : focused.rank))
+        if (expandedRank === focused.rank) {
+          // Already expanded — second Enter applies
+          handleApply(focused)
+        } else {
+          setExpandedRank(focused.rank)
+        }
         return
       }
 
@@ -164,7 +179,7 @@ export function SuggestionsList({ onRetry }: SuggestionsListProps) {
         return
       }
     },
-    [suggestions, focusedCardIndex, previewSuggestionRank, setPreviewSuggestionRank, skipSuggestion]
+    [suggestions, focusedCardIndex, expandedRank, previewSuggestionRank, setPreviewSuggestionRank, skipSuggestion]
   )
 
   function handleHoverEnter(suggestion: SuggestionResult) {

@@ -79,6 +79,13 @@ export function App() {
         return
       }
 
+      // Escape is safe globally — fires before the input guard
+      if (e.key === 'Escape') {
+        useOptimizationStore.getState().setPreviewSuggestionRank(null)
+        window.dispatchEvent(new CustomEvent('keyboard:escape'))
+        return
+      }
+
       // Guard bare-key shortcuts: skip when typing in an input/textarea/contenteditable
       const target = e.target as HTMLElement
       const isInputTarget =
@@ -89,14 +96,10 @@ export function App() {
 
       // Skip bare-key shortcuts when in settings view (no optimize button or tree visible)
       const { currentView } = useAppStore.getState()
-
-      if (e.key === 'Escape') {
-        useOptimizationStore.getState().setPreviewSuggestionRank(null)
-        window.dispatchEvent(new CustomEvent('keyboard:escape'))
-        return
-      }
-
       if (currentView === 'settings') return
+
+      // Skip bare-key shortcuts when modifier keys are held (avoid hijacking Ctrl+O, Alt+I, etc.)
+      if (e.ctrlKey || e.metaKey || e.altKey) return
 
       if (e.key === 'o' || e.key === 'O') {
         e.preventDefault()

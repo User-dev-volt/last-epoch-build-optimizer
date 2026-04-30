@@ -12,12 +12,11 @@ export function BuildImportInput() {
         id="build-import-input"
         placeholder="Paste build code here..."
         rows={3}
-        className="w-full rounded px-2 py-1.5 text-xs resize-none"
+        className="w-full rounded px-2 py-1.5 text-xs resize-none focus:outline focus:outline-1 focus:outline-[var(--color-accent-gold)]"
         style={{
           backgroundColor: 'var(--color-bg-elevated)',
           color: 'var(--color-text-primary)',
           border: '1px solid var(--color-bg-hover)',
-          outline: 'none',
         }}
       />
     </div>
