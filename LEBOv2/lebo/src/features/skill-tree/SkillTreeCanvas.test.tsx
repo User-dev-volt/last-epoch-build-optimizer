@@ -44,6 +44,7 @@ const DEFAULT_PROPS = {
   allocatedNodes: {},
   highlightedNodes: { glowing: new Set<string>(), dimmed: new Set<string>() },
   onNodeClick: vi.fn(),
+  onNodeRightClick: vi.fn(),
   onNodeHover: vi.fn(),
   onKeyboardNavigate: vi.fn(),
 }

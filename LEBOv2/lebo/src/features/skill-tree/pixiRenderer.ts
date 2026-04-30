@@ -80,6 +80,9 @@ export async function initRenderer(
     resolution: window.devicePixelRatio || 1,
   })
 
+  // Prevent browser context menu on right-click so right-click node removal works
+  app.canvas.addEventListener('contextmenu', (e) => e.preventDefault())
+
   const worldContainer = new Container()
   app.stage.addChild(worldContainer)
 
@@ -203,7 +206,11 @@ export async function initRenderer(
       hit.on('pointerout', () => callbacksRef.current.onNodeHover(null))
       hit.on('pointerdown', (e) => {
         e.stopPropagation()
-        callbacksRef.current.onNodeClick(node.id)
+        if (e.button === 2) {
+          callbacksRef.current.onNodeRightClick(node.id)
+        } else {
+          callbacksRef.current.onNodeClick(node.id)
+        }
       })
       hitAreaContainer.addChild(hit)
     }

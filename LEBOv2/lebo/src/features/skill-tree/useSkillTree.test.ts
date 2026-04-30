@@ -73,6 +73,28 @@ describe('useSkillTree', () => {
     expect(useBuildStore.getState().activeBuild!.nodeAllocations['root']).toBe(1)
   })
 
+  it('successive left-clicks add multiple points up to maxPoints', () => {
+    const { result } = renderHook(() => useSkillTree(allNodes))
+    act(() => result.current.handleNodeClick('root'))
+    act(() => result.current.handleNodeClick('root'))
+    act(() => result.current.handleNodeClick('root'))
+    expect(useBuildStore.getState().activeBuild!.nodeAllocations['root']).toBe(3)
+  })
+
+  it('handleNodeRightClick removes one point', () => {
+    const { result } = renderHook(() => useSkillTree(allNodes))
+    act(() => result.current.handleNodeClick('root'))
+    act(() => result.current.handleNodeClick('root'))
+    act(() => result.current.handleNodeRightClick('root'))
+    expect(useBuildStore.getState().activeBuild!.nodeAllocations['root']).toBe(1)
+  })
+
+  it('handleNodeRightClick on zero-point node does not set error', () => {
+    const { result } = renderHook(() => useSkillTree(allNodes))
+    act(() => result.current.handleNodeRightClick('root'))
+    expect(result.current.nodeError).toBeNull()
+  })
+
   it('handleKeyboardNavigate sets keyboardFocusedNodeId and keyboardPosition', () => {
     const { result } = renderHook(() => useSkillTree(allNodes))
     act(() => result.current.handleKeyboardNavigate('root', 120, 240))

@@ -107,6 +107,7 @@ export function SkillTreeView() {
     keyboardFocusedNodeId,
     keyboardPosition,
     handleNodeClick,
+    handleNodeRightClick,
     handleNodeHover,
     handleMouseMove,
     handleKeyboardNavigate,
@@ -189,6 +190,7 @@ export function SkillTreeView() {
               allocatedNodes={allocatedNodes}
               highlightedNodes={highlightedNodeIds ?? EMPTY_HIGHLIGHTED}
               onNodeClick={handleNodeClick}
+              onNodeRightClick={handleNodeRightClick}
               onNodeHover={handleNodeHover}
               onKeyboardNavigate={handleKeyboardNavigate}
             />

@@ -10,13 +10,14 @@ export function SkillTreeCanvas({
   allocatedNodes,
   highlightedNodes,
   onNodeClick,
+  onNodeRightClick,
   onNodeHover,
   onKeyboardNavigate,
 }: SkillTreeCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rendererRef = useRef<RendererInstance | null>(null)
-  const callbacksRef = useRef<RendererCallbacks>({ onNodeClick, onNodeHover })
+  const callbacksRef = useRef<RendererCallbacks>({ onNodeClick, onNodeRightClick, onNodeHover })
   const dataRef = useRef({ treeData, allocatedNodes, highlightedNodes })
   const treeDataRef = useRef(treeData)
   const bfsOrderRef = useRef<string[]>([])
@@ -60,7 +61,7 @@ export function SkillTreeCanvas({
 
   // Keep refs current after every render
   useEffect(() => {
-    callbacksRef.current = { onNodeClick, onNodeHover }
+    callbacksRef.current = { onNodeClick, onNodeRightClick, onNodeHover }
     dataRef.current = { treeData, allocatedNodes, highlightedNodes }
     treeDataRef.current = treeData
     bfsOrderRef.current = bfsOrder
@@ -282,6 +283,10 @@ export function SkillTreeCanvas({
                 onKeyboardNavigate(null, 0, 0)
               }}
               onClick={() => onNodeClick(id)}
+              onContextMenu={(e) => {
+                e.preventDefault()
+                onNodeRightClick(id)
+              }}
             />
           )
         })}

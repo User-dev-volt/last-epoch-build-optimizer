@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import toast from 'react-hot-toast'
 import { invokeCommand } from '../../shared/utils/invokeCommand'
 import { useAppStore } from '../../shared/stores/appStore'
@@ -8,6 +8,8 @@ import { OpenRouterInput } from './OpenRouterInput'
 export function ProviderSelector() {
   const llmProvider = useAppStore((s) => s.llmProvider)
   const setLlmProvider = useAppStore((s) => s.setLlmProvider)
+  const claudeRef = useRef<HTMLButtonElement>(null)
+  const openrouterRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     invokeCommand<string>('get_llm_provider')
@@ -16,11 +18,19 @@ export function ProviderSelector() {
   }, [])
 
   async function handleProviderChange(provider: 'claude' | 'openrouter') {
+    if (llmProvider === provider) return
+    const prevProvider = llmProvider
+    setLlmProvider(provider)
+    // Restore focus after DOM update (ApiKeyInput ↔ OpenRouterInput swap)
+    requestAnimationFrame(() => {
+      if (provider === 'claude') claudeRef.current?.focus()
+      else openrouterRef.current?.focus()
+    })
     try {
       await invokeCommand('set_llm_provider', { provider })
-      setLlmProvider(provider)
       toast.success(provider === 'claude' ? 'Switched to Claude' : 'Switched to OpenRouter')
     } catch {
+      setLlmProvider(prevProvider)
       toast.error('Failed to save provider selection')
     }
   }
@@ -33,10 +43,15 @@ export function ProviderSelector() {
 
       <div
         data-testid="provider-selector"
+        role="group"
+        aria-label="AI provider"
         className="flex gap-2"
       >
         <button
+          ref={claudeRef}
           data-testid="provider-claude"
+          type="button"
+          aria-pressed={llmProvider === 'claude'}
           onClick={() => handleProviderChange('claude')}
           className="px-3 py-1.5 rounded text-xs font-medium"
           style={
@@ -48,7 +63,10 @@ export function ProviderSelector() {
           Claude (Anthropic)
         </button>
         <button
+          ref={openrouterRef}
           data-testid="provider-openrouter"
+          type="button"
+          aria-pressed={llmProvider === 'openrouter'}
           onClick={() => handleProviderChange('openrouter')}
           className="px-3 py-1.5 rounded text-xs font-medium"
           style={

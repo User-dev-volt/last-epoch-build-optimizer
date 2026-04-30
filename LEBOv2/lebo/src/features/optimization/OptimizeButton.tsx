@@ -4,6 +4,8 @@ interface OptimizeButtonProps {
   isOptimizing: boolean
 }
 
+const BAR_DELAYS = ['0ms', '160ms', '320ms', '480ms', '640ms']
+
 export function OptimizeButton({ onOptimize, disabled, isOptimizing }: OptimizeButtonProps) {
   const isInteractive = !disabled && !isOptimizing
 
@@ -17,7 +19,7 @@ export function OptimizeButton({ onOptimize, disabled, isOptimizing }: OptimizeB
         aria-label={isOptimizing ? 'Analyzing build...' : 'Optimize build'}
         id="optimize-button"
         data-testid="optimize-button"
-        className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded text-sm font-semibold transition-opacity"
+        className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded text-sm font-semibold"
         style={{
           backgroundColor: disabled
             ? 'var(--color-bg-elevated)'
@@ -31,18 +33,21 @@ export function OptimizeButton({ onOptimize, disabled, isOptimizing }: OptimizeB
           <>
             <span>Analyzing...</span>
             <div
-              className="flex items-end gap-0.5"
-              style={{ height: '12px' }}
+              className="flex items-end gap-px"
+              style={{ height: '14px' }}
               data-testid="optimize-loading-indicator"
+              aria-hidden="true"
             >
-              {([0, 150, 300] as const).map((delay) => (
+              {BAR_DELAYS.map((delay) => (
                 <div
                   key={delay}
-                  className="w-0.5 rounded-full animate-pulse"
                   style={{
-                    height: delay === 150 ? '12px' : '8px',
+                    width: '3px',
+                    height: '4px',
                     backgroundColor: 'var(--color-bg-base)',
-                    animationDelay: `${delay}ms`,
+                    borderRadius: '2px',
+                    animation: `analyzing-bar 0.9s ease-in-out infinite`,
+                    animationDelay: delay,
                   }}
                 />
               ))}
@@ -54,12 +59,29 @@ export function OptimizeButton({ onOptimize, disabled, isOptimizing }: OptimizeB
       </button>
 
       {isOptimizing && (
-        <p
-          className="text-xs text-center"
-          style={{ color: 'var(--color-text-muted)' }}
-        >
-          This usually takes 20–30 seconds
-        </p>
+        <div className="flex flex-col gap-1.5">
+          {/* Indeterminate progress bar */}
+          <div
+            className="w-full rounded-full overflow-hidden"
+            style={{ height: '3px', backgroundColor: 'var(--color-bg-elevated)' }}
+            aria-hidden="true"
+          >
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: '40%',
+                backgroundColor: 'var(--color-accent-gold)',
+                animation: 'analyzing-progress 1.8s ease-in-out infinite',
+              }}
+            />
+          </div>
+          <p
+            className="text-xs text-center"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            This usually takes 20–30 seconds
+          </p>
+        </div>
       )}
     </div>
   )

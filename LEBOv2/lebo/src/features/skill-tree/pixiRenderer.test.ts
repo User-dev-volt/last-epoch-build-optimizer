@@ -82,7 +82,7 @@ vi.mock('pixi.js', () => {
 })
 
 function makeCallbacksRef(): { current: RendererCallbacks } {
-  return { current: { onNodeClick: vi.fn(), onNodeHover: vi.fn() } }
+  return { current: { onNodeClick: vi.fn(), onNodeRightClick: vi.fn(), onNodeHover: vi.fn() } }
 }
 
 function makeCanvas(): HTMLCanvasElement {

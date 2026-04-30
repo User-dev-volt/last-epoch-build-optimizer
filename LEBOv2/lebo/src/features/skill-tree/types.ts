@@ -27,6 +27,7 @@ export interface TreeData {
 
 export interface RendererCallbacks {
   onNodeClick: (nodeId: string) => void
+  onNodeRightClick: (nodeId: string) => void
   onNodeHover: (nodeId: string | null) => void
 }
 
@@ -48,6 +49,7 @@ export interface SkillTreeCanvasProps {
   allocatedNodes: Record<string, number>
   highlightedNodes: HighlightedNodes
   onNodeClick: (nodeId: string) => void
+  onNodeRightClick: (nodeId: string) => void
   onNodeHover: (nodeId: string | null) => void
   onKeyboardNavigate: (nodeId: string | null, screenX: number, screenY: number) => void
 }
