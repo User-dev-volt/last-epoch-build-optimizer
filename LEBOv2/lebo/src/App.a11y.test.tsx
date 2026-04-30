@@ -49,9 +49,10 @@ vi.mock('react-hot-toast', () => ({
 }))
 
 describe('App accessibility (axe)', () => {
-  const initialState = useAppStore.getState()
+  let initialState: ReturnType<typeof useAppStore.getState>
 
   beforeEach(() => {
+    initialState = useAppStore.getState()
     useAppStore.setState(initialState, true)
     vi.clearAllMocks()
   })

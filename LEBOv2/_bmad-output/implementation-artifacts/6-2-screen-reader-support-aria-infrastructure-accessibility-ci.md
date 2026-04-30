@@ -253,12 +253,12 @@ All 7 tasks implemented and verified. 459 tests pass, TypeScript clean.
 
 ### Patch Items
 
-- [ ] [Review][Patch] `contextmenu` listener added to canvas in `initRenderer` is never removed in `destroy()` — memory leak / orphaned handler under StrictMode double-mount [`lebo/src/features/skill-tree/pixiRenderer.ts`]
-- [ ] [Review][Patch] `useReducedMotion` calls `window.matchMedia(...)` at the top of the hook body, creating a new `MediaQueryList` object on every render — use `useRef` to memoize across renders [`lebo/src/shared/hooks/useReducedMotion.ts`]
-- [ ] [Review][Patch] Reduced motion flag is not applied before the first `renderTree` call at init, and changing `reducedMotion` after mount does not trigger a re-render of the tree — call `renderTree` inside the `setReducedMotion` useEffect [`lebo/src/features/skill-tree/SkillTreeCanvas.tsx:174`]
-- [ ] [Review][Patch] `setRegion` clear→rAF→set pattern drops "Analyzing your build..." announcement when optimization completes before the rAF fires (rapid transitions) — cancel pending rAF or coalesce with a tracked rAF id [`lebo/src/shared/hooks/useAccessibilityAnnouncer.ts`]
-- [ ] [Review][Patch] Arrow-key navigation silently dead-ends when all connected nodes are outside the current viewport — no feedback to the user; add a screen-reader announcement or call `onKeyboardNavigate(null, 0, 0)` [`lebo/src/features/skill-tree/SkillTreeCanvas.tsx:237`]
-- [ ] [Review][Patch] `initialState` captured at `describe` scope (evaluated once at module load) — dirty baseline if prior tests mutate the store; move inside `beforeEach` [`lebo/src/App.a11y.test.tsx:52`]
+- [x] [Review][Patch] `contextmenu` listener added to canvas in `initRenderer` is never removed in `destroy()` — memory leak / orphaned handler under StrictMode double-mount [`lebo/src/features/skill-tree/pixiRenderer.ts`]
+- [x] [Review][Patch] `useReducedMotion` calls `window.matchMedia(...)` at the top of the hook body, creating a new `MediaQueryList` object on every render — use `useRef` to memoize across renders [`lebo/src/shared/hooks/useReducedMotion.ts`]
+- [x] [Review][Patch] Reduced motion flag is not applied before the first `renderTree` call at init, and changing `reducedMotion` after mount does not trigger a re-render of the tree — call `renderTree` inside the `setReducedMotion` useEffect [`lebo/src/features/skill-tree/SkillTreeCanvas.tsx:174`]
+- [x] [Review][Patch] `setRegion` clear→rAF→set pattern drops "Analyzing your build..." announcement when optimization completes before the rAF fires (rapid transitions) — cancel pending rAF or coalesce with a tracked rAF id [`lebo/src/shared/hooks/useAccessibilityAnnouncer.ts`]
+- [x] [Review][Patch] Arrow-key navigation silently dead-ends when all connected nodes are outside the current viewport — re-announces current position via `onKeyboardNavigate` so screen reader gives feedback [`lebo/src/features/skill-tree/SkillTreeCanvas.tsx:237`]
+- [x] [Review][Patch] `initialState` captured at `describe` scope (evaluated once at module load) — dirty baseline if prior tests mutate the store; moved inside `beforeEach` [`lebo/src/App.a11y.test.tsx:52`]
 
 ### Deferred Items
 
@@ -271,4 +271,4 @@ All 7 tasks implemented and verified. 459 tests pass, TypeScript clean.
 ## Story Completion Status
 
 Story created: 2026-04-29
-Status: in-progress
+Status: done

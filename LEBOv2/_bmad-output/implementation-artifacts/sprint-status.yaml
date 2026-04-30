@@ -52,7 +52,7 @@
 #   - 4.1 (Context Panel — needs item/affix/idol data from game data)
 
 generated: 2026-04-18
-last_updated: 2026-04-30 # 6.2 review → in-progress (code review: 6 patches found: contextmenu listener leak, useReducedMotion matchMedia re-creation, reduced motion first-render miss, rAF race in announcer, arrow-key dead-end, initialState scope; 5 deferred; Acceptance Auditor failed rate-limit)
+last_updated: 2026-04-30 # 6.2 → done (code review: 6 patches applied: contextmenu listener leak, useReducedMotion matchMedia re-creation, reduced motion first-render miss, rAF race in announcer, arrow-key dead-end re-announce, initialState scope fix; 5 deferred; 465 tests pass)
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -193,6 +193,6 @@ development_status:
   6-1-keyboard-navigation-global-shortcuts: done
 
   # Story 6.2: Depends on 6.1 + all view components existing (ARIA audit requires complete UI)
-  6-2-screen-reader-support-aria-infrastructure-accessibility-ci: in-progress
+  6-2-screen-reader-support-aria-infrastructure-accessibility-ci: done
 
   epic-6-retrospective: optional

@@ -81,7 +81,8 @@ export async function initRenderer(
   })
 
   // Prevent browser context menu on right-click so right-click node removal works
-  app.canvas.addEventListener('contextmenu', (e) => e.preventDefault())
+  const onContextMenu = (e: Event) => e.preventDefault()
+  app.canvas.addEventListener('contextmenu', onContextMenu)
 
   const worldContainer = new Container()
   app.stage.addChild(worldContainer)
@@ -235,6 +236,7 @@ export async function initRenderer(
   }
 
   function destroy() {
+    app.canvas.removeEventListener('contextmenu', onContextMenu)
     // false = do not remove canvas from DOM; React owns the canvas element's lifecycle
     app.destroy(false, { children: true })
   }

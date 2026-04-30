@@ -29,6 +29,7 @@ export function SkillTreeCanvas({
 
   const [nodeButtons, setNodeButtons] = useState<NodeButton[]>([])
   const reducedMotion = useReducedMotion()
+  const reducedMotionRef = useRef(reducedMotion)
 
   // BFS order derived from directed edges (fromId → toId); roots are nodes with no incoming edge
   const bfsOrder = useMemo(() => {
@@ -65,6 +66,7 @@ export function SkillTreeCanvas({
     dataRef.current = { treeData, allocatedNodes, highlightedNodes }
     treeDataRef.current = treeData
     bfsOrderRef.current = bfsOrder
+    reducedMotionRef.current = reducedMotion
   })
 
   // Adjacency map built from TreeNode.connections (already bidirectional per node)
@@ -144,6 +146,7 @@ export function SkillTreeCanvas({
 
         const { width, height } = container.getBoundingClientRect()
         r.resize(width, height)
+        r.setReducedMotion(reducedMotionRef.current)
         const { treeData: td, allocatedNodes: an, highlightedNodes: hn } = dataRef.current
         r.renderTree(td, an, hn)
 
@@ -170,9 +173,13 @@ export function SkillTreeCanvas({
     rendererRef.current?.renderTree(treeData, allocatedNodes, highlightedNodes)
   }, [treeData, allocatedNodes, highlightedNodes])
 
-  // Propagate reduced motion preference to renderer
+  // Propagate reduced motion preference to renderer and re-render so the change takes effect immediately
   useEffect(() => {
-    rendererRef.current?.setReducedMotion(reducedMotion)
+    const r = rendererRef.current
+    if (!r) return
+    r.setReducedMotion(reducedMotion)
+    const { treeData: td, allocatedNodes: an, highlightedNodes: hn } = dataRef.current
+    r.renderTree(td, an, hn)
   }, [reducedMotion])
 
   function handleNodeKeyDown(e: React.KeyboardEvent<HTMLButtonElement>, id: string) {
@@ -234,7 +241,13 @@ export function SkillTreeCanvas({
       }
     }
 
-    if (bestId) buttonRefs.current.get(bestId)?.focus()
+    if (bestId) {
+      buttonRefs.current.get(bestId)?.focus()
+    } else if (connections.length > 0 && containerRef.current) {
+      // All connected nodes are off-screen in this direction — re-announce current position
+      const rect = containerRef.current.getBoundingClientRect()
+      onKeyboardNavigate(id, rect.left + currentBtn.screenX, rect.top + currentBtn.screenY)
+    }
   }
 
   return (

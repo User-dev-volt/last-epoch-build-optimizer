@@ -1,13 +1,19 @@
 import { useEffect } from 'react'
 import { useOptimizationStore } from '../stores/optimizationStore'
 
+const pendingRafs = new Map<string, number>()
+
 function setRegion(id: string, text: string) {
   const el = document.getElementById(id)
   if (!el) return
+  const prev = pendingRafs.get(id)
+  if (prev !== undefined) cancelAnimationFrame(prev)
   el.textContent = ''
-  requestAnimationFrame(() => {
+  const rafId = requestAnimationFrame(() => {
     el.textContent = text
+    pendingRafs.delete(id)
   })
+  pendingRafs.set(id, rafId)
 }
 
 export function useAccessibilityAnnouncer() {

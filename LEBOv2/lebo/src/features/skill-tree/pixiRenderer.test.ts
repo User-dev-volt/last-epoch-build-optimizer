@@ -20,7 +20,7 @@ const { mockApp, mockRendererResize, mockAppDestroy } = vi.hoisted(() => {
         screen: { width: 800, height: 600 },
       },
       screen: { width: 800, height: 600 },
-      canvas: { addEventListener: vi.fn() },
+      canvas: { addEventListener: vi.fn(), removeEventListener: vi.fn() },
       renderer: { resize: mockRendererResize },
       ticker: { FPS: 60, add: vi.fn() },
       destroy: mockAppDestroy,
