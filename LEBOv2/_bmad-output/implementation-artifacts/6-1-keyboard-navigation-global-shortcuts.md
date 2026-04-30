@@ -1,6 +1,6 @@
 # Story 6.1: Keyboard Navigation & Global Shortcuts
 
-Status: review
+Status: done
 
 ## Story
 
