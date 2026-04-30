@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import type { SkillTreeCanvasProps, RendererCallbacks, RendererInstance } from './types'
 import { initRenderer, NODE_RADIUS } from './pixiRenderer'
+import { useReducedMotion } from '../../shared/hooks/useReducedMotion'
 
 type NodeButton = { id: string; screenX: number; screenY: number; r: number }
 
@@ -26,6 +27,7 @@ export function SkillTreeCanvas({
   const initChainRef = useRef<Promise<unknown>>(Promise.resolve())
 
   const [nodeButtons, setNodeButtons] = useState<NodeButton[]>([])
+  const reducedMotion = useReducedMotion()
 
   // BFS order derived from directed edges (fromId → toId); roots are nodes with no incoming edge
   const bfsOrder = useMemo(() => {
@@ -166,6 +168,11 @@ export function SkillTreeCanvas({
   useEffect(() => {
     rendererRef.current?.renderTree(treeData, allocatedNodes, highlightedNodes)
   }, [treeData, allocatedNodes, highlightedNodes])
+
+  // Propagate reduced motion preference to renderer
+  useEffect(() => {
+    rendererRef.current?.setReducedMotion(reducedMotion)
+  }, [reducedMotion])
 
   function handleNodeKeyDown(e: React.KeyboardEvent<HTMLButtonElement>, id: string) {
     if (e.key === 'Enter' || e.key === ' ') {

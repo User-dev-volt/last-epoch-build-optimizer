@@ -14,12 +14,15 @@ const mockRenderTree = vi.fn()
 const mockResize = vi.fn()
 const mockDestroy = vi.fn()
 
+const mockSetReducedMotion = vi.fn()
+
 const mockRenderer: RendererInstance = {
   renderTree: mockRenderTree,
   resize: mockResize,
   destroy: mockDestroy,
   getViewport: mockGetViewport,
   addTickerListener: mockAddTickerListener,
+  setReducedMotion: mockSetReducedMotion,
 }
 
 vi.mock('./pixiRenderer', () => ({

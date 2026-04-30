@@ -41,7 +41,7 @@ export function GoalSelector() {
             key={value}
             value={value}
             data-testid={`goal-option-${value}`}
-            className="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer focus:outline-none"
+            className="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer data-[focus]:outline data-[focus]:outline-2 data-[focus]:outline-[var(--color-accent-gold)]"
           >
             {({ checked, disabled }: { checked: boolean; disabled: boolean }) => (
               <span

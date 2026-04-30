@@ -1,6 +1,6 @@
 # Story 6.2: Screen Reader Support, ARIA Infrastructure & Accessibility CI
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -42,124 +42,56 @@ So that the tool is fully usable with NVDA (Windows) and VoiceOver (macOS) witho
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Install vitest-axe and configure (AC: 1)
-  - [ ] `pnpm add -D vitest-axe` from the `lebo/` directory
-  - [ ] In `lebo/src/test-setup.ts`, add:
+- [x] Task 1: Install vitest-axe and configure (AC: 1)
+  - [x] `pnpm add -D vitest-axe` from the `lebo/` directory
+  - [x] In `lebo/src/test-setup.ts`, add:
     ```ts
     import { toHaveNoViolations } from 'vitest-axe'
     expect.extend(toHaveNoViolations)
     ```
-  - [ ] Verify `vitest-axe` exports: `{ axe, toHaveNoViolations }` — the `axe` function wraps `axe-core` and accepts a DOM container element
+  - [x] Verify `vitest-axe` exports: `{ axe, toHaveNoViolations }` — the `axe` function wraps `axe-core` and accepts a DOM container element
 
-- [ ] Task 2: Write axe integration tests for main view and settings view (AC: 1)
-  - [ ] Create `lebo/src/App.a11y.test.tsx`:
+- [x] Task 2: Write axe integration tests for main view and settings view (AC: 1)
+  - [x] Create `lebo/src/App.a11y.test.tsx`:
     - Mock all Tauri commands (pattern: `vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))`)
     - Mock `@tauri-apps/plugin-updater` (already mocked in other test files — copy pattern)
     - Render `<App />` with default store state (no active build, no suggestions)
     - Run `axe(container)` and assert `toHaveNoViolations()`
     - Second test: set store to settings view (`useAppStore.getState().setCurrentView('settings')`) and re-render + re-run axe
-  - [ ] The axe tests render component trees against jsdom — PixiJS canvas will not mount (no WebGL in jsdom); this is expected. The overlay div and non-canvas DOM will be audited.
-  - [ ] Pass `{ rules: { 'color-contrast': { enabled: false } } }` to `axe()` only if color-contrast violations appear that are false positives from the dark theme (jsdom doesn't compute CSS custom property contrast). Do NOT blanket-disable other rules.
-  - [ ] If a violation is found, fix the component rather than disabling the rule
+  - [x] The axe tests render component trees against jsdom — PixiJS canvas will not mount (no WebGL in jsdom); this is expected. The overlay div and non-canvas DOM will be audited.
+  - [x] Pass `{ rules: { 'color-contrast': { enabled: false } } }` to `axe()` only if color-contrast violations appear that are false positives from the dark theme (jsdom doesn't compute CSS custom property contrast). Do NOT blanket-disable other rules.
+  - [x] If a violation is found, fix the component rather than disabling the rule
 
-- [ ] Task 3: Wire live region content announcements (AC: 2, 3, 4)
-  - [ ] Create `lebo/src/shared/hooks/useAccessibilityAnnouncer.ts`:
-    ```ts
-    export function useAccessibilityAnnouncer() {
-      useEffect(() => {
-        return useOptimizationStore.subscribe((state, prev) => {
-          if (state.isOptimizing && !prev.isOptimizing) {
-            setRegion('ai-status-region', 'Analyzing your build...')
-          }
-          if (state.hasOptimizationCompleted && !prev.hasOptimizationCompleted) {
-            setRegion('ai-status-region', `Optimization complete. ${state.suggestions.length} suggestions available`)
-          }
-          if (state.streamError && state.streamError !== prev.streamError) {
-            const msg = state.streamError.message ?? 'An error occurred. Please try again.'
-            setRegion('critical-error-region', msg)
-          }
-        })
-      }, [])
-    }
+- [x] Task 3: Wire live region content announcements (AC: 2, 3, 4)
+  - [x] Create `lebo/src/shared/hooks/useAccessibilityAnnouncer.ts`
+  - [x] Call `useAccessibilityAnnouncer()` in `App.tsx` — add to the hook call list at the top of `App()`
+  - [x] Do NOT touch `import-progress-region`
+  - [x] When `isOptimizing` goes false (optimization ends or errors), also clear `#ai-status-region`
 
-    function setRegion(id: string, text: string) {
-      const el = document.getElementById(id)
-      if (!el) return
-      el.textContent = ''                  // force re-announcement by clearing first
-      requestAnimationFrame(() => { el.textContent = text })
-    }
-    ```
-  - [ ] Call `useAccessibilityAnnouncer()` in `App.tsx` — add to the hook call list at the top of `App()`
-  - [ ] Do NOT touch `import-progress-region` — this region is infrastructure-ready but will remain empty until Story 2.1/2.2 implements actual build code parsing (that story is deferred). The div remains in place.
-  - [ ] When `isOptimizing` goes false (optimization ends or errors), also clear `#ai-status-region`:
-    ```ts
-    if (!state.isOptimizing && prev.isOptimizing && !state.hasOptimizationCompleted) {
-      setRegion('ai-status-region', '')
-    }
-    ```
+- [x] Task 4: Fix `focus:outline-none` violations — components that remove the global focus ring with no replacement (AC: 6)
+  - [x] **`SkillTreeTabBar.tsx`** — `Tab` component: replaced `focus:outline-none` with `data-[focus]:outline data-[focus]:outline-2 data-[focus]:outline-[var(--color-accent-gold)] data-[focus]:outline-offset-[-2px]`
+  - [x] **`GoalSelector.tsx`** — `Radio` component: replaced `focus:outline-none` with `data-[focus]:outline data-[focus]:outline-2 data-[focus]:outline-[var(--color-accent-gold)]`
+  - [x] **`SavedBuildsList.tsx`** — rename `<input>`: removed `outline: 'none'`, added `focus:outline focus:outline-1 focus:outline-[var(--color-accent-gold)]`
+  - [x] **`ClassMasterySelector.tsx`** — left as-is (Headless UI manages focus internally)
 
-- [ ] Task 4: Fix `focus:outline-none` violations — components that remove the global focus ring with no replacement (AC: 6)
-  - [ ] **`SkillTreeTabBar.tsx`** — `Tab` component at line ~27:
-    - Replace `focus:outline-none` with Headless UI v2's data attribute focus class:
-      `data-[focus]:outline data-[focus]:outline-2 data-[focus]:outline-[var(--color-accent-gold)] data-[focus]:outline-offset-[-2px]`
-    - Do NOT use Tailwind's `focus:` prefix on Headless UI primitives — Headless UI v2 uses `data-[focus]` not `:focus`
-    - The existing `borderBottom: '2px solid var(--color-accent-gold)'` shows selected state only; this adds a separate visible focus state
-  - [ ] **`GoalSelector.tsx`** — `Radio` component at line ~44:
-    - Replace `focus:outline-none` with `data-[focus]:outline data-[focus]:outline-2 data-[focus]:outline-[var(--color-accent-gold)]`
-  - [ ] **`SavedBuildsList.tsx`** — rename `<input>` at line ~114:
-    - Remove `outline: 'none'` from the inline style object
-    - Add `className="... focus:outline focus:outline-1 focus:outline-[var(--color-accent-gold)]"` (the existing gold border is static, not a focus indicator; the explicit gold outline on focus is the correct fix)
-  - [ ] **`ClassMasterySelector.tsx`** — `focus:outline-none` on dropdown panel container elements (lines ~49, ~108): Leave these as-is. These are Headless UI Listbox panel containers that Headless UI manages for focus — they are `role="listbox"` with `aria-orientation` attributes and Headless UI manages focus indicators internally for the options. Removing `focus:outline-none` would cause double-outline.
+- [x] Task 5: Enhance SuggestionCard aria-label with score deltas (AC: 5)
+  - [x] In `SuggestionCard.tsx`, updated `ariaLabel` with `formatScore()` and full score before/after format
+  - [x] Update `SuggestionCard.test.tsx` to assert the new aria-label format includes score values
 
-- [ ] Task 5: Enhance SuggestionCard aria-label with score deltas (AC: 5)
-  - [ ] In `SuggestionCard.tsx`, update the `ariaLabel` construction (currently line ~95):
-    ```ts
-    function formatScore(v: number | null): string {
-      return v === null ? '—' : String(v)
-    }
-    const ariaLabel = [
-      `[Rank ${suggestion.rank}]`,
-      `${changeType} ${toNodeName} — ${changeDescription}.`,
-      `Damage: ${formatScore(suggestion.baselineScore.damage)} → ${formatScore(suggestion.previewScore.damage)}.`,
-      `Survivability: ${formatScore(suggestion.baselineScore.survivability)} → ${formatScore(suggestion.previewScore.survivability)}.`,
-      `Speed: ${formatScore(suggestion.baselineScore.speed)} → ${formatScore(suggestion.previewScore.speed)}.`,
-      suggestion.explanation,
-    ].join(' ')
-    ```
-  - [ ] `baselineScore` and `previewScore` are both on `SuggestionResult` (types already defined in `optimization.ts`). No new data needed.
-  - [ ] Update `SuggestionCard.test.tsx` to assert the new aria-label format includes score values
+- [x] Task 6: Create `useReducedMotion` hook and apply to PixiJS renderer (AC: 7)
+  - [x] Created `lebo/src/shared/hooks/useReducedMotion.ts`
+  - [x] Added `setReducedMotion(enabled: boolean): void` to `RendererInstance` in `types.ts`
+  - [x] Implemented in `pixiRenderer.ts`: `reducedMotionEnabled` flag stored in closure; when true, skips the glow halo (pulsing outer alpha circle) in `drawSuggested`
+  - [x] In `SkillTreeCanvas.tsx`, calls `useReducedMotion()` and passes to renderer via `useEffect`
+  - [x] Added `useReducedMotion.test.ts` — matchMedia mock, initial state, change handler
 
-- [ ] Task 6: Create `useReducedMotion` hook and apply to PixiJS renderer (AC: 7)
-  - [ ] Create `lebo/src/shared/hooks/useReducedMotion.ts`:
-    ```ts
-    import { useState, useEffect } from 'react'
-
-    export function useReducedMotion(): boolean {
-      const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-      const [reducedMotion, setReducedMotion] = useState(mq.matches)
-      useEffect(() => {
-        const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches)
-        mq.addEventListener('change', handler)
-        return () => mq.removeEventListener('change', handler)
-      }, [])
-      return reducedMotion
-    }
-    ```
-  - [ ] In `SkillTreeCanvas.tsx`, call `useReducedMotion()` and pass the result to the renderer:
-    - Read current `RendererInstance` interface in `types.ts` — check if `renderTree` or `setReducedMotion` exists
-    - Add `setReducedMotion(enabled: boolean): void` to `RendererInstance` in `types.ts`
-    - Implement in `pixiRenderer.ts`: store `reducedMotionEnabled` flag; when true, skip the glow/tween alpha animation in the highlight loop (the `isGlowing` branch around line 180 — set alpha directly instead of animating)
-    - In `SkillTreeCanvas.tsx`, call `renderer.setReducedMotion(reducedMotion)` in a `useEffect([reducedMotion, rendererRef.current])` after renderer init
-  - [ ] CSS-level reduced motion is already handled globally in `global.css` (kills all `animate-*` and `transition-*`). The `useReducedMotion` hook is specifically for PixiJS WebGL animations that CSS cannot reach.
-  - [ ] Add `useReducedMotion.test.ts` — mock `window.matchMedia`, test initial state and change event handling
-
-- [ ] Task 7: Tests (all ACs)
-  - [ ] `App.a11y.test.tsx` — axe audit for main view and settings view (Task 2 above)
-  - [ ] `useAccessibilityAnnouncer.test.ts` — test region injection: isOptimizing→true, completion with count, streamError injection, clear on abort
-  - [ ] `useReducedMotion.test.ts` — matchMedia mock, initial state, change handler
-  - [ ] `SuggestionCard.test.tsx` — extend existing test: assert aria-label includes "Damage: X → Y" format
-  - [ ] `pnpm tsc --noEmit` — clean
-  - [ ] `pnpm vitest run` — all tests passing
+- [x] Task 7: Tests (all ACs)
+  - [x] `App.a11y.test.tsx` — axe audit for main view and settings view (Task 2 above)
+  - [x] `useAccessibilityAnnouncer.test.ts` — test region injection: isOptimizing→true, completion with count, streamError injection, clear on abort
+  - [x] `useReducedMotion.test.ts` — matchMedia mock, initial state, change handler
+  - [x] `SuggestionCard.test.tsx` — extend existing test: assert aria-label includes "Damage: X → Y" format
+  - [x] `pnpm tsc --noEmit` — clean
+  - [x] `pnpm vitest run` — all 459 tests passing
 
 ## Dev Notes
 
@@ -271,9 +203,50 @@ NFR16 (tooltip readability at 100% system font scale) must be verified manually 
 
 ## Dev Agent Record
 
-_To be filled in during implementation._
+### Implementation Plan
+
+Implemented in task order as specified. Key decisions:
+- `vitest-axe` v0.1.0 uses the old `Vi.Assertion` namespace — added `lebo/src/vitest-axe.d.ts` to augment the current Vitest 4.x `Assertion` interface instead. Also added `window.matchMedia` global mock to `test-setup.ts` since jsdom doesn't provide it.
+- `useReducedMotion` is called at the component level in `SkillTreeCanvas` and propagated to the renderer via a `useEffect`. Since there is no ticker-based animation loop currently, the `setReducedMotion` flag disables the outer glow halo (`alpha: 0.25` circle) drawn by `drawSuggested` — the static ring and node color still render.
+- `useAccessibilityAnnouncer` uses `useOptimizationStore.subscribe` (state transitions), not `useOptimizationStore` (renders), to avoid noise announcements.
+- NFR16 (tooltip readability at 100% display scale) requires manual Windows verification before final sign-off.
+
+### Completion Notes
+
+All 7 tasks implemented and verified. 459 tests pass, TypeScript clean.
+- **Task 1**: `vitest-axe` installed; `test-setup.ts` extended with `toHaveNoViolations` + global `matchMedia` stub; `vitest-axe.d.ts` type declaration added for Vitest 4.x compatibility.
+- **Task 2**: `App.a11y.test.tsx` — 2 axe integration tests (main view + settings view), all passing with `color-contrast` rule disabled for jsdom false-positives.
+- **Task 3**: `useAccessibilityAnnouncer.ts` hook created; wired into `App.tsx`; handles isOptimizing, completion, streamError, and abort-clear transitions.
+- **Task 4**: Fixed `SkillTreeTabBar.tsx`, `GoalSelector.tsx`, `SavedBuildsList.tsx` focus indicators. Left `ClassMasterySelector.tsx` as-is (Headless UI manages internally).
+- **Task 5**: `SuggestionCard.tsx` ariaLabel now includes `Damage: X → Y`, `Survivability: X → Y`, `Speed: X → Y` with null formatted as em dash.
+- **Task 6**: `useReducedMotion.ts` created; `RendererInstance` interface updated; `pixiRenderer.ts` skips glow halo when reduced motion enabled; `SkillTreeCanvas.tsx` propagates the flag.
+- **Task 7**: Full test suite green (459 tests).
+
+## File List
+
+- `lebo/src/test-setup.ts` — modified: added vitest-axe matcher extension + matchMedia global stub
+- `lebo/src/vitest-axe.d.ts` — new: Vitest 4.x type augmentation for `toHaveNoViolations`
+- `lebo/src/App.tsx` — modified: added `useAccessibilityAnnouncer()` call
+- `lebo/src/App.a11y.test.tsx` — new: axe integration tests for main + settings view
+- `lebo/src/shared/hooks/useAccessibilityAnnouncer.ts` — new: live region wiring hook
+- `lebo/src/shared/hooks/useAccessibilityAnnouncer.test.ts` — new: announcer hook tests
+- `lebo/src/shared/hooks/useReducedMotion.ts` — new: reads prefers-reduced-motion
+- `lebo/src/shared/hooks/useReducedMotion.test.ts` — new: matchMedia mock test
+- `lebo/src/features/skill-tree/types.ts` — modified: added `setReducedMotion` to `RendererInstance`
+- `lebo/src/features/skill-tree/pixiRenderer.ts` — modified: `setReducedMotion` + skip glow halo
+- `lebo/src/features/skill-tree/SkillTreeCanvas.tsx` — modified: `useReducedMotion()` + pass to renderer
+- `lebo/src/features/skill-tree/SkillTreeCanvas.test.tsx` — modified: added `setReducedMotion` to mock
+- `lebo/src/features/skill-tree/SkillTreeTabBar.tsx` — modified: `focus:outline-none` → `data-[focus]:outline`
+- `lebo/src/features/optimization/GoalSelector.tsx` — modified: `focus:outline-none` → `data-[focus]:outline`
+- `lebo/src/features/optimization/SuggestionCard.tsx` — modified: enhanced ariaLabel with score deltas
+- `lebo/src/features/optimization/SuggestionCard.test.tsx` — modified: added aria-label score assertions
+- `lebo/src/features/build-manager/SavedBuildsList.tsx` — modified: removed `outline: 'none'`, added gold focus class
+
+## Change Log
+
+- 2026-04-29: Story 6.2 implemented — screen reader support, ARIA infrastructure, and accessibility CI (vitest-axe integration, live region announcements, focus ring fixes, SuggestionCard label enhancement, useReducedMotion hook)
 
 ## Story Completion Status
 
 Story created: 2026-04-29
-Status: ready-for-dev
+Status: review

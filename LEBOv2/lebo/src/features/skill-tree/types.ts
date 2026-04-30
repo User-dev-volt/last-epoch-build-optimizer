@@ -40,6 +40,7 @@ export interface RendererInstance {
   destroy(): void
   getViewport(): { x: number; y: number; scale: number }
   addTickerListener(fn: () => void): () => void
+  setReducedMotion(enabled: boolean): void
 }
 
 export interface SkillTreeCanvasProps {

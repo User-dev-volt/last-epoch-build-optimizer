@@ -24,7 +24,7 @@ export function SkillTreeTabBar({ activeSkills, selectedIndex, onChange }: Skill
           return (
             <Tab
               key={tab.id}
-              className="px-4 py-2 text-sm focus:outline-none transition-colors"
+              className="px-4 py-2 text-sm transition-colors data-[focus]:outline data-[focus]:outline-2 data-[focus]:outline-[var(--color-accent-gold)] data-[focus]:outline-offset-[-2px]"
               style={{
                 color: selected ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
                 fontWeight: selected ? 600 : 400,

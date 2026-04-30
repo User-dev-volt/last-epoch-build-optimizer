@@ -54,8 +54,10 @@ function drawLocked(g: Graphics, x: number, y: number, r: number) {
   g.moveTo(x + o, y - o).lineTo(x - o, y + o).stroke({ color: 0x5a5050, width: 2 })
 }
 
-function drawSuggested(g: Graphics, x: number, y: number, r: number) {
-  g.circle(x, y, r + 6).fill({ color: 0x7b68ee, alpha: 0.25 })
+function drawSuggested(g: Graphics, x: number, y: number, r: number, reducedMotion = false) {
+  if (!reducedMotion) {
+    g.circle(x, y, r + 6).fill({ color: 0x7b68ee, alpha: 0.25 })
+  }
   g.circle(x, y, r).fill(0x141417)
   g.circle(x, y, r).stroke({ color: 0x7b68ee, width: 3 })
 }
@@ -183,7 +185,7 @@ export async function initRenderer(
       if (isAllocated || node.state === 'allocated') {
         drawAllocated(allocatedGraphics, node.x, node.y, r)
       } else if (isGlowing || node.state === 'suggested') {
-        drawSuggested(suggestedGraphics, node.x, node.y, r)
+        drawSuggested(suggestedGraphics, node.x, node.y, r, reducedMotionEnabled)
       } else if (isDimmed) {
         drawDimmed(dimmedGraphics, node.x, node.y, r)
       } else if (node.state === 'locked') {
@@ -207,7 +209,13 @@ export async function initRenderer(
     }
   }
 
+  let reducedMotionEnabled = false
+
   let initialCentered = false
+
+  function setReducedMotion(enabled: boolean) {
+    reducedMotionEnabled = enabled
+  }
 
   function resize(w: number, h: number) {
     app.renderer.resize(w, h)
@@ -234,5 +242,5 @@ export async function initRenderer(
     return () => app.ticker.remove(cb)
   }
 
-  return { renderTree, resize, destroy, getViewport, addTickerListener }
+  return { renderTree, resize, destroy, getViewport, addTickerListener, setReducedMotion }
 }

@@ -92,7 +92,17 @@ export const SuggestionCard = forwardRef<HTMLDivElement, SuggestionCardProps>(
     const changeDescription = getChangeDescription(changeType, suggestion.nodeChange.pointsChange)
     const typeBadgeColor = getTypeBadgeColor(changeType)
 
-    const ariaLabel = `[Rank ${suggestion.rank}] ${changeType} ${toNodeName} — ${changeDescription}. ${suggestion.explanation}`
+    function formatScore(v: number | null): string {
+      return v === null ? '—' : String(v)
+    }
+    const ariaLabel = [
+      `[Rank ${suggestion.rank}]`,
+      `${changeType} ${toNodeName} — ${changeDescription}.`,
+      `Damage: ${formatScore(suggestion.baselineScore.damage)} → ${formatScore(suggestion.previewScore.damage)}.`,
+      `Survivability: ${formatScore(suggestion.baselineScore.survivability)} → ${formatScore(suggestion.previewScore.survivability)}.`,
+      `Speed: ${formatScore(suggestion.baselineScore.speed)} → ${formatScore(suggestion.previewScore.speed)}.`,
+      suggestion.explanation,
+    ].join(' ')
 
     return (
       <div

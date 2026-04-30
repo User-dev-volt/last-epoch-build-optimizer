@@ -206,6 +206,35 @@ describe('SuggestionCard', () => {
     expect(screen.queryByTestId('suggestion-preview-btn')).toBeNull()
   })
 
+  it('aria-label includes score deltas in before → after format', () => {
+    const suggestion = makeSuggestion({
+      rank: 2,
+      nodeChange: { fromNodeId: null, toNodeId: 'n1', pointsChange: 1 },
+      explanation: 'Great synergy',
+      baselineScore: { damage: 47, survivability: 30, speed: 10 },
+      previewScore: { damage: 52, survivability: 30, speed: 10 },
+    })
+    render(<SuggestionCard {...DEFAULT_HANDLERS} suggestion={suggestion} toNodeName="Iron Mastery" />)
+    const card = screen.getByRole('article')
+    const label = card.getAttribute('aria-label') ?? ''
+    expect(label).toContain('Damage: 47 → 52')
+    expect(label).toContain('Survivability: 30 → 30')
+    expect(label).toContain('Speed: 10 → 10')
+    expect(label).toContain('[Rank 2]')
+    expect(label).toContain('Great synergy')
+  })
+
+  it('aria-label formats null score as em dash', () => {
+    const suggestion = makeSuggestion({
+      baselineScore: { damage: null, survivability: null, speed: null },
+      previewScore: { damage: null, survivability: null, speed: null },
+    })
+    render(<SuggestionCard {...DEFAULT_HANDLERS} suggestion={suggestion} toNodeName="Node A" />)
+    const card = screen.getByRole('article')
+    const label = card.getAttribute('aria-label') ?? ''
+    expect(label).toContain('Damage: — → —')
+  })
+
   it('shows apply error message when applyError is set', () => {
     render(
       <SuggestionCard

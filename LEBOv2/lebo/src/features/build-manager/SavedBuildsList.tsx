@@ -106,12 +106,11 @@ export function SavedBuildsList() {
               <div className="flex flex-1 items-center gap-1">
                 <input
                   autoFocus
-                  className="flex-1 text-sm rounded px-1 py-0.5 min-w-0"
+                  className="flex-1 text-sm rounded px-1 py-0.5 min-w-0 focus:outline focus:outline-1 focus:outline-[var(--color-accent-gold)]"
                   style={{
                     backgroundColor: 'var(--color-bg-base)',
                     color: 'var(--color-text-primary)',
                     border: '1px solid var(--color-accent-gold)',
-                    outline: 'none',
                   }}
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
