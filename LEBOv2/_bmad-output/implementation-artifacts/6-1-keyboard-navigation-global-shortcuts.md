@@ -282,12 +282,12 @@ All 6 tasks complete. 447/447 tests passing. `pnpm tsc --noEmit` clean.
 
 ## Review Findings
 
-- [ ] [Review][Decision] Tab traversal order: spec says "connection graph order (parent nodes before children)" but implementation uses visible-viewport-array order — dev notes document this as a deliberate simplification; confirm whether this deviation is accepted or must be corrected with BFS sorting [`SkillTreeCanvas.tsx`]
+- [x] [Review][Decision] Tab traversal order: BFS sort implemented — `syncButtonPositions` now orders visible nodes by BFS from directed-edge roots; also fixed single-node Tab flicker guard [`SkillTreeCanvas.tsx`]
 - [ ] [Review][Patch] Escape key blocked by input guard — `if (isInputTarget) return` fires before the Escape handler, so pressing Escape while a textarea/input is focused silently does nothing instead of clearing tree preview / dispatching `keyboard:escape` (AC4 + Input Guard Constraint) [`App.tsx`]
 - [ ] [Review][Patch] O/I shortcuts intercept modifier combos — `e.key === 'O'` matches Ctrl+O/Alt+I, calling `e.preventDefault()` and suppressing native browser actions [`App.tsx`]
 - [ ] [Review][Patch] BuildImportInput removes focus outline with no replacement — `outline: 'none'` in style with no `focus:` Tailwind utility fails WCAG 2.4.7 (Focus Visible) [`BuildImportInput.tsx`]
 - [ ] [Review][Patch] `focusedCardIndex` stale after suggestions change — if suggestions are replaced/removed (e.g., re-run), `focusedCardIndex` points to the wrong card; needs a `useEffect` reset when `suggestions` changes [`SuggestionsList.tsx`]
-- [ ] [Review][Patch] Tab on single visible tree node causes blur+focus flicker — when `nodeButtons.length === 1`, Tab wraps to the same element, firing `onBlur`→`onFocus` and briefly dismissing the tooltip [`SkillTreeCanvas.tsx`]
+- [x] [Review][Patch] Tab on single visible tree node causes blur+focus flicker — fixed: guard `if (nodeButtons.length < 2) return` + `nextId !== id` check added [`SkillTreeCanvas.tsx`]
 - [ ] [Review][Patch] Enter on focused suggestion card should apply when already expanded (AC5) — spec says "expands or applies"; implementation only toggles expansion and never calls `onApply` [`SuggestionsList.tsx`]
 - [x] [Review][Defer] `document.getElementById('optimize-button')?.focus()` gives no feedback when button not visible/mounted — deferred, pre-existing UX gap; toast/announcement out of scope for 6.1 [`App.tsx`]
 - [x] [Review][Defer] SuggestionCard child action buttons (Apply/Preview/Skip) remain in natural tab order — creates tab stops outside the managed card-nav model; deferred, spec silent on child button tabIndex [`SuggestionCard.tsx`]

@@ -18,6 +18,7 @@ export function SkillTreeCanvas({
   const callbacksRef = useRef<RendererCallbacks>({ onNodeClick, onNodeHover })
   const dataRef = useRef({ treeData, allocatedNodes, highlightedNodes })
   const treeDataRef = useRef(treeData)
+  const bfsOrderRef = useRef<string[]>([])
   const focusedNodeIdRef = useRef<string | null>(null)
   const buttonRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
   const lastViewportRef = useRef({ x: 0, y: 0, scale: 1 })
@@ -26,11 +27,41 @@ export function SkillTreeCanvas({
 
   const [nodeButtons, setNodeButtons] = useState<NodeButton[]>([])
 
+  // BFS order derived from directed edges (fromId → toId); roots are nodes with no incoming edge
+  const bfsOrder = useMemo(() => {
+    const children = new Map<string, string[]>()
+    const hasParent = new Set<string>()
+    for (const edge of treeData.edges) {
+      if (!children.has(edge.fromId)) children.set(edge.fromId, [])
+      children.get(edge.fromId)!.push(edge.toId)
+      hasParent.add(edge.toId)
+    }
+    const roots = treeData.nodes.filter((n) => !hasParent.has(n.id)).map((n) => n.id)
+    const visited = new Set<string>()
+    const order: string[] = []
+    const queue = [...roots]
+    while (queue.length > 0) {
+      const id = queue.shift()!
+      if (visited.has(id)) continue
+      visited.add(id)
+      order.push(id)
+      for (const child of children.get(id) ?? []) {
+        if (!visited.has(child)) queue.push(child)
+      }
+    }
+    // Append isolated nodes not reachable from any root
+    for (const node of treeData.nodes) {
+      if (!visited.has(node.id)) order.push(node.id)
+    }
+    return order
+  }, [treeData])
+
   // Keep refs current after every render
   useEffect(() => {
     callbacksRef.current = { onNodeClick, onNodeHover }
     dataRef.current = { treeData, allocatedNodes, highlightedNodes }
     treeDataRef.current = treeData
+    bfsOrderRef.current = bfsOrder
   })
 
   // Adjacency map built from TreeNode.connections (already bidirectional per node)
@@ -52,19 +83,26 @@ export function SkillTreeCanvas({
     lastViewportRef.current = vp
     const { width, height } = container.getBoundingClientRect()
     const { x: panX, y: panY, scale } = vp
-    const visible = treeDataRef.current.nodes.filter((n) => {
+    const nodeMap = new Map(treeDataRef.current.nodes.map((n) => [n.id, n]))
+    const visibleIds = new Set<string>()
+    for (const n of treeDataRef.current.nodes) {
       const sx = panX + n.x * scale
       const sy = panY + n.y * scale
-      return sx > -50 && sx < width + 50 && sy > -50 && sy < height + 50
-    })
-    setNodeButtons(
-      visible.map((n) => ({
-        id: n.id,
+      if (sx > -50 && sx < width + 50 && sy > -50 && sy < height + 50) visibleIds.add(n.id)
+    }
+    // Preserve BFS graph order (root → children → grandchildren) for Tab traversal
+    const buttons: NodeButton[] = []
+    for (const id of bfsOrderRef.current) {
+      if (!visibleIds.has(id)) continue
+      const n = nodeMap.get(id)!
+      buttons.push({
+        id,
         screenX: panX + n.x * scale,
         screenY: panY + n.y * scale,
         r: NODE_RADIUS[n.size] * scale,
-      }))
-    )
+      })
+    }
+    setNodeButtons(buttons)
   }
 
   // Mount/unmount: init renderer + ResizeObserver + ticker
@@ -144,13 +182,14 @@ export function SkillTreeCanvas({
 
     if (e.key === 'Tab') {
       e.preventDefault()
+      if (nodeButtons.length < 2) return
       const currentIdx = nodeButtons.findIndex((btn) => btn.id === id)
       if (currentIdx === -1) return
       const nextIdx = e.shiftKey
         ? (currentIdx - 1 + nodeButtons.length) % nodeButtons.length
         : (currentIdx + 1) % nodeButtons.length
       const nextId = nodeButtons[nextIdx]?.id
-      if (nextId) buttonRefs.current.get(nextId)?.focus()
+      if (nextId && nextId !== id) buttonRefs.current.get(nextId)?.focus()
       return
     }
 
