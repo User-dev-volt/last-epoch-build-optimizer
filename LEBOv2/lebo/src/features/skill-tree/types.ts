@@ -39,6 +39,7 @@ export interface RendererInstance {
   resize(w: number, h: number): void
   destroy(): void
   getViewport(): { x: number; y: number; scale: number }
+  addTickerListener(fn: () => void): () => void
 }
 
 export interface SkillTreeCanvasProps {

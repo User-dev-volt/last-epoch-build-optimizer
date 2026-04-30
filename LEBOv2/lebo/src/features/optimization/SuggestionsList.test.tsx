@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import { useOptimizationStore } from '../../shared/stores/optimizationStore'
 import { useBuildStore } from '../../shared/stores/buildStore'
 import { useGameDataStore } from '../../shared/stores/gameDataStore'
@@ -444,5 +444,100 @@ describe('SuggestionsList', () => {
     render(<SuggestionsList onRetry={vi.fn()} />)
     fireEvent.click(screen.getByTestId('auth-error-settings-link'))
     expect(useAppStore.getState().currentView).toBe('settings')
+  })
+
+  // Story 6.1: keyboard navigation tests
+
+  it('ArrowDown moves keyboard focus to next suggestion card', () => {
+    useOptimizationStore.setState({
+      suggestions: [makeSuggestion(1), makeSuggestion(2)],
+      isOptimizing: false,
+      streamError: null,
+    })
+    render(<SuggestionsList onRetry={vi.fn()} />)
+    const list = screen.getByRole('list', { name: /optimization suggestions/i })
+    fireEvent.keyDown(list, { key: 'ArrowDown' })
+    const card1 = screen.getByTestId('suggestion-card-1')
+    expect(document.activeElement).toBe(card1)
+  })
+
+  it('ArrowDown then ArrowDown moves focus to second card', () => {
+    useOptimizationStore.setState({
+      suggestions: [makeSuggestion(1), makeSuggestion(2)],
+      isOptimizing: false,
+      streamError: null,
+    })
+    render(<SuggestionsList onRetry={vi.fn()} />)
+    const list = screen.getByRole('list', { name: /optimization suggestions/i })
+    fireEvent.keyDown(list, { key: 'ArrowDown' })
+    fireEvent.keyDown(list, { key: 'ArrowDown' })
+    const card2 = screen.getByTestId('suggestion-card-2')
+    expect(document.activeElement).toBe(card2)
+  })
+
+  it('P key triggers setPreviewSuggestionRank for focused suggestion', () => {
+    useOptimizationStore.setState({
+      suggestions: [makeSuggestion(1)],
+      isOptimizing: false,
+      streamError: null,
+      previewSuggestionRank: null,
+    })
+    render(<SuggestionsList onRetry={vi.fn()} />)
+    const list = screen.getByRole('list', { name: /optimization suggestions/i })
+    fireEvent.keyDown(list, { key: 'ArrowDown' })
+    fireEvent.keyDown(list, { key: 'P' })
+    expect(useOptimizationStore.getState().previewSuggestionRank).toBe(1)
+  })
+
+  it('S key triggers skipSuggestion for focused suggestion', () => {
+    useOptimizationStore.setState({
+      suggestions: [makeSuggestion(1), makeSuggestion(2)],
+      isOptimizing: false,
+      streamError: null,
+      skippedSuggestions: [],
+    })
+    render(<SuggestionsList onRetry={vi.fn()} />)
+    const list = screen.getByRole('list', { name: /optimization suggestions/i })
+    fireEvent.keyDown(list, { key: 'ArrowDown' })
+    fireEvent.keyDown(list, { key: 'S' })
+    expect(useOptimizationStore.getState().skippedSuggestions).toHaveLength(1)
+    expect(useOptimizationStore.getState().skippedSuggestions[0].rank).toBe(1)
+  })
+
+  it('Escape clears focused card and preview', () => {
+    useOptimizationStore.setState({
+      suggestions: [makeSuggestion(1)],
+      isOptimizing: false,
+      streamError: null,
+      previewSuggestionRank: 1,
+    })
+    render(<SuggestionsList onRetry={vi.fn()} />)
+    const list = screen.getByRole('list', { name: /optimization suggestions/i })
+    fireEvent.keyDown(list, { key: 'ArrowDown' })
+    fireEvent.keyDown(list, { key: 'Escape' })
+    // After Escape, no card should be focused and preview should be cleared
+    expect(useOptimizationStore.getState().previewSuggestionRank).toBeNull()
+  })
+
+  it('global keyboard:escape event clears focused card state', async () => {
+    useOptimizationStore.setState({
+      suggestions: [makeSuggestion(1)],
+      isOptimizing: false,
+      streamError: null,
+      previewSuggestionRank: null,
+    })
+    render(<SuggestionsList onRetry={vi.fn()} />)
+    const list = screen.getByRole('list', { name: /optimization suggestions/i })
+    // Focus first card via ArrowDown
+    fireEvent.keyDown(list, { key: 'ArrowDown' })
+    // Verify card received focus styling
+    const card1 = screen.getByTestId('suggestion-card-1')
+    expect(card1.style.outline).toBeTruthy()
+    // Dispatch the global escape event (as App.tsx would) inside act so React re-renders
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('keyboard:escape'))
+    })
+    // After escape, focus styling should be cleared
+    expect(card1.style.outline).toBeFalsy()
   })
 })

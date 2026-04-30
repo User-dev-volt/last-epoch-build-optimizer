@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useOptimizationStore } from '../../shared/stores/optimizationStore'
 import { useBuildStore } from '../../shared/stores/buildStore'
 import { useGameDataStore } from '../../shared/stores/gameDataStore'
@@ -80,12 +80,92 @@ export function SuggestionsList({ onRetry }: SuggestionsListProps) {
   const gameData = useGameDataStore((s) => s.gameData)
 
   const [applyErrors, setApplyErrors] = useState<Record<number, string>>({})
+  const [focusedCardIndex, setFocusedCardIndex] = useState<number | null>(null)
+  const [expandedRank, setExpandedRank] = useState<number | null>(null)
+  const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map())
 
   const classId = activeBuild?.classId ?? ''
   const masteryId = activeBuild?.masteryId ?? ''
 
   const count = suggestions.length
   const countLabel = count === 1 ? '1 suggestion found' : `${count} suggestions found`
+
+  // Focus card element when focusedCardIndex changes
+  useEffect(() => {
+    if (focusedCardIndex === null) return
+    const suggestion = suggestions[focusedCardIndex]
+    if (!suggestion) return
+    const el = cardRefs.current.get(suggestion.rank)
+    el?.focus()
+  }, [focusedCardIndex, suggestions])
+
+  // Listen for global keyboard:escape event from App.tsx
+  useEffect(() => {
+    function handleEscape() {
+      setFocusedCardIndex(null)
+      setExpandedRank(null)
+    }
+    window.addEventListener('keyboard:escape', handleEscape)
+    return () => window.removeEventListener('keyboard:escape', handleEscape)
+  }, [])
+
+  const handleListKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (suggestions.length === 0) return
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setFocusedCardIndex((prev) => {
+          if (prev === null) return 0
+          return Math.min(prev + 1, suggestions.length - 1)
+        })
+        return
+      }
+
+      if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setFocusedCardIndex((prev) => {
+          if (prev === null) return 0
+          return Math.max(prev - 1, 0)
+        })
+        return
+      }
+
+      if (focusedCardIndex === null) return
+      const focused = suggestions[focusedCardIndex]
+      if (!focused) return
+
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        setExpandedRank((prev) => (prev === focused.rank ? null : focused.rank))
+        return
+      }
+
+      if (e.key === 'p' || e.key === 'P') {
+        e.preventDefault()
+        setPreviewSuggestionRank(
+          previewSuggestionRank === focused.rank ? null : focused.rank
+        )
+        return
+      }
+
+      if (e.key === 's' || e.key === 'S') {
+        e.preventDefault()
+        skipSuggestion(focused.rank)
+        setFocusedCardIndex(null)
+        return
+      }
+
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setFocusedCardIndex(null)
+        setExpandedRank(null)
+        setPreviewSuggestionRank(null)
+        return
+      }
+    },
+    [suggestions, focusedCardIndex, previewSuggestionRank, setPreviewSuggestionRank, skipSuggestion]
+  )
 
   function handleHoverEnter(suggestion: SuggestionResult) {
     setHighlightedNodeIds({
@@ -169,10 +249,15 @@ export function SuggestionsList({ onRetry }: SuggestionsListProps) {
     }
   }
 
-  function renderCard(suggestion: SuggestionResult, allowInteraction: boolean) {
+  function renderCard(suggestion: SuggestionResult, allowInteraction: boolean, index?: number) {
+    const isFocused = index !== undefined && focusedCardIndex === index
     return (
       <SuggestionCard
         key={`${suggestion.rank}-${suggestion.nodeChange.toNodeId}`}
+        ref={(el) => {
+          if (el) cardRefs.current.set(suggestion.rank, el)
+          else cardRefs.current.delete(suggestion.rank)
+        }}
         suggestion={suggestion}
         toNodeName={getNodeName(suggestion.nodeChange.toNodeId, gameData, classId, masteryId)}
         fromNodeName={
@@ -183,6 +268,8 @@ export function SuggestionsList({ onRetry }: SuggestionsListProps) {
         isApplied={appliedRanks.includes(suggestion.rank)}
         applyError={applyErrors[suggestion.rank] ?? null}
         isPreviewActive={previewSuggestionRank === suggestion.rank}
+        isFocused={isFocused}
+        isExpanded={expandedRank === suggestion.rank}
         onApply={() => handleApply(suggestion)}
         onSkip={() => { if (allowInteraction) skipSuggestion(suggestion.rank) }}
         onPreview={() => { if (allowInteraction) handlePreview(suggestion.rank) }}
@@ -298,7 +385,16 @@ export function SuggestionsList({ onRetry }: SuggestionsListProps) {
         </p>
       )}
 
-      {suggestions.map((suggestion) => renderCard(suggestion, true))}
+      {suggestions.length > 0 && (
+        <div
+          role="list"
+          aria-label="Optimization suggestions"
+          onKeyDown={handleListKeyDown}
+          className="flex flex-col gap-2"
+        >
+          {suggestions.map((suggestion, idx) => renderCard(suggestion, true, idx))}
+        </div>
+      )}
 
       {suggestions.length === 0 && !isOptimizing && !streamError && (
         hasOptimizationCompleted ? (

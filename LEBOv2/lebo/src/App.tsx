@@ -76,6 +76,38 @@ export function App() {
         if (activeBuild) {
           saveBuild(activeBuild).catch(console.error)
         }
+        return
+      }
+
+      // Guard bare-key shortcuts: skip when typing in an input/textarea/contenteditable
+      const target = e.target as HTMLElement
+      const isInputTarget =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target.isContentEditable
+      if (isInputTarget) return
+
+      // Skip bare-key shortcuts when in settings view (no optimize button or tree visible)
+      const { currentView } = useAppStore.getState()
+
+      if (e.key === 'Escape') {
+        useOptimizationStore.getState().setPreviewSuggestionRank(null)
+        window.dispatchEvent(new CustomEvent('keyboard:escape'))
+        return
+      }
+
+      if (currentView === 'settings') return
+
+      if (e.key === 'o' || e.key === 'O') {
+        e.preventDefault()
+        document.getElementById('optimize-button')?.focus()
+        return
+      }
+
+      if (e.key === 'i' || e.key === 'I') {
+        e.preventDefault()
+        document.getElementById('build-import-input')?.focus()
+        return
       }
     }
     window.addEventListener('keydown', handleKeyDown)

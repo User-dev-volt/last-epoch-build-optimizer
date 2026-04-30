@@ -2,6 +2,7 @@ import { useAppStore } from '../../shared/stores/appStore'
 import { useBuildStore } from '../../shared/stores/buildStore'
 import { saveBuild } from '../build-manager/buildPersistence'
 import { SavedBuildsList } from '../build-manager/SavedBuildsList'
+import { BuildImportInput } from '../build-manager/BuildImportInput'
 import { PanelCollapseToggle } from './PanelCollapseToggle'
 import { ClassMasterySelector } from '../skill-tree/ClassMasterySelector'
 import { ContextPanel } from '../context-panel/ContextPanel'
@@ -44,6 +45,8 @@ export function LeftPanel() {
         </div>
       ) : (
         <div className="p-4 overflow-y-auto flex flex-col gap-4">
+          <BuildImportInput />
+
           <ClassMasterySelector />
 
           {activeBuild && (

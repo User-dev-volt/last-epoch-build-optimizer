@@ -190,7 +190,7 @@ development_status:
   epic-6: in-progress
 
   # Story 6.1: Depends on Epics 1–4 (keyboard nav covers all primary interactions)
-  6-1-keyboard-navigation-global-shortcuts: ready-for-dev
+  6-1-keyboard-navigation-global-shortcuts: review
 
   # Story 6.2: Depends on 6.1 + all view components existing (ARIA audit requires complete UI)
   6-2-screen-reader-support-aria-infrastructure-accessibility-ci: backlog

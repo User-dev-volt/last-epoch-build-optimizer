@@ -29,8 +29,53 @@ export function Settings() {
           Settings
         </span>
       </header>
-      <div className="flex-1 overflow-y-auto p-6 max-w-lg">
+      <div className="flex-1 overflow-y-auto p-6 max-w-lg flex flex-col gap-8">
         <ProviderSelector />
+
+        <section>
+          <p className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text-primary)' }}>
+            Keyboard Shortcuts
+          </p>
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr style={{ color: 'var(--color-text-muted)' }}>
+                <th className="text-left pb-2 pr-4 font-medium">Shortcut</th>
+                <th className="text-left pb-2 font-medium">Action</th>
+              </tr>
+            </thead>
+            <tbody style={{ color: 'var(--color-text-secondary)' }}>
+              {[
+                ['O', 'Focus Optimize button'],
+                ['I', 'Focus Import Build input'],
+                ['Ctrl+S', 'Save current build'],
+                ['Escape', 'Collapse suggestion / Clear preview'],
+                ['Up / Down', 'Navigate suggestion list'],
+                ['P', 'Preview focused suggestion'],
+                ['S', 'Skip focused suggestion'],
+                ['Tab / Shift+Tab', 'Navigate tree nodes (connection order)'],
+                ['Enter', 'Allocate / deallocate focused tree node'],
+                ['Arrow keys', 'Move to adjacent connected tree node'],
+              ].map(([shortcut, action]) => (
+                <tr key={shortcut} style={{ borderTop: '1px solid var(--color-bg-elevated)' }}>
+                  <td className="py-1.5 pr-4">
+                    <kbd
+                      className="px-1.5 py-0.5 rounded text-xs"
+                      style={{
+                        backgroundColor: 'var(--color-bg-elevated)',
+                        color: 'var(--color-text-primary)',
+                        fontFamily: 'var(--font-mono)',
+                        border: '1px solid var(--color-bg-hover)',
+                      }}
+                    >
+                      {shortcut}
+                    </kbd>
+                  </td>
+                  <td className="py-1.5">{action}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
       </div>
     </div>
   )

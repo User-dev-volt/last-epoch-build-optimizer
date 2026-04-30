@@ -35,7 +35,7 @@ import type { TreeData, RendererCallbacks, RendererInstance } from './types'
   }
 })()
 
-const NODE_RADIUS = { small: 12, medium: 18, large: 26 }
+export const NODE_RADIUS = { small: 12, medium: 18, large: 26 }
 
 function drawAllocated(g: Graphics, x: number, y: number, r: number) {
   g.circle(x, y, r).fill(0xc9a84c)
@@ -228,5 +228,11 @@ export async function initRenderer(
     return { x: worldContainer.x, y: worldContainer.y, scale: worldContainer.scale.x }
   }
 
-  return { renderTree, resize, destroy, getViewport }
+  function addTickerListener(fn: () => void): () => void {
+    const cb = () => fn()
+    app.ticker.add(cb)
+    return () => app.ticker.remove(cb)
+  }
+
+  return { renderTree, resize, destroy, getViewport, addTickerListener }
 }

@@ -15,6 +15,7 @@ export function OptimizeButton({ onOptimize, disabled, isOptimizing }: OptimizeB
         aria-disabled={disabled || isOptimizing ? 'true' : 'false'}
         aria-busy={isOptimizing ? 'true' : 'false'}
         aria-label={isOptimizing ? 'Analyzing build...' : 'Optimize build'}
+        id="optimize-button"
         data-testid="optimize-button"
         className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded text-sm font-semibold transition-opacity"
         style={{
