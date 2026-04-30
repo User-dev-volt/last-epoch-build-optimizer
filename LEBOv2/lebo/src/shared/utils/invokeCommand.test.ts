@@ -37,7 +37,7 @@ describe('invokeCommand', () => {
     mockInvoke.mockRejectedValue('AUTH_ERROR: no key configured')
     await expect(invokeCommand('some_command')).rejects.toMatchObject({
       type: 'AUTH_ERROR',
-      message: expect.stringContaining('API key'),
+      message: 'no key configured',
     })
   })
 

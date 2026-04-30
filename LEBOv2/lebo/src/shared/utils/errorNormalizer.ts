@@ -28,7 +28,8 @@ export function normalizeAppError(raw: unknown): AppError {
     const upperRaw = raw.toUpperCase()
     for (const [key, type] of Object.entries(ERROR_TYPE_MAP)) {
       if (upperRaw.includes(key)) {
-        return { type, message: USER_MESSAGES[type], detail: raw }
+        const message = type === 'AUTH_ERROR' ? extractAuthMessage(raw, key) : USER_MESSAGES[type]
+        return { type, message, detail: raw }
       }
     }
     return { type: 'UNKNOWN', message: USER_MESSAGES.UNKNOWN, detail: raw }
@@ -39,6 +40,19 @@ export function normalizeAppError(raw: unknown): AppError {
   }
 
   return { type: 'UNKNOWN', message: USER_MESSAGES.UNKNOWN }
+}
+
+// The Rust backend sends provider-specific messages (e.g. "Add your OpenRouter key…")
+// so we preserve them rather than substituting the hardcoded static fallback.
+function extractAuthMessage(raw: string, key: string): string {
+  const idx = raw.toUpperCase().indexOf(key)
+  const after = raw
+    .slice(idx + key.length)
+    .replace(/^:\s*/, '')
+    // Strip duplicate parenthetical appended by the Rust error propagation
+    .replace(/\s*\([^)]*AUTH_ERROR[^)]*\)\s*$/, '')
+    .trim()
+  return after.length > 0 ? after : USER_MESSAGES.AUTH_ERROR
 }
 
 function isAppError(value: unknown): value is AppError {

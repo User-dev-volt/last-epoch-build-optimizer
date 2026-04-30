@@ -26,6 +26,24 @@ describe('normalizeAppError', () => {
     expect(result.type).toBe('AUTH_ERROR')
   })
 
+  it('AUTH_ERROR preserves provider-specific backend message for Claude', () => {
+    const result = normalizeAppError('AUTH_ERROR: No API key configured. Add your Claude API key in Settings.')
+    expect(result.type).toBe('AUTH_ERROR')
+    expect(result.message).toBe('No API key configured. Add your Claude API key in Settings.')
+  })
+
+  it('AUTH_ERROR preserves provider-specific backend message for OpenRouter', () => {
+    const result = normalizeAppError('AUTH_ERROR: No OpenRouter API key configured. Add your key in Settings.')
+    expect(result.type).toBe('AUTH_ERROR')
+    expect(result.message).toBe('No OpenRouter API key configured. Add your key in Settings.')
+  })
+
+  it('AUTH_ERROR strips duplicate parenthetical from Rust error propagation', () => {
+    const raw = 'AUTH_ERROR: No OpenRouter API key configured. Add your key in Settings. (AUTH_ERROR: No OpenRouter API key configured. Add your key in Settings.)'
+    const result = normalizeAppError(raw)
+    expect(result.message).toBe('No OpenRouter API key configured. Add your key in Settings.')
+  })
+
   it('detects STORAGE_ERROR from string', () => {
     const result = normalizeAppError('STORAGE_ERROR: sqlite write failed')
     expect(result.type).toBe('STORAGE_ERROR')
