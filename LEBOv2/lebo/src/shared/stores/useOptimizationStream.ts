@@ -32,6 +32,26 @@ interface ModelActivePayload {
   model_name: string
 }
 
+export async function startOptimization() {
+  const activeBuild = useBuildStore.getState().activeBuild
+  const goal = useOptimizationStore.getState().goal
+  if (!activeBuild) return
+
+  useOptimizationStore.getState().clearSuggestions()
+  useOptimizationStore.getState().setIsOptimizing(true)
+
+  try {
+    await invokeCommand('invoke_claude_api', {
+      buildState: activeBuild,
+      goal,
+    })
+  } catch (err) {
+    const appError = normalizeAppError(err)
+    useOptimizationStore.getState().setStreamError(appError)
+    useOptimizationStore.getState().setIsOptimizing(false)
+  }
+}
+
 export function useOptimizationStream() {
   const { addSuggestion, clearSuggestions, setIsOptimizing, setStreamError } =
     useOptimizationStore.getState()
@@ -143,27 +163,4 @@ export function useOptimizationStream() {
       useOptimizationStore.getState().setIsOptimizing(false)
     }
   }, [addSuggestion, clearSuggestions, setIsOptimizing, setStreamError])
-
-  async function startOptimization() {
-    const activeBuild = useBuildStore.getState().activeBuild
-    const goal = useOptimizationStore.getState().goal
-    if (!activeBuild) return
-
-    useOptimizationStore.getState().clearSuggestions()
-    useOptimizationStore.getState().setIsOptimizing(true)
-
-    try {
-      await invokeCommand('invoke_claude_api', {
-        buildState: activeBuild,
-        goal,
-      })
-    } catch (err) {
-      // Synchronous IPC errors (e.g., AUTH_ERROR before streaming starts)
-      const appError = normalizeAppError(err)
-      useOptimizationStore.getState().setStreamError(appError)
-      useOptimizationStore.getState().setIsOptimizing(false)
-    }
-  }
-
-  return { startOptimization }
 }

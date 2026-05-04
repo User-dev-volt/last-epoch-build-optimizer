@@ -6,7 +6,8 @@ import { useAppStore } from '../../shared/stores/appStore'
 
 // Mock useOptimizationStream — it registers Tauri event listeners we can't run in jsdom
 vi.mock('../../shared/stores/useOptimizationStream', () => ({
-  useOptimizationStream: () => ({ startOptimization: vi.fn() }),
+  useOptimizationStream: vi.fn(),
+  startOptimization: vi.fn(),
 }))
 
 // Mock @tauri-apps/api/event to prevent listen() side-effects

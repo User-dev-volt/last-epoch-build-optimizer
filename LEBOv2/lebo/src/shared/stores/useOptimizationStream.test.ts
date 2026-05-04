@@ -49,7 +49,7 @@ vi.mock('./gameDataStore', () => ({
 import { listen } from '@tauri-apps/api/event'
 import { invokeCommand } from '../utils/invokeCommand'
 import { useOptimizationStore } from './optimizationStore'
-import { useOptimizationStream } from './useOptimizationStream'
+import { useOptimizationStream, startOptimization } from './useOptimizationStream'
 
 const mockListen = listen as Mock
 const mockInvokeCommand = invokeCommand as Mock
@@ -125,14 +125,8 @@ describe('useOptimizationStream', () => {
       previewScore: { damage: 55, survivability: 30, speed: 10 },
     })
 
-    const { result } = renderHook(() => useOptimizationStream())
-    // Wait for async listener registration
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 0))
-    })
-
-    await act(async () => {
-      await result.current.startOptimization()
+      await startOptimization()
     })
 
     expect(useOptimizationStore.getState().suggestions).toHaveLength(0)
@@ -144,13 +138,8 @@ describe('useOptimizationStream', () => {
   it('startOptimization stores AUTH_ERROR when invokeCommand throws', async () => {
     mockInvokeCommand.mockRejectedValueOnce('AUTH_ERROR: no API key configured')
 
-    const { result } = renderHook(() => useOptimizationStream())
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 0))
-    })
-
-    await act(async () => {
-      await result.current.startOptimization()
+      await startOptimization()
     })
 
     const { streamError, isOptimizing } = useOptimizationStore.getState()
@@ -238,10 +227,7 @@ describe('useOptimizationStream', () => {
     useOptimizationStore.getState().skipSuggestion(1)
     expect(useOptimizationStore.getState().skippedSuggestions).toHaveLength(1)
 
-    const { result } = renderHook(() => useOptimizationStream())
-    await act(async () => { await new Promise((r) => setTimeout(r, 0)) })
-
-    await act(async () => { await result.current.startOptimization() })
+    await act(async () => { await startOptimization() })
 
     expect(useOptimizationStore.getState().skippedSuggestions).toHaveLength(0)
   })
@@ -250,10 +236,7 @@ describe('useOptimizationStream', () => {
     useOptimizationStore.getState().setPreviewSuggestionRank(2)
     expect(useOptimizationStore.getState().previewSuggestionRank).toBe(2)
 
-    const { result } = renderHook(() => useOptimizationStream())
-    await act(async () => { await new Promise((r) => setTimeout(r, 0)) })
-
-    await act(async () => { await result.current.startOptimization() })
+    await act(async () => { await startOptimization() })
 
     expect(useOptimizationStore.getState().previewSuggestionRank).toBeNull()
   })
@@ -261,10 +244,7 @@ describe('useOptimizationStream', () => {
   it('startOptimization passes updated goal to invokeCommand', async () => {
     useOptimizationStore.getState().setGoal('maximize_damage')
 
-    const { result } = renderHook(() => useOptimizationStream())
-    await act(async () => { await new Promise((r) => setTimeout(r, 0)) })
-
-    await act(async () => { await result.current.startOptimization() })
+    await act(async () => { await startOptimization() })
 
     expect(mockInvokeCommand).toHaveBeenCalledWith('invoke_claude_api', expect.objectContaining({
       goal: 'maximize_damage',

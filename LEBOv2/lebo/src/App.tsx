@@ -11,6 +11,7 @@ import { useGameDataStore } from './shared/stores/gameDataStore'
 import { useOptimizationStore } from './shared/stores/optimizationStore'
 import { calculateScore } from './features/optimization/scoringEngine'
 import { useAppStore } from './shared/stores/appStore'
+import { useOptimizationStream } from './shared/stores/useOptimizationStream'
 import { AppHeader } from './features/layout/AppHeader'
 import { StatusBar } from './features/layout/StatusBar'
 import { LeftPanel } from './features/layout/LeftPanel'
@@ -33,6 +34,7 @@ export function App() {
   useConnectivity()
   useUpdateCheck()
   useAccessibilityAnnouncer()
+  useOptimizationStream()
   const currentView = useAppStore((s) => s.currentView)
 
   useEffect(() => {

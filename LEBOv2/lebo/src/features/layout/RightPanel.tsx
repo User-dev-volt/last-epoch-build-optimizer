@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAppStore } from '../../shared/stores/appStore'
 import { useBuildStore } from '../../shared/stores/buildStore'
 import { useOptimizationStore } from '../../shared/stores/optimizationStore'
-import { useOptimizationStream } from '../../shared/stores/useOptimizationStream'
+import { startOptimization } from '../../shared/stores/useOptimizationStream'
 import { PanelCollapseToggle } from './PanelCollapseToggle'
 import { ScoreGauge } from '../optimization/ScoreGauge'
 import { GoalSelector } from '../optimization/GoalSelector'
@@ -20,7 +20,6 @@ export function RightPanel() {
   const currentModel = useOptimizationStore((s) => s.currentModel)
   const previewSuggestionRank = useOptimizationStore((s) => s.previewSuggestionRank)
   const suggestions = useOptimizationStore((s) => s.suggestions)
-  const { startOptimization } = useOptimizationStream()
 
   const previewScore =
     previewSuggestionRank !== null
