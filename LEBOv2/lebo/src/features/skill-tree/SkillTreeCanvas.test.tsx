@@ -33,8 +33,8 @@ vi.mock('./pixiRenderer', () => ({
 // Two connected nodes placed in viewport
 const TWO_NODE_TREE: TreeData = {
   nodes: [
-    { id: 'node-a', x: 0, y: 0, size: 'medium', state: 'available', connections: ['node-b'] },
-    { id: 'node-b', x: 50, y: 0, size: 'medium', state: 'available', connections: ['node-a'] },
+    { id: 'node-a', x: 0, y: 0, size: 'medium', maxPoints: 1, state: 'available', connections: ['node-b'] },
+    { id: 'node-b', x: 50, y: 0, size: 'medium', maxPoints: 1, state: 'available', connections: ['node-a'] },
   ],
   edges: [{ fromId: 'node-a', toId: 'node-b' }],
 }
@@ -42,7 +42,7 @@ const TWO_NODE_TREE: TreeData = {
 const DEFAULT_PROPS = {
   treeData: TWO_NODE_TREE,
   allocatedNodes: {},
-  highlightedNodes: { glowing: new Set<string>(), dimmed: new Set<string>() },
+  highlightedNodes: { glowing: new Set<string>(), dimmed: new Set<string>(), previewRemoved: new Set<string>(), previewAdded: new Set<string>() },
   onNodeClick: vi.fn(),
   onNodeRightClick: vi.fn(),
   onNodeHover: vi.fn(),

@@ -39,6 +39,7 @@ function appendTreeNodes(
       x: node.position.x,
       y: node.position.y + yOffset,
       size: node.size,
+      maxPoints: node.maxPoints,
       connections: connections[nodeId] ?? [],
       state: allocatedNodes[nodeId]
         ? 'allocated'

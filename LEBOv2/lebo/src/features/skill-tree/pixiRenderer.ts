@@ -1,4 +1,4 @@
-import { Application, Circle, Container, Graphics } from 'pixi.js'
+import { Application, Circle, Container, Graphics, Text } from 'pixi.js'
 import type { TreeData, RendererCallbacks, RendererInstance } from './types'
 
 // PixiJS v8's logPrettyShaderError calls .split() on getShaderSource/getShaderInfoLog results,
@@ -67,6 +67,18 @@ function drawDimmed(g: Graphics, x: number, y: number, r: number) {
   g.circle(x, y, r).stroke({ color: 0x5a5070, width: 1 })
 }
 
+function drawPreviewRemoved(g: Graphics, x: number, y: number, r: number) {
+  g.circle(x, y, r + 5).fill({ color: 0xff3333, alpha: 0.2 })
+  g.circle(x, y, r).fill(0x1a0a0a)
+  g.circle(x, y, r).stroke({ color: 0xff3333, width: 3 })
+}
+
+function drawPreviewAdded(g: Graphics, x: number, y: number, r: number) {
+  g.circle(x, y, r + 5).fill({ color: 0x33ff77, alpha: 0.2 })
+  g.circle(x, y, r).fill(0x0a1a0f)
+  g.circle(x, y, r).stroke({ color: 0x33ff77, width: 3 })
+}
+
 export async function initRenderer(
   canvas: HTMLCanvasElement,
   callbacksRef: { current: RendererCallbacks }
@@ -93,8 +105,12 @@ export async function initRenderer(
   const allocatedGraphics = new Graphics()
   const suggestedGraphics = new Graphics()
   const dimmedGraphics = new Graphics()
+  const previewRemovedGraphics = new Graphics()
+  const previewAddedGraphics = new Graphics()
   // Pure interaction layer — no rendering, just hitArea containers
   const hitAreaContainer = new Container()
+  // Text labels for point counts
+  const labelContainer = new Container()
 
   worldContainer.addChild(
     edgeGraphics,
@@ -103,7 +119,10 @@ export async function initRenderer(
     allocatedGraphics,
     dimmedGraphics,
     suggestedGraphics,
-    hitAreaContainer
+    previewRemovedGraphics,
+    previewAddedGraphics,
+    labelContainer,
+    hitAreaContainer,
   )
 
   worldContainer.scale.set(0.6)
@@ -164,7 +183,10 @@ export async function initRenderer(
     allocatedGraphics.clear()
     suggestedGraphics.clear()
     dimmedGraphics.clear()
+    previewRemovedGraphics.clear()
+    previewAddedGraphics.clear()
     hitAreaContainer.removeChildren()
+    labelContainer.removeChildren()
 
     const nodeMap = new Map(data.nodes.map((n) => [n.id, n]))
 
@@ -185,8 +207,14 @@ export async function initRenderer(
       const isAllocated = allocatedNodes[node.id] !== undefined
       const isGlowing = highlightedNodes.glowing.has(node.id)
       const isDimmed = highlightedNodes.dimmed.has(node.id) && !isGlowing
+      const isPreviewRemoved = highlightedNodes.previewRemoved.has(node.id)
+      const isPreviewAdded = highlightedNodes.previewAdded.has(node.id)
 
-      if (isAllocated || node.state === 'allocated') {
+      if (isPreviewRemoved) {
+        drawPreviewRemoved(previewRemovedGraphics, node.x, node.y, r)
+      } else if (isPreviewAdded) {
+        drawPreviewAdded(previewAddedGraphics, node.x, node.y, r)
+      } else if (isAllocated || node.state === 'allocated') {
         drawAllocated(allocatedGraphics, node.x, node.y, r)
       } else if (isGlowing || node.state === 'suggested') {
         drawSuggested(suggestedGraphics, node.x, node.y, r, reducedMotionEnabled)
@@ -197,6 +225,36 @@ export async function initRenderer(
       } else {
         drawAvailable(availableGraphics, node.x, node.y, r)
       }
+
+      // Point count label below the node
+      const currentPts = allocatedNodes[node.id] ?? 0
+      const labelText = `${currentPts}/${node.maxPoints}`
+      let labelColor: string
+      if (isPreviewRemoved) {
+        labelColor = '#ff5555'
+      } else if (isPreviewAdded) {
+        labelColor = '#44ff88'
+      } else if (isAllocated || node.state === 'allocated') {
+        labelColor = '#c9a84c'
+      } else if (node.state === 'locked') {
+        labelColor = '#3d3d50'
+      } else {
+        labelColor = '#4a6070'
+      }
+
+      const label = new Text({
+        text: labelText,
+        style: {
+          fontSize: 10,
+          fill: labelColor,
+          fontFamily: 'monospace',
+          align: 'center',
+        },
+      })
+      label.anchor.set(0.5, 0)
+      label.x = node.x
+      label.y = node.y + r + 3
+      labelContainer.addChild(label)
 
       // Invisible hit area: Container + Circle hitArea — no GPU draw calls
       const hit = new Container()

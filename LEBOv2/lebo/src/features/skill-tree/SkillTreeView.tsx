@@ -14,7 +14,13 @@ import { SkillTreeTabBar } from './SkillTreeTabBar'
 import { useSkillTree } from './useSkillTree'
 
 const EMPTY_ALLOCATED: Record<string, number> = {}
-const EMPTY_HIGHLIGHTED: HighlightedNodes = { glowing: new Set<string>(), dimmed: new Set<string>() }
+const EMPTY_SET = new Set<string>()
+const EMPTY_HIGHLIGHTED: HighlightedNodes = {
+  glowing: EMPTY_SET,
+  dimmed: EMPTY_SET,
+  previewRemoved: EMPTY_SET,
+  previewAdded: EMPTY_SET,
+}
 const EMPTY_SKILLS: ActiveSkill[] = []
 
 function computePreviewAllocations(
@@ -99,6 +105,21 @@ export function SkillTreeView() {
   )
 
   const allocatedNodes = previewAllocatedNodes ?? baseAllocatedNodes
+
+  // Build preview color sets: red = node losing points, green = node gaining points
+  const highlightedNodes = useMemo<HighlightedNodes>(() => {
+    const base = highlightedNodeIds ?? EMPTY_HIGHLIGHTED
+    if (!previewSuggestion) {
+      return { ...base, previewRemoved: EMPTY_SET, previewAdded: EMPTY_SET }
+    }
+    const previewRemoved = new Set<string>()
+    const previewAdded = new Set<string>()
+    if (previewSuggestion.nodeChange.fromNodeId) {
+      previewRemoved.add(previewSuggestion.nodeChange.fromNodeId)
+    }
+    previewAdded.add(previewSuggestion.nodeChange.toNodeId)
+    return { ...base, previewRemoved, previewAdded }
+  }, [highlightedNodeIds, previewSuggestion])
 
   const {
     hoveredNodeId,
@@ -188,7 +209,7 @@ export function SkillTreeView() {
             <SkillTreeCanvas
               treeData={treeData}
               allocatedNodes={allocatedNodes}
-              highlightedNodes={highlightedNodeIds ?? EMPTY_HIGHLIGHTED}
+              highlightedNodes={highlightedNodes}
               onNodeClick={handleNodeClick}
               onNodeRightClick={handleNodeRightClick}
               onNodeHover={handleNodeHover}

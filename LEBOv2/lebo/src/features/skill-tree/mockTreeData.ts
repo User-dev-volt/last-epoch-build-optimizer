@@ -39,7 +39,7 @@ for (let tier = 0; tier < TIER_COUNTS.length; tier++) {
     const id = `n${globalIdx}`
     tierIds.push(id)
 
-    const node: TreeNode = { id, x, y, size, connections: [], state }
+    const node: TreeNode = { id, x, y, size, maxPoints: 1, connections: [], state }
     nodes.push(node)
     nodeMap.set(id, node)
     globalIdx++

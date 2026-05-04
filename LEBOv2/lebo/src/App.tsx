@@ -138,23 +138,21 @@ export function App() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  if (currentView === 'settings') {
-    return (
-      <>
-        <ErrorBoundary>
-          <Settings />
-        </ErrorBoundary>
-        <Toaster position="bottom-center" toastOptions={TOASTER_OPTS} />
-      </>
-    )
-  }
-
   return (
     <>
       <ErrorBoundary>
+        {/* Settings is always mounted so in-flight saves survive navigation */}
+        <div style={{ display: currentView === 'settings' ? 'block' : 'none' }}>
+          <Settings />
+        </div>
         <div
           className="flex flex-col overflow-hidden"
-          style={{ height: '100dvh', minWidth: '1280px', minHeight: '720px' }}
+          style={{
+            display: currentView === 'main' ? 'flex' : 'none',
+            height: '100dvh',
+            minWidth: '1280px',
+            minHeight: '720px',
+          }}
         >
           {/* Skip links — UX-DR15 accessibility */}
           <a

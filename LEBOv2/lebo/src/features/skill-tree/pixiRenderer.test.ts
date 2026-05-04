@@ -107,12 +107,12 @@ describe('initRenderer', () => {
 
   it('renderTree does not throw with empty TreeData (0 nodes, 0 edges)', async () => {
     const renderer = await initRenderer(makeCanvas(), makeCallbacksRef())
-    expect(() => renderer.renderTree(emptyTree, {}, { glowing: new Set(), dimmed: new Set() })).not.toThrow()
+    expect(() => renderer.renderTree(emptyTree, {}, { glowing: new Set(), dimmed: new Set(), previewRemoved: new Set(), previewAdded: new Set() })).not.toThrow()
   })
 
   it('renderTree does not throw with 800-node mock tree', async () => {
     const renderer = await initRenderer(makeCanvas(), makeCallbacksRef())
-    expect(() => renderer.renderTree(mockTreeData, {}, { glowing: new Set(), dimmed: new Set() })).not.toThrow()
+    expect(() => renderer.renderTree(mockTreeData, {}, { glowing: new Set(), dimmed: new Set(), previewRemoved: new Set(), previewAdded: new Set() })).not.toThrow()
   })
 
   it('resize calls app.renderer.resize with correct args', async () => {

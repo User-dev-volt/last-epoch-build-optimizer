@@ -4,6 +4,8 @@ export type NodeState = 'allocated' | 'available' | 'locked' | 'suggested'
 export interface HighlightedNodes {
   glowing: Set<string>
   dimmed: Set<string>
+  previewRemoved: Set<string>
+  previewAdded: Set<string>
 }
 
 export interface TreeNode {
@@ -11,6 +13,7 @@ export interface TreeNode {
   x: number
   y: number
   size: NodeSize
+  maxPoints: number
   connections: string[]
   state: NodeState
 }
