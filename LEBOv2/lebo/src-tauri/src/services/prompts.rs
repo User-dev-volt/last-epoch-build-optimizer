@@ -16,4 +16,7 @@ Field rules:
 - points_change: positive integer = points to add to to_node_id (and remove from from_node_id when non-null)
 - explanation: 1-2 sentences citing specific node names and the mechanical reason for the change
 
+CONSTRAINT — PREREQUISITE LOCKS:
+Each node in availableNodes has a "lockedFromRemoval" boolean field. When lockedFromRemoval is true, that node is a prerequisite for one or more other currently-allocated nodes and CANNOT be deallocated. Never set from_node_id to any node where lockedFromRemoval is true — such a suggestion is impossible to apply and must not be generated.
+
 Output ONLY the NDJSON lines. No other text whatsoever."#;

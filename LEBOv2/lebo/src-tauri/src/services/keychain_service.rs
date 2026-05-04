@@ -1,4 +1,5 @@
 use argon2::{Argon2, Params};
+use std::sync::OnceLock;
 use tauri::Manager;
 use tauri_plugin_stronghold::stronghold::Stronghold as SHVault;
 
@@ -9,13 +10,20 @@ const LLM_PROVIDER_KEY: &[u8] = b"llm_provider";
 const OPENROUTER_API_KEY: &[u8] = b"openrouter_api_key";
 const MODEL_PREFERENCE_KEY: &[u8] = b"openrouter_model_preference";
 
+// Argon2id output is deterministic for fixed inputs — compute once per process.
+static VAULT_KEY_CACHE: OnceLock<Vec<u8>> = OnceLock::new();
+
 pub fn hash_vault_password() -> Vec<u8> {
-    let params = Params::new(65536, 2, 1, Some(32)).expect("invalid argon2 params");
-    let mut output = vec![0u8; 32];
-    Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params)
-        .hash_password_into(VAULT_PASSWORD, b"lebo-stronghold-salt", &mut output)
-        .expect("argon2 hash failed");
-    output
+    VAULT_KEY_CACHE
+        .get_or_init(|| {
+            let params = Params::new(65536, 2, 1, Some(32)).expect("invalid argon2 params");
+            let mut output = vec![0u8; 32];
+            Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params)
+                .hash_password_into(VAULT_PASSWORD, b"lebo-stronghold-salt", &mut output)
+                .expect("argon2 hash failed");
+            output
+        })
+        .clone()
 }
 
 fn get_vault_path(app: &tauri::AppHandle) -> std::path::PathBuf {
@@ -32,26 +40,24 @@ fn open_vault(vault_path: &std::path::Path) -> Result<SHVault, String> {
 
 pub async fn set_api_key(app: &tauri::AppHandle, key: &str) -> Result<(), String> {
     let vault_path = get_vault_path(app);
-    let sh = open_vault(&vault_path)?;
-
-    // Try to load the existing client; create one only when none exists yet.
-    // Using or_else with a targeted create avoids silently discarding a client
-    // that failed to load for reasons other than "not found" (e.g. corruption).
-    let client = match sh.load_client(CLIENT_NAME) {
-        Ok(c) => c,
-        Err(_) => sh
-            .create_client(CLIENT_NAME)
-            .map_err(|e| format!("STORAGE_ERROR: failed to create client: {e}"))?,
-    };
-
-    client
-        .store()
-        .insert(VAULT_KEY.to_vec(), key.as_bytes().to_vec(), None)
-        .map_err(|e| format!("STORAGE_ERROR: failed to store key: {e}"))?;
-
-    sh.save()
-        .map_err(|e| format!("STORAGE_ERROR: failed to save vault: {e}"))?;
-    Ok(())
+    let key = key.to_string();
+    tokio::task::spawn_blocking(move || {
+        let sh = open_vault(&vault_path)?;
+        let client = match sh.load_client(CLIENT_NAME) {
+            Ok(c) => c,
+            Err(_) => sh
+                .create_client(CLIENT_NAME)
+                .map_err(|e| format!("STORAGE_ERROR: failed to create client: {e}"))?,
+        };
+        client
+            .store()
+            .insert(VAULT_KEY.to_vec(), key.as_bytes().to_vec(), None)
+            .map_err(|e| format!("STORAGE_ERROR: failed to store key: {e}"))?;
+        sh.save()
+            .map_err(|e| format!("STORAGE_ERROR: failed to save vault: {e}"))
+    })
+    .await
+    .map_err(|e| format!("STORAGE_ERROR: vault task panicked: {e}"))?
 }
 
 pub async fn get_api_key(app: &tauri::AppHandle) -> Result<String, String> {
@@ -61,16 +67,20 @@ pub async fn get_api_key(app: &tauri::AppHandle) -> Result<String, String> {
             "AUTH_ERROR: No API key configured. Add your Claude API key in Settings.".to_string(),
         );
     }
-    let sh = open_vault(&vault_path).map_err(|e| e)?; // STORAGE_ERROR already prefixed by open_vault
-    let client = sh
-        .load_client(CLIENT_NAME)
-        .map_err(|e| format!("STORAGE_ERROR: failed to load vault client: {e}"))?;
-    let data = client
-        .store()
-        .get(VAULT_KEY)
-        .map_err(|e| format!("STORAGE_ERROR: failed to read from vault: {e}"))?
-        .ok_or_else(|| "AUTH_ERROR: No API key configured. Add your Claude API key in Settings.".to_string())?;
-    String::from_utf8(data).map_err(|_| "AUTH_ERROR: API key corrupted in vault".to_string())
+    tokio::task::spawn_blocking(move || {
+        let sh = open_vault(&vault_path).map_err(|e| e)?;
+        let client = sh
+            .load_client(CLIENT_NAME)
+            .map_err(|e| format!("STORAGE_ERROR: failed to load vault client: {e}"))?;
+        let data = client
+            .store()
+            .get(VAULT_KEY)
+            .map_err(|e| format!("STORAGE_ERROR: failed to read from vault: {e}"))?
+            .ok_or_else(|| "AUTH_ERROR: No API key configured. Add your Claude API key in Settings.".to_string())?;
+        String::from_utf8(data).map_err(|_| "AUTH_ERROR: API key corrupted in vault".to_string())
+    })
+    .await
+    .map_err(|e| format!("STORAGE_ERROR: vault task panicked: {e}"))?
 }
 
 pub async fn is_api_key_configured(app: &tauri::AppHandle) -> Result<bool, String> {
@@ -78,23 +88,26 @@ pub async fn is_api_key_configured(app: &tauri::AppHandle) -> Result<bool, Strin
     if !vault_path.exists() {
         return Ok(false);
     }
-    let sh = open_vault(&vault_path).map_err(|e| format!("STORAGE_ERROR: {e}"))?;
-    let client = match sh.load_client(CLIENT_NAME) {
-        Ok(c) => c,
-        Err(_) => return Ok(false),
-    };
-    let exists = client
-        .store()
-        .get(VAULT_KEY)
-        .map(|v| v.is_some())
-        .unwrap_or(false);
-    Ok(exists)
+    tokio::task::spawn_blocking(move || {
+        let sh = open_vault(&vault_path).map_err(|e| format!("STORAGE_ERROR: {e}"))?;
+        let client = match sh.load_client(CLIENT_NAME) {
+            Ok(c) => c,
+            Err(_) => return Ok(false),
+        };
+        let exists = client
+            .store()
+            .get(VAULT_KEY)
+            .map(|v| v.is_some())
+            .unwrap_or(false);
+        Ok(exists)
+    })
+    .await
+    .map_err(|e| format!("STORAGE_ERROR: vault task panicked: {e}"))?
 }
 
 // ── Generic vault helpers ────────────────────────────────────────────────────
 
-fn vault_write(app: &tauri::AppHandle, key: &[u8], value: &str) -> Result<(), String> {
-    let vault_path = get_vault_path(app);
+fn vault_write(vault_path: std::path::PathBuf, key: &'static [u8], value: String) -> Result<(), String> {
     let sh = open_vault(&vault_path)?;
     let client = match sh.load_client(CLIENT_NAME) {
         Ok(c) => c,
@@ -110,32 +123,30 @@ fn vault_write(app: &tauri::AppHandle, key: &[u8], value: &str) -> Result<(), St
         .map_err(|e| format!("STORAGE_ERROR: failed to save vault: {e}"))
 }
 
-fn vault_read(app: &tauri::AppHandle, key: &[u8], default: Option<&str>, absent_err: Option<&str>) -> Result<String, String> {
-    let vault_path = get_vault_path(app);
+fn vault_read(vault_path: std::path::PathBuf, key: &[u8], default: Option<String>, absent_err: Option<String>) -> Result<String, String> {
     if !vault_path.exists() {
-        if let Some(d) = default { return Ok(d.to_string()); }
-        return Err(absent_err.unwrap_or("AUTH_ERROR: key not found").to_string());
+        if let Some(d) = default { return Ok(d); }
+        return Err(absent_err.unwrap_or_else(|| "AUTH_ERROR: key not found".to_string()));
     }
     let sh = open_vault(&vault_path)?;
     let client = match sh.load_client(CLIENT_NAME) {
         Ok(c) => c,
         Err(_) => {
-            if let Some(d) = default { return Ok(d.to_string()); }
-            return Err(absent_err.unwrap_or("AUTH_ERROR: key not found").to_string());
+            if let Some(d) = default { return Ok(d); }
+            return Err(absent_err.unwrap_or_else(|| "AUTH_ERROR: key not found".to_string()));
         }
     };
     match client.store().get(key) {
         Ok(Some(data)) => String::from_utf8(data).map_err(|_| "AUTH_ERROR: value corrupted in vault".to_string()),
         Ok(None) => {
-            if let Some(d) = default { Ok(d.to_string()) }
-            else { Err(absent_err.unwrap_or("AUTH_ERROR: key not found").to_string()) }
+            if let Some(d) = default { Ok(d) }
+            else { Err(absent_err.unwrap_or_else(|| "AUTH_ERROR: key not found".to_string())) }
         }
         Err(e) => Err(format!("STORAGE_ERROR: failed to read from vault: {e}")),
     }
 }
 
-fn vault_key_exists(app: &tauri::AppHandle, key: &[u8]) -> Result<bool, String> {
-    let vault_path = get_vault_path(app);
+fn vault_key_exists(vault_path: std::path::PathBuf, key: &[u8]) -> Result<bool, String> {
     if !vault_path.exists() { return Ok(false); }
     let sh = open_vault(&vault_path).map_err(|e| format!("STORAGE_ERROR: {e}"))?;
     let client = match sh.load_client(CLIENT_NAME) {
@@ -156,30 +167,51 @@ fn validate_provider(provider: &str) -> Result<(), String> {
 
 pub async fn set_llm_provider(app: &tauri::AppHandle, provider: &str) -> Result<(), String> {
     validate_provider(provider)?;
-    vault_write(app, LLM_PROVIDER_KEY, provider)
+    let vault_path = get_vault_path(app);
+    let provider = provider.to_string();
+    tokio::task::spawn_blocking(move || vault_write(vault_path, LLM_PROVIDER_KEY, provider))
+        .await
+        .map_err(|e| format!("STORAGE_ERROR: vault task panicked: {e}"))?
 }
 
 pub async fn get_llm_provider(app: &tauri::AppHandle) -> Result<String, String> {
-    vault_read(app, LLM_PROVIDER_KEY, Some("claude"), None)
+    let vault_path = get_vault_path(app);
+    tokio::task::spawn_blocking(move || {
+        vault_read(vault_path, LLM_PROVIDER_KEY, Some("claude".to_string()), None)
+    })
+    .await
+    .map_err(|e| format!("STORAGE_ERROR: vault task panicked: {e}"))?
 }
 
 // ── OpenRouter API key ────────────────────────────────────────────────────────
 
 pub async fn set_openrouter_api_key(app: &tauri::AppHandle, key: &str) -> Result<(), String> {
-    vault_write(app, OPENROUTER_API_KEY, key)
+    let vault_path = get_vault_path(app);
+    let key = key.to_string();
+    tokio::task::spawn_blocking(move || vault_write(vault_path, OPENROUTER_API_KEY, key))
+        .await
+        .map_err(|e| format!("STORAGE_ERROR: vault task panicked: {e}"))?
 }
 
 pub async fn get_openrouter_api_key(app: &tauri::AppHandle) -> Result<String, String> {
-    vault_read(
-        app,
-        OPENROUTER_API_KEY,
-        None,
-        Some("AUTH_ERROR: No OpenRouter API key configured. Add your key in Settings."),
-    )
+    let vault_path = get_vault_path(app);
+    tokio::task::spawn_blocking(move || {
+        vault_read(
+            vault_path,
+            OPENROUTER_API_KEY,
+            None,
+            Some("AUTH_ERROR: No OpenRouter API key configured. Add your key in Settings.".to_string()),
+        )
+    })
+    .await
+    .map_err(|e| format!("STORAGE_ERROR: vault task panicked: {e}"))?
 }
 
 pub async fn is_openrouter_configured(app: &tauri::AppHandle) -> Result<bool, String> {
-    vault_key_exists(app, OPENROUTER_API_KEY)
+    let vault_path = get_vault_path(app);
+    tokio::task::spawn_blocking(move || vault_key_exists(vault_path, OPENROUTER_API_KEY))
+        .await
+        .map_err(|e| format!("STORAGE_ERROR: vault task panicked: {e}"))?
 }
 
 // ── Model preference ──────────────────────────────────────────────────────────
@@ -204,11 +236,20 @@ fn validate_model_preference(preference: &str) -> Result<(), String> {
 
 pub async fn set_model_preference(app: &tauri::AppHandle, preference: &str) -> Result<(), String> {
     validate_model_preference(preference)?;
-    vault_write(app, MODEL_PREFERENCE_KEY, preference)
+    let vault_path = get_vault_path(app);
+    let preference = preference.to_string();
+    tokio::task::spawn_blocking(move || vault_write(vault_path, MODEL_PREFERENCE_KEY, preference))
+        .await
+        .map_err(|e| format!("STORAGE_ERROR: vault task panicked: {e}"))?
 }
 
 pub async fn get_model_preference(app: &tauri::AppHandle) -> Result<String, String> {
-    vault_read(app, MODEL_PREFERENCE_KEY, Some("free-first"), None)
+    let vault_path = get_vault_path(app);
+    tokio::task::spawn_blocking(move || {
+        vault_read(vault_path, MODEL_PREFERENCE_KEY, Some("free-first".to_string()), None)
+    })
+    .await
+    .map_err(|e| format!("STORAGE_ERROR: vault task panicked: {e}"))?
 }
 
 #[cfg(test)]
@@ -251,5 +292,13 @@ mod tests {
         let long = "a".repeat(129);
         let err = validate_model_preference(&long).unwrap_err();
         assert!(err.starts_with("VALIDATION_ERROR:"));
+    }
+
+    #[test]
+    fn hash_vault_password_is_cached() {
+        let first = hash_vault_password();
+        let second = hash_vault_password();
+        assert_eq!(first, second);
+        assert_eq!(first.len(), 32);
     }
 }

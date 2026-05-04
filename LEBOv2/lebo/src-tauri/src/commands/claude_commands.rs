@@ -37,8 +37,26 @@ pub async fn invoke_claude_api(
         .ok_or_else(|| format!("PARSE_ERROR: mastery '{}' not found in class '{}'", mastery_id, class_id))?;
 
     // ── Build node context map for the prompt ─────────────────────────────────
-    // node_id → { name, tags, maxPoints, currentPoints }
+    // node_id → { name, tags, maxPoints, currentPoints, lockedFromRemoval }
     let node_allocations = build_state["nodeAllocations"].as_object().cloned().unwrap_or_default();
+
+    // Build parent→children map from edges: edge { from_id, to_id } means to_id requires from_id.
+    // A node is locked from removal if any of its children are currently allocated.
+    let mut children_of: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
+    for edge in class_data.base_tree.edges.iter().chain(mastery_data.passive_tree.edges.iter()) {
+        children_of.entry(edge.from_id.clone()).or_default().push(edge.to_id.clone());
+    }
+
+    let is_locked = |node_id: &str| -> bool {
+        children_of
+            .get(node_id)
+            .map(|children| {
+                children.iter().any(|child_id| {
+                    node_allocations.get(child_id).and_then(|v| v.as_u64()).unwrap_or(0) > 0
+                })
+            })
+            .unwrap_or(false)
+    };
 
     let mut available_nodes = serde_json::Map::new();
 
@@ -55,7 +73,8 @@ pub async fn invoke_claude_api(
                 "name": node.name,
                 "tags": all_tags,
                 "maxPoints": node.max_points,
-                "currentPoints": current_points
+                "currentPoints": current_points,
+                "lockedFromRemoval": is_locked(&node.id)
             }),
         );
     }
@@ -73,7 +92,8 @@ pub async fn invoke_claude_api(
                 "name": node.name,
                 "tags": all_tags,
                 "maxPoints": node.max_points,
-                "currentPoints": current_points
+                "currentPoints": current_points,
+                "lockedFromRemoval": is_locked(&node.id)
             }),
         );
     }
