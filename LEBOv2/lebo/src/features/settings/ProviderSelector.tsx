@@ -16,12 +16,18 @@ export function ProviderSelector() {
 
   useEffect(() => {
     invokeCommand<string>('get_llm_provider')
-      .then((p) => setLlmProvider(p as 'claude' | 'openrouter'))
+      .then((p) => {
+        const provider = p as 'claude' | 'openrouter'
+        setLlmProvider(provider)
+        // Only check OpenRouter config when it's the active provider — avoids
+        // concurrent Stronghold vault reads that back up the Tauri IPC queue.
+        if (provider === 'openrouter') {
+          return invokeCommand<boolean>('check_openrouter_configured')
+            .then((configured) => setIsOpenRouterConfigured(configured))
+            .catch(() => setIsOpenRouterConfigured(false))
+        }
+      })
       .catch(() => setLlmProvider('claude'))
-
-    invokeCommand<boolean>('check_openrouter_configured')
-      .then((configured) => setIsOpenRouterConfigured(configured))
-      .catch(() => setIsOpenRouterConfigured(false))
   }, [])
 
   async function handleProviderChange(provider: 'claude' | 'openrouter') {
