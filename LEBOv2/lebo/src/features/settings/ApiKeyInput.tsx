@@ -58,9 +58,6 @@ export function ApiKeyInput() {
 
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-        AI API Key
-      </h2>
       <div className="flex flex-col gap-1">
         <label
           htmlFor="api-key-field"
