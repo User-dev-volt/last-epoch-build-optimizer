@@ -8,6 +8,7 @@ import { OpenRouterInput } from './OpenRouterInput'
 export function ProviderSelector() {
   const llmProvider = useAppStore((s) => s.llmProvider)
   const setLlmProvider = useAppStore((s) => s.setLlmProvider)
+  const setApiKeyConfigured = useAppStore((s) => s.setApiKeyConfigured)
   const claudeRef = useRef<HTMLButtonElement>(null)
   const openrouterRef = useRef<HTMLButtonElement>(null)
 
@@ -15,16 +16,18 @@ export function ProviderSelector() {
   const [isOpenRouterConfigured, setIsOpenRouterConfigured] = useState(false)
 
   useEffect(() => {
+    // All vault reads are chained sequentially to avoid concurrent Stronghold
+    // access, which causes reads to return stale data and back up the IPC queue.
     invokeCommand<string>('get_llm_provider')
-      .then((p) => {
+      .then(async (p) => {
         const provider = p as 'claude' | 'openrouter'
         setLlmProvider(provider)
-        // Only check OpenRouter config when it's the active provider — avoids
-        // concurrent Stronghold vault reads that back up the Tauri IPC queue.
         if (provider === 'openrouter') {
-          return invokeCommand<boolean>('check_openrouter_configured')
-            .then((configured) => setIsOpenRouterConfigured(configured))
-            .catch(() => setIsOpenRouterConfigured(false))
+          const configured = await invokeCommand<boolean>('check_openrouter_configured').catch(() => false)
+          setIsOpenRouterConfigured(configured as boolean)
+        } else {
+          const configured = await invokeCommand<boolean>('check_api_key_configured').catch(() => false)
+          setApiKeyConfigured(configured as boolean)
         }
       })
       .catch(() => setLlmProvider('claude'))

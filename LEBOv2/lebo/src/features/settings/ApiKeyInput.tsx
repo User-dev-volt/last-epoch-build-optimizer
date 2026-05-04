@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { invokeCommand } from '../../shared/utils/invokeCommand'
 import { useAppStore } from '../../shared/stores/appStore'
@@ -11,12 +11,6 @@ export function ApiKeyInput() {
   const [localKeyValue, setLocalKeyValue] = useState('')
   const [inlineError, setInlineError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-
-  useEffect(() => {
-    invokeCommand<boolean>('check_api_key_configured')
-      .then((result) => setApiKeyConfigured(result))
-      .catch(() => setApiKeyConfigured(false))
-  }, [])
 
   async function handleSave() {
     if (!localKeyValue.trim()) return
