@@ -17,6 +17,7 @@ export function RightPanel() {
   const activeBuild = useBuildStore((s) => s.activeBuild)
   const scores = useOptimizationStore((s) => s.scores)
   const isOptimizing = useOptimizationStore((s) => s.isOptimizing)
+  const currentModel = useOptimizationStore((s) => s.currentModel)
   const previewSuggestionRank = useOptimizationStore((s) => s.previewSuggestionRank)
   const suggestions = useOptimizationStore((s) => s.suggestions)
   const { startOptimization } = useOptimizationStream()
@@ -85,6 +86,16 @@ export function RightPanel() {
             disabled={!activeBuild || !isOnline}
             isOptimizing={isOptimizing}
           />
+
+          {isOptimizing && currentModel && (
+            <p
+              className="text-xs"
+              style={{ color: 'var(--color-text-muted)' }}
+              data-testid="current-model-indicator"
+            >
+              Using: {currentModel}
+            </p>
+          )}
 
           {isOnlineChecked && !isOnline && (
             <p

@@ -41,12 +41,3 @@ pub async fn check_openrouter_configured(app_handle: tauri::AppHandle) -> Result
     keychain_service::is_openrouter_configured(&app_handle).await
 }
 
-#[tauri::command]
-pub async fn set_model_preference(app_handle: tauri::AppHandle, preference: String) -> Result<(), String> {
-    keychain_service::set_model_preference(&app_handle, &preference).await
-}
-
-#[tauri::command]
-pub async fn get_model_preference(app_handle: tauri::AppHandle) -> Result<String, String> {
-    keychain_service::get_model_preference(&app_handle).await
-}

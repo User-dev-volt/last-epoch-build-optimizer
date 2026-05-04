@@ -27,6 +27,11 @@ interface OptimizationErrorPayload {
   message: string
 }
 
+interface ModelActivePayload {
+  model_id: string
+  model_name: string
+}
+
 export function useOptimizationStream() {
   const { addSuggestion, clearSuggestions, setIsOptimizing, setStreamError } =
     useOptimizationStore.getState()
@@ -99,6 +104,7 @@ export function useOptimizationStream() {
         () => {
           useOptimizationStore.getState().setIsOptimizing(false)
           useOptimizationStore.getState().setHasOptimizationCompleted(true)
+          useOptimizationStore.getState().setCurrentModel(null)
         },
       )
       if (!isMounted) { unlisten2(); return }
@@ -111,10 +117,20 @@ export function useOptimizationStream() {
           const appError = normalizeAppError(`${error_type}: ${message}`)
           useOptimizationStore.getState().setStreamError(appError)
           useOptimizationStore.getState().setIsOptimizing(false)
+          useOptimizationStore.getState().setCurrentModel(null)
         },
       )
       if (!isMounted) { unlisten3(); return }
       unlisteners.push(unlisten3)
+
+      const unlisten4 = await listen<ModelActivePayload>(
+        'optimization:model-active',
+        (event) => {
+          useOptimizationStore.getState().setCurrentModel(event.payload.model_name)
+        },
+      )
+      if (!isMounted) { unlisten4(); return }
+      unlisteners.push(unlisten4)
     }
 
     registerListeners().catch(console.error)

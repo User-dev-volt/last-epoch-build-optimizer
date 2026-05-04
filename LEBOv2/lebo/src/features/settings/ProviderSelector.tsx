@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { invokeCommand } from '../../shared/utils/invokeCommand'
 import { useAppStore } from '../../shared/stores/appStore'
@@ -11,17 +11,23 @@ export function ProviderSelector() {
   const claudeRef = useRef<HTMLButtonElement>(null)
   const openrouterRef = useRef<HTMLButtonElement>(null)
 
+  // Persists across provider tab switches — prevents re-checking vault on every remount
+  const [isOpenRouterConfigured, setIsOpenRouterConfigured] = useState(false)
+
   useEffect(() => {
     invokeCommand<string>('get_llm_provider')
       .then((p) => setLlmProvider(p as 'claude' | 'openrouter'))
       .catch(() => setLlmProvider('claude'))
+
+    invokeCommand<boolean>('check_openrouter_configured')
+      .then((configured) => setIsOpenRouterConfigured(configured))
+      .catch(() => setIsOpenRouterConfigured(false))
   }, [])
 
   async function handleProviderChange(provider: 'claude' | 'openrouter') {
     if (llmProvider === provider) return
     const prevProvider = llmProvider
     setLlmProvider(provider)
-    // Restore focus after DOM update (ApiKeyInput ↔ OpenRouterInput swap)
     requestAnimationFrame(() => {
       if (provider === 'claude') claudeRef.current?.focus()
       else openrouterRef.current?.focus()
@@ -79,7 +85,14 @@ export function ProviderSelector() {
         </button>
       </div>
 
-      {llmProvider === null ? null : llmProvider === 'openrouter' ? <OpenRouterInput /> : <ApiKeyInput />}
+      {llmProvider === null ? null : llmProvider === 'openrouter' ? (
+        <OpenRouterInput
+          isConfigured={isOpenRouterConfigured}
+          onConfigured={() => setIsOpenRouterConfigured(true)}
+        />
+      ) : (
+        <ApiKeyInput />
+      )}
     </div>
   )
 }

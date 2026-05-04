@@ -18,6 +18,7 @@ interface OptimizationStore {
   hasOptimizationCompleted: boolean
   scores: BuildScore | null
   streamError: AppError | null
+  currentModel: string | null
   setGoal: (goal: OptimizationGoal) => void
   setSuggestions: (suggestions: SuggestionResult[]) => void
   addSuggestion: (suggestion: SuggestionResult) => void
@@ -30,6 +31,7 @@ interface OptimizationStore {
   setAppliedRank: (rank: number) => void
   setPreviewSuggestionRank: (rank: number | null) => void
   setHighlightedNodeIds: (nodes: HighlightedNodeIds | null) => void
+  setCurrentModel: (model: string | null) => void
 }
 
 export const useOptimizationStore = create<OptimizationStore>()((set) => ({
@@ -43,6 +45,7 @@ export const useOptimizationStore = create<OptimizationStore>()((set) => ({
   hasOptimizationCompleted: false,
   scores: null,
   streamError: null,
+  currentModel: null,
   setGoal: (goal) => set({ goal }),
   setSuggestions: (suggestions) => set({ suggestions }),
   addSuggestion: (suggestion) =>
@@ -56,6 +59,7 @@ export const useOptimizationStore = create<OptimizationStore>()((set) => ({
       highlightedNodeIds: null,
       streamError: null,
       hasOptimizationCompleted: false,
+      currentModel: null,
     }),
   setIsOptimizing: (optimizing) => set({ isOptimizing: optimizing }),
   setHasOptimizationCompleted: (value) => set({ hasOptimizationCompleted: value }),
@@ -74,4 +78,5 @@ export const useOptimizationStore = create<OptimizationStore>()((set) => ({
     set((s) => ({ appliedRanks: [...s.appliedRanks, rank] })),
   setPreviewSuggestionRank: (rank) => set({ previewSuggestionRank: rank }),
   setHighlightedNodeIds: (nodes) => set({ highlightedNodeIds: nodes }),
+  setCurrentModel: (model) => set({ currentModel: model }),
 }))

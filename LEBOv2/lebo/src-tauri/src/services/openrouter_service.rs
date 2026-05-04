@@ -8,12 +8,19 @@ use crate::services::prompts::OPTIMIZATION_SYSTEM_PROMPT;
 const BASE_URL: &str = "https://openrouter.ai/api/v1/chat/completions";
 const TIMEOUT_SECS: u64 = 45;
 const MAX_NDJSON_LINE_BYTES: usize = 65_536;
-// Update to the published repository URL once the repo is public — OpenRouter uses this for attribution.
 const SITE_URL: &str = "https://github.com/lebo";
+
+// Models tried in order; on rate-limit the next is attempted with context handoff.
+const MODELS: &[(&str, &str)] = &[
+    ("google/gemini-2.0-flash-exp:free", "Gemini 2.0 Flash"),
+    ("meta-llama/llama-3.3-70b-instruct:free", "Llama 3.3 70B"),
+    ("mistralai/mistral-7b-instruct:free", "Mistral 7B"),
+    ("google/gemma-2-27b-it:free", "Gemma 2 27B"),
+];
 
 // ── Request structs ──────────────────────────────────────────────────────────
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 struct Message {
     role: &'static str,
     content: String,
@@ -24,6 +31,14 @@ struct OpenRouterRequest {
     model: String,
     messages: Vec<Message>,
     stream: bool,
+}
+
+// ── Event payloads ───────────────────────────────────────────────────────────
+
+#[derive(Serialize, Clone)]
+pub struct ModelActivePayload {
+    pub model_id: String,
+    pub model_name: String,
 }
 
 // ── SSE delta structs (OpenAI format) ────────────────────────────────────────
@@ -46,31 +61,104 @@ struct SseChunk {
     choices: Vec<Choice>,
 }
 
-// ── Main streaming function ───────────────────────────────────────────────────
+// ── Error classification ─────────────────────────────────────────────────────
+
+enum StreamError {
+    RateLimit,
+    Fatal(String),
+}
+
+// ── Main public function ──────────────────────────────────────────────────────
 
 pub async fn stream_optimization(
     app_handle: &tauri::AppHandle,
     api_key: &str,
-    model_preference: &str,
     user_message: String,
 ) -> Result<(), String> {
-    let model = if model_preference == "free-first" {
-        "openrouter/auto".to_string()
-    } else {
-        model_preference.to_string()
-    };
-
     let client = Client::builder()
         .timeout(std::time::Duration::from_secs(TIMEOUT_SECS))
         .build()
         .map_err(|e| format!("NETWORK_ERROR: failed to build HTTP client: {}", e))?;
 
-    let request_body = OpenRouterRequest {
-        model,
-        messages: vec![
+    let mut suggestion_count: u32 = 0;
+    let mut accumulated_suggestions: Vec<String> = Vec::new();
+
+    for (model_id, model_name) in MODELS {
+        let _ = app_handle.emit(
+            "optimization:model-active",
+            ModelActivePayload {
+                model_id: model_id.to_string(),
+                model_name: model_name.to_string(),
+            },
+        );
+
+        let messages = build_messages(&user_message, &accumulated_suggestions, suggestion_count);
+
+        match try_model(
+            app_handle,
+            &client,
+            api_key,
+            model_id,
+            messages,
+            &mut suggestion_count,
+            &mut accumulated_suggestions,
+        )
+        .await
+        {
+            Ok(()) => return Ok(()),
+            Err(StreamError::RateLimit) => continue,
+            Err(StreamError::Fatal(e)) => return Err(e),
+        }
+    }
+
+    Err("API_ERROR: All free models are currently rate-limited or unavailable. Please try again later.".to_string())
+}
+
+// ── Message builder ───────────────────────────────────────────────────────────
+
+fn build_messages(
+    user_message: &str,
+    accumulated_suggestions: &[String],
+    suggestion_count: u32,
+) -> Vec<Message> {
+    if accumulated_suggestions.is_empty() {
+        vec![
             Message { role: "system", content: OPTIMIZATION_SYSTEM_PROMPT.to_string() },
-            Message { role: "user", content: user_message },
-        ],
+            Message { role: "user", content: user_message.to_string() },
+        ]
+    } else {
+        // Context handoff: new model receives already-generated suggestions as
+        // the assistant turn, then a user prompt to continue from the next rank.
+        vec![
+            Message { role: "system", content: OPTIMIZATION_SYSTEM_PROMPT.to_string() },
+            Message { role: "user", content: user_message.to_string() },
+            Message { role: "assistant", content: accumulated_suggestions.join("\n") },
+            Message {
+                role: "user",
+                content: format!(
+                    "Continue generating suggestions starting from rank {}. Do not repeat the {} suggestions already shown above.",
+                    suggestion_count + 1,
+                    suggestion_count,
+                ),
+            },
+        ]
+    }
+}
+
+// ── Per-model streaming attempt ───────────────────────────────────────────────
+
+async fn try_model(
+    app_handle: &tauri::AppHandle,
+    client: &Client,
+    api_key: &str,
+    model_id: &str,
+    messages: Vec<Message>,
+    suggestion_count: &mut u32,
+    accumulated_suggestions: &mut Vec<String>,
+) -> Result<(), StreamError> {
+    let request_body = OpenRouterRequest {
+        model: model_id.to_string(),
+        messages,
         stream: true,
     };
 
@@ -87,37 +175,47 @@ pub async fn stream_optimization(
     let response = match send_result {
         Ok(r) => r,
         Err(e) => {
-            return Err(if e.is_timeout() {
+            let msg = if e.is_timeout() {
                 format!("TIMEOUT: request exceeded {} seconds", TIMEOUT_SECS)
             } else {
                 format!("NETWORK_ERROR: {}", e)
-            });
+            };
+            return Err(StreamError::Fatal(msg));
         }
     };
 
     let status = response.status();
     if !status.is_success() {
         let body = response.text().await.unwrap_or_default();
-        return Err(match status.as_u16() {
-            401 | 403 => "AUTH_ERROR: invalid OpenRouter API key".to_string(),
-            429 => "API_ERROR: rate limit reached — wait a moment and retry".to_string(),
-            _ => format!("API_ERROR: OpenRouter server error (HTTP {}): {}", status, body),
-        });
+        return match status.as_u16() {
+            401 | 403 => Err(StreamError::Fatal("AUTH_ERROR: invalid OpenRouter API key".to_string())),
+            429 => Err(StreamError::RateLimit),
+            _ => {
+                // Some providers return quota-exhausted as non-429; treat as rate-limit if body says so
+                let lower = body.to_lowercase();
+                if lower.contains("rate limit") || lower.contains("quota") || lower.contains("capacity") {
+                    Err(StreamError::RateLimit)
+                } else {
+                    Err(StreamError::Fatal(format!(
+                        "API_ERROR: OpenRouter server error (HTTP {}): {}",
+                        status, body
+                    )))
+                }
+            }
+        };
     }
 
     let mut stream = response.bytes_stream();
     let mut sse_buffer = String::new();
     let mut ndjson_buffer = String::new();
-    let mut suggestion_count: u32 = 0;
     let mut stream_done = false;
 
     while let Some(chunk_result) = stream.next().await {
         let chunk = chunk_result
-            .map_err(|e| format!("NETWORK_ERROR: stream read error: {}", e))?;
+            .map_err(|e| StreamError::Fatal(format!("NETWORK_ERROR: stream read error: {}", e)))?;
         let text = String::from_utf8_lossy(&chunk);
         sse_buffer.push_str(&text);
 
-        // Process complete SSE lines (OpenRouter sends line-by-line, not \n\n framed)
         while let Some(newline_pos) = sse_buffer.find('\n') {
             let line = sse_buffer[..newline_pos].trim().to_string();
             sse_buffer = sse_buffer[newline_pos + 1..].to_string();
@@ -125,7 +223,6 @@ pub async fn stream_optimization(
             if line.is_empty() || line.starts_with(':') {
                 continue;
             }
-
             if !line.starts_with("data: ") {
                 continue;
             }
@@ -145,12 +242,12 @@ pub async fn stream_optimization(
             for choice in &chunk.choices {
                 if let Some(ref content) = choice.delta.content {
                     ndjson_buffer.push_str(content);
-
                     if ndjson_buffer.len() > MAX_NDJSON_LINE_BYTES {
-                        return Err("PARSE_ERROR: NDJSON line exceeded 64KB limit".to_string());
+                        return Err(StreamError::Fatal(
+                            "PARSE_ERROR: NDJSON line exceeded 64KB limit".to_string(),
+                        ));
                     }
                 }
-
                 if choice.finish_reason.as_deref() == Some("stop") {
                     stream_done = true;
                 }
@@ -160,7 +257,6 @@ pub async fn stream_optimization(
                 break;
             }
 
-            // Parse complete NDJSON lines
             while let Some(nl) = ndjson_buffer.find('\n') {
                 let suggestion_line = ndjson_buffer[..nl].trim().to_string();
                 ndjson_buffer = ndjson_buffer[nl + 1..].to_string();
@@ -171,15 +267,19 @@ pub async fn stream_optimization(
 
                 match serde_json::from_str::<SuggestionEvent>(&suggestion_line) {
                     Ok(suggestion) => {
-                        suggestion_count += 1;
+                        *suggestion_count += 1;
+                        accumulated_suggestions.push(suggestion_line);
                         let payload = SuggestionReceivedPayload::from(&suggestion);
                         app_handle
                             .emit("optimization:suggestion-received", &payload)
-                            .map_err(|e| format!("APP_ERROR: emit failed: {}", e))?;
+                            .map_err(|e| StreamError::Fatal(format!("APP_ERROR: emit failed: {}", e)))?;
                     }
                     Err(e) => {
                         if suggestion_line.starts_with('{') && suggestion_line.ends_with('}') {
-                            return Err(format!("PARSE_ERROR: malformed suggestion JSON: {}", e));
+                            return Err(StreamError::Fatal(format!(
+                                "PARSE_ERROR: malformed suggestion JSON: {}",
+                                e
+                            )));
                         }
                     }
                 }
@@ -191,12 +291,13 @@ pub async fn stream_optimization(
         }
     }
 
-    // Flush any remaining buffer content
+    // Flush remaining buffer
     let remaining = ndjson_buffer.trim().to_string();
     if !remaining.is_empty() {
         match serde_json::from_str::<SuggestionEvent>(&remaining) {
             Ok(suggestion) => {
-                suggestion_count += 1;
+                *suggestion_count += 1;
+                accumulated_suggestions.push(remaining);
                 let payload = SuggestionReceivedPayload::from(&suggestion);
                 let _ = app_handle.emit("optimization:suggestion-received", &payload);
             }
@@ -209,12 +310,11 @@ pub async fn stream_optimization(
                         message: err_msg.clone(),
                     },
                 );
-                // Emit complete so the frontend stream listener is not left hanging
                 let _ = app_handle.emit(
                     "optimization:complete",
-                    &OptimizationCompletePayload { suggestion_count },
+                    &OptimizationCompletePayload { suggestion_count: *suggestion_count },
                 );
-                return Err(err_msg);
+                return Err(StreamError::Fatal(err_msg));
             }
         }
     }
@@ -222,9 +322,9 @@ pub async fn stream_optimization(
     app_handle
         .emit(
             "optimization:complete",
-            &OptimizationCompletePayload { suggestion_count },
+            &OptimizationCompletePayload { suggestion_count: *suggestion_count },
         )
-        .map_err(|e| format!("APP_ERROR: emit complete failed: {}", e))?;
+        .map_err(|e| StreamError::Fatal(format!("APP_ERROR: emit complete failed: {}", e)))?;
 
     Ok(())
 }
@@ -236,24 +336,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn resolves_free_first_to_auto_model() {
-        let model = if "free-first" == "free-first" {
-            "openrouter/auto".to_string()
-        } else {
-            "free-first".to_string()
-        };
-        assert_eq!(model, "openrouter/auto");
+    fn build_messages_first_model_has_two_messages() {
+        let msgs = build_messages("build context", &[], 0);
+        assert_eq!(msgs.len(), 2);
+        assert_eq!(msgs[0].role, "system");
+        assert_eq!(msgs[1].role, "user");
     }
 
     #[test]
-    fn uses_explicit_model_id_as_is() {
-        let preference = "google/gemini-2.0-flash-exp:free";
-        let model = if preference == "free-first" {
-            "openrouter/auto".to_string()
-        } else {
-            preference.to_string()
-        };
-        assert_eq!(model, "google/gemini-2.0-flash-exp:free");
+    fn build_messages_handoff_has_four_messages() {
+        let suggestions = vec![
+            r#"{"rank":1,"fromNodeId":null,"toNodeId":"node-a","pointsChange":1,"explanation":"good"}"#.to_string(),
+        ];
+        let msgs = build_messages("build context", &suggestions, 1);
+        assert_eq!(msgs.len(), 4);
+        assert_eq!(msgs[2].role, "assistant");
+        assert_eq!(msgs[3].role, "user");
+        assert!(msgs[3].content.contains("rank 2"));
+    }
+
+    #[test]
+    fn models_list_has_four_entries() {
+        assert_eq!(MODELS.len(), 4);
     }
 
     #[test]

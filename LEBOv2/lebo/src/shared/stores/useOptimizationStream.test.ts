@@ -70,18 +70,19 @@ describe('useOptimizationStream', () => {
     vi.restoreAllMocks()
   })
 
-  it('registers three event listeners on mount', async () => {
+  it('registers four event listeners on mount', async () => {
     await act(async () => {
       renderHook(() => useOptimizationStream())
     })
-    expect(mockListen).toHaveBeenCalledTimes(3)
+    expect(mockListen).toHaveBeenCalledTimes(4)
     expect(mockListen).toHaveBeenCalledWith('optimization:suggestion-received', expect.any(Function))
     expect(mockListen).toHaveBeenCalledWith('optimization:complete', expect.any(Function))
     expect(mockListen).toHaveBeenCalledWith('optimization:error', expect.any(Function))
+    expect(mockListen).toHaveBeenCalledWith('optimization:model-active', expect.any(Function))
   })
 
   it('calls unlisten for all listeners on unmount', async () => {
-    const unlistenFns = [vi.fn(), vi.fn(), vi.fn()]
+    const unlistenFns = [vi.fn(), vi.fn(), vi.fn(), vi.fn()]
     let callCount = 0
     mockListen.mockImplementation(() => Promise.resolve(unlistenFns[callCount++]))
 
@@ -96,6 +97,7 @@ describe('useOptimizationStream', () => {
     expect(unlistenFns[0]).toHaveBeenCalled()
     expect(unlistenFns[1]).toHaveBeenCalled()
     expect(unlistenFns[2]).toHaveBeenCalled()
+    expect(unlistenFns[3]).toHaveBeenCalled()
   })
 
   it('sets isOptimizing(false) on unmount', async () => {

@@ -117,8 +117,7 @@ pub async fn invoke_claude_api(
                 return Err(err);
             }
         };
-        let model_pref = keychain_service::get_model_preference(&app_handle).await.unwrap_or_else(|_| "free-first".to_string());
-        openrouter_service::stream_optimization(&app_handle, &or_key, &model_pref, user_message).await
+        openrouter_service::stream_optimization(&app_handle, &or_key, user_message).await
     } else {
         let api_key = keychain_service::get_api_key(&app_handle).await?;
         #[cfg(debug_assertions)]
