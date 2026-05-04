@@ -11,6 +11,7 @@ import { useGameDataStore } from './shared/stores/gameDataStore'
 import { useOptimizationStore } from './shared/stores/optimizationStore'
 import { calculateScore } from './features/optimization/scoringEngine'
 import { useAppStore } from './shared/stores/appStore'
+import { invokeCommand } from './shared/utils/invokeCommand'
 import { useOptimizationStream } from './shared/stores/useOptimizationStream'
 import { AppHeader } from './features/layout/AppHeader'
 import { StatusBar } from './features/layout/StatusBar'
@@ -40,6 +41,22 @@ export function App() {
   useEffect(() => {
     initGameData().catch(console.error)
     loadBuildsOnStartup().catch(console.error)
+
+    // Sequential vault reads — must be chained to avoid concurrent Stronghold access
+    const { setLlmProvider, setApiKeyConfigured, setOpenRouterConfigured } = useAppStore.getState()
+    invokeCommand<string>('get_llm_provider')
+      .then(async (p) => {
+        const provider = p as 'claude' | 'openrouter'
+        setLlmProvider(provider)
+        if (provider === 'openrouter') {
+          const configured = await invokeCommand<boolean>('check_openrouter_configured').catch(() => false)
+          setOpenRouterConfigured(configured as boolean)
+        } else {
+          const configured = await invokeCommand<boolean>('check_api_key_configured').catch(() => false)
+          setApiKeyConfigured(configured as boolean)
+        }
+      })
+      .catch(() => setLlmProvider('claude'))
   }, [])
 
   useEffect(() => {

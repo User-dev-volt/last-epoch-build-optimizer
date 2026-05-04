@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import toast from 'react-hot-toast'
 import { invokeCommand } from '../../shared/utils/invokeCommand'
 import { useAppStore } from '../../shared/stores/appStore'
@@ -8,30 +8,10 @@ import { OpenRouterInput } from './OpenRouterInput'
 export function ProviderSelector() {
   const llmProvider = useAppStore((s) => s.llmProvider)
   const setLlmProvider = useAppStore((s) => s.setLlmProvider)
-  const setApiKeyConfigured = useAppStore((s) => s.setApiKeyConfigured)
+  const isOpenRouterConfigured = useAppStore((s) => s.isOpenRouterConfigured)
+  const setOpenRouterConfigured = useAppStore((s) => s.setOpenRouterConfigured)
   const claudeRef = useRef<HTMLButtonElement>(null)
   const openrouterRef = useRef<HTMLButtonElement>(null)
-
-  // Persists across provider tab switches — prevents re-checking vault on every remount
-  const [isOpenRouterConfigured, setIsOpenRouterConfigured] = useState(false)
-
-  useEffect(() => {
-    // All vault reads are chained sequentially to avoid concurrent Stronghold
-    // access, which causes reads to return stale data and back up the IPC queue.
-    invokeCommand<string>('get_llm_provider')
-      .then(async (p) => {
-        const provider = p as 'claude' | 'openrouter'
-        setLlmProvider(provider)
-        if (provider === 'openrouter') {
-          const configured = await invokeCommand<boolean>('check_openrouter_configured').catch(() => false)
-          setIsOpenRouterConfigured(configured as boolean)
-        } else {
-          const configured = await invokeCommand<boolean>('check_api_key_configured').catch(() => false)
-          setApiKeyConfigured(configured as boolean)
-        }
-      })
-      .catch(() => setLlmProvider('claude'))
-  }, [])
 
   async function handleProviderChange(provider: 'claude' | 'openrouter') {
     if (llmProvider === provider) return
@@ -96,8 +76,8 @@ export function ProviderSelector() {
 
       {llmProvider === null ? null : llmProvider === 'openrouter' ? (
         <OpenRouterInput
-          isConfigured={isOpenRouterConfigured}
-          onConfigured={() => setIsOpenRouterConfigured(true)}
+          isConfigured={isOpenRouterConfigured ?? false}
+          onConfigured={() => setOpenRouterConfigured(true)}
         />
       ) : (
         <ApiKeyInput />

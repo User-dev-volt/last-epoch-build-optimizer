@@ -13,6 +13,7 @@ interface AppStore {
   currentView: 'main' | 'settings'
   activePanel: PanelState
   isApiKeyConfigured: boolean | null
+  isOpenRouterConfigured: boolean | null
   llmProvider: 'claude' | 'openrouter' | null
   updateInfo: { version: string; body: string | null } | null
   updateStatus: 'idle' | 'downloading' | 'ready' | 'error'
@@ -22,6 +23,7 @@ interface AppStore {
   setCurrentView: (view: 'main' | 'settings') => void
   setPanelState: (panel: 'left' | 'right', state: PanelCollapseState) => void
   setApiKeyConfigured: (v: boolean | null) => void
+  setOpenRouterConfigured: (v: boolean | null) => void
   setLlmProvider: (v: 'claude' | 'openrouter' | null) => void
   setUpdateInfo: (info: { version: string; body: string | null } | null) => void
   setUpdateStatus: (status: 'idle' | 'downloading' | 'ready' | 'error') => void
@@ -35,6 +37,7 @@ export const useAppStore = create<AppStore>()((set) => ({
   currentView: 'main',
   activePanel: { left: 'expanded', right: 'expanded' },
   isApiKeyConfigured: null,
+  isOpenRouterConfigured: null,
   llmProvider: null,
   updateInfo: null,
   updateStatus: 'idle',
@@ -45,6 +48,7 @@ export const useAppStore = create<AppStore>()((set) => ({
   setPanelState: (panel, state) =>
     set((s) => ({ activePanel: { ...s.activePanel, [panel]: state } })),
   setApiKeyConfigured: (v) => set({ isApiKeyConfigured: v }),
+  setOpenRouterConfigured: (v) => set({ isOpenRouterConfigured: v }),
   setLlmProvider: (v) => set({ llmProvider: v }),
   setUpdateInfo: (info) => set({ updateInfo: info }),
   setUpdateStatus: (status) => set({ updateStatus: status }),
