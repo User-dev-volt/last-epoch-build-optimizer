@@ -195,4 +195,4 @@ development_status:
   # Story 6.2: Depends on 6.1 + all view components existing (ARIA audit requires complete UI)
   6-2-screen-reader-support-aria-infrastructure-accessibility-ci: done
 
-  epic-6-retrospective: optional
+  epic-6-retrospective: done # full project retrospective — 2026-05-05
