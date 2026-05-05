@@ -11,13 +11,15 @@ const MAX_NDJSON_LINE_BYTES: usize = 65_536;
 const SITE_URL: &str = "https://github.com/lebo";
 
 // Models tried in order; on rate-limit, 404, or invalid-model-ID the next is attempted.
+// Verified against https://openrouter.ai/api/v1/models on 2026-05-05.
 const MODELS: &[(&str, &str)] = &[
+    ("nousresearch/hermes-3-llama-3.1-405b:free", "Hermes 3 405B"),
     ("meta-llama/llama-3.3-70b-instruct:free", "Llama 3.3 70B"),
-    ("deepseek/deepseek-r1:free", "DeepSeek R1"),
-    ("deepseek/deepseek-chat:free", "DeepSeek Chat"),
-    ("mistralai/mistral-7b-instruct:free", "Mistral 7B"),
-    ("google/gemma-2-27b-it:free", "Gemma 2 27B"),
-    ("qwen/qwen-2.5-72b-instruct:free", "Qwen 2.5 72B"),
+    ("openai/gpt-oss-120b:free", "GPT-OSS 120B"),
+    ("google/gemma-4-31b-it:free", "Gemma 4 31B"),
+    ("google/gemma-3-27b-it:free", "Gemma 3 27B"),
+    ("qwen/qwen3-coder:free", "Qwen3 Coder"),
+    ("openrouter/free", "OpenRouter Free"),
 ];
 
 // ── Request structs ──────────────────────────────────────────────────────────
