@@ -10,13 +10,14 @@ const TIMEOUT_SECS: u64 = 45;
 const MAX_NDJSON_LINE_BYTES: usize = 65_536;
 const SITE_URL: &str = "https://github.com/lebo";
 
-// Models tried in order; on rate-limit or 404 (endpoint removed) the next is attempted.
+// Models tried in order; on rate-limit, 404, or invalid-model-ID the next is attempted.
 const MODELS: &[(&str, &str)] = &[
-    ("google/gemini-2.0-flash:free", "Gemini 2.0 Flash"),
     ("meta-llama/llama-3.3-70b-instruct:free", "Llama 3.3 70B"),
+    ("deepseek/deepseek-r1:free", "DeepSeek R1"),
     ("deepseek/deepseek-chat:free", "DeepSeek Chat"),
     ("mistralai/mistral-7b-instruct:free", "Mistral 7B"),
     ("google/gemma-2-27b-it:free", "Gemma 2 27B"),
+    ("qwen/qwen-2.5-72b-instruct:free", "Qwen 2.5 72B"),
 ];
 
 // ── Request structs ──────────────────────────────────────────────────────────
@@ -188,14 +189,17 @@ async fn try_model(
     let status = response.status();
     if !status.is_success() {
         let body = response.text().await.unwrap_or_default();
+        let lower = body.to_lowercase();
         return match status.as_u16() {
             401 | 403 => Err(StreamError::Fatal("AUTH_ERROR: invalid OpenRouter API key".to_string())),
             429 => Err(StreamError::RateLimit),
             // 404 = model endpoint removed/retired — skip to next model
             404 => Err(StreamError::RateLimit),
+            // 400 with "not a valid model ID" = model ID stale — skip to next model
+            400 if lower.contains("not a valid model") || lower.contains("no endpoints found") => {
+                Err(StreamError::RateLimit)
+            }
             _ => {
-                // Some providers return quota-exhausted as non-429; treat as rate-limit if body says so
-                let lower = body.to_lowercase();
                 if lower.contains("rate limit") || lower.contains("quota") || lower.contains("capacity") || lower.contains("no endpoints found") {
                     Err(StreamError::RateLimit)
                 } else {
