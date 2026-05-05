@@ -194,15 +194,17 @@ async fn try_model(
         let lower = body.to_lowercase();
         return match status.as_u16() {
             401 | 403 => Err(StreamError::Fatal("AUTH_ERROR: invalid OpenRouter API key".to_string())),
-            429 => Err(StreamError::RateLimit),
-            // 404 = model endpoint removed/retired — skip to next model
-            404 => Err(StreamError::RateLimit),
+            // 429 = rate limited, 404 = model removed, 402 = provider spend limit — all skip to next
+            429 | 404 | 402 => Err(StreamError::RateLimit),
             // 400 with "not a valid model ID" = model ID stale — skip to next model
             400 if lower.contains("not a valid model") || lower.contains("no endpoints found") => {
                 Err(StreamError::RateLimit)
             }
             _ => {
-                if lower.contains("rate limit") || lower.contains("quota") || lower.contains("capacity") || lower.contains("no endpoints found") {
+                if lower.contains("rate limit") || lower.contains("quota") || lower.contains("capacity")
+                    || lower.contains("no endpoints found") || lower.contains("spend limit")
+                    || lower.contains("provider returned error")
+                {
                     Err(StreamError::RateLimit)
                 } else {
                     Err(StreamError::Fatal(format!(
