@@ -7,7 +7,7 @@
 
 ## Status
 
-**Phase:** `Building`
+**Phase:** `Polish / Epic 5`
 **Health:** `On Track`
 **Last Touched:** `2026-05-05`
 
@@ -16,7 +16,8 @@
 ## Current Focus
 
 ```
-Epic 4 — AI Optimization Engine. Claude API integration, prompt builder, streaming suggestions.
+Epic 5 — Polish, UX, error states. Epic 4 (AI Optimization Engine) is fully working
+with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced during testing.
 ```
 
 ---
@@ -24,35 +25,34 @@ Epic 4 — AI Optimization Engine. Claude API integration, prompt builder, strea
 ## Next Action
 
 ```
-Start Epic 4. Read _bmad-output/planning-artifacts/epics/epic-4.md, then implement:
-- Story 4.1: API key storage (Tauri secure store or SQLite)
-- Story 4.2: Prompt builder — serialize build + tree context for Claude
-The optimization Rust command stub is already in src-tauri/src/commands/optimization.rs
-and the optimizationStore is wired for streaming.
+Continue Epic 5 polish. Remaining known issues to address:
+- Story 3.4: URL import from lastepochtools.com (stubbed in LoadModal, needs real Rust impl)
+- Skill tree tab switcher shows placeholder — skill tree data not yet in game-data.json
+- General UX pass on error states and onboarding
 ```
 
 ---
 
 ## Mental RAM
 
-- Epics 1–3 complete. App runs: class select → mastery select → build screen with live Pixi.js tree
-- Pixi.js StrictMode fix: `initDone` flag prevents `destroy()` before `app.init()` resolves
-- Scoring wired in App.tsx useEffect watching `passiveAllocations` + `masteryId`
-- Save/Load modals done; Rust `save_build` accepts optional `id` for upsert
-- URL import stub in LoadModal → calls `import_build_from_url` (returns stub error — real impl in Epic 4)
-- Game data: 375 passive nodes across 15 masteries, embedded via `include_str!` in game_data.rs
-- If blank screen: delete `%APPDATA%\com.md_ki.lebo\lebo.db` to force re-seed
+- **Epics 1–4 complete.** Full flow works: class → mastery → build tree → AI optimize → apply suggestions
+- Claude API + OpenRouter both working end-to-end with streaming suggestions
+- Stronghold vault (Argon2id): all vault ops MUST use `tokio::task::spawn_blocking` or they block the Tauri async runtime and cause 1-2 min UI freezes. Argon2id hash is cached via `OnceLock` — only runs once per process.
+- OpenRouter free models rotate constantly — treat 400/402/404 as skip-to-next, not fatal. Model list verified 2026-05-05 (see Decision Log).
+- Settings view kept always-mounted (display:none) so in-flight API key saves survive navigation away and back
+- Prerequisite lock fix: build context sent to AI now includes `lockedFromRemoval: bool` per node so AI can't suggest removing prerequisite nodes
+- PixiJS renderer: node labels (`currentPts/maxPts`) drawn with `Text` below each node. Preview coloring: red = points removed, green = points added (via `previewRemoved`/`previewAdded` sets in `HighlightedNodes`)
 - Cargo target dir (Windows App Control workaround): `C:/Users/MD_Ki/cargo-targets/lebo`
+- If blank screen: delete `%APPDATA%\com.md_ki.lebo\lebo.db` to force re-seed
 
 ---
 
 ## Open Loops
 
-- [ ] Epic 4: Claude API key storage + prompt builder + streaming
-- [ ] Epic 4: SuggestionsPanel UI wired to real optimization data
-- [ ] Epic 5: Polish, error states, keyboard shortcuts, onboarding
 - [ ] Story 3.4: URL import from lastepochtools.com (stubbed, needs real Rust impl)
 - [ ] Skill tree tab switcher shows placeholder — skill tree data not yet in game-data.json
+- [ ] Epic 5: General polish pass — onboarding, empty states
+- [ ] OpenRouter model list will drift — re-verify against `https://openrouter.ai/api/v1/models` periodically
 
 ---
 
@@ -64,6 +64,12 @@ and the optimizationStore is wired for streaming.
 | 2026-04-15 | include_str! for game data | Avoids runtime path issues in dev vs prod |
 | 2026-04-15 | initDone flag for Pixi cleanup | StrictMode fires cleanup before async init resolves |
 | 2026-04-15 | Scoring wired in App.tsx | Cleanest place to subscribe to both buildStore + gameDataStore |
+| 2026-05-04 | Stronghold vault ops → spawn_blocking | Argon2id KDF on async thread starves Tokio runtime; caused 1-2 min UI freezes |
+| 2026-05-04 | OnceLock for Argon2id hash | Hash is deterministic; no reason to recompute each vault open |
+| 2026-05-04 | Settings always-mounted (display:none) | Unmounting loses in-flight save state; CSS hide preserves component lifecycle |
+| 2026-05-04 | Provider cards replace tab switcher | Separate "save key" from "activate provider" — both keys can be stored independently |
+| 2026-05-05 | 400/402/404 all skip-to-next in OpenRouter | Provider-side limits/missing models should not kill the whole optimization run |
+| 2026-05-05 | lockedFromRemoval in AI prompt context | AI was suggesting removing prerequisite nodes; guard exists on apply but suggestion was confusing |
 
 ---
 
@@ -72,6 +78,8 @@ and the optimizationStore is wired for streaming.
 | Date | What I Did | Where I Left Off |
 |------|------------|------------------|
 | 2026-04-15 | Epics 1–3: DB, game data seeding, Pixi.js tree, scoring engine, Save/Load modals | Start Epic 4 — AI optimization |
+| 2026-05-04 | Epic 4 complete: Claude + OpenRouter streaming, vault perf fix, UX polish (labels, preview colors, settings persistence, provider cards) | Epic 5 polish |
+| 2026-05-05 | OpenRouter error handling: 400/402/404 skip-to-next, model list updated from live API, Test Connection button | Continue Epic 5 |
 
 ---
 
