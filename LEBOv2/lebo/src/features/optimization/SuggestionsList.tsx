@@ -345,7 +345,17 @@ export function SuggestionsList({ onRetry }: SuggestionsListProps) {
           }}
           data-testid="stream-error-banner"
         >
-          <span className="flex-1">{streamError.message}</span>
+          <span className="flex-1 flex flex-col gap-1">
+            <span>{streamError.message}</span>
+            {streamError.detail && streamError.detail !== streamError.message && (
+              <span
+                className="text-xs opacity-60 break-all"
+                style={{ color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}
+              >
+                {String(streamError.detail)}
+              </span>
+            )}
+          </span>
           {streamError.type === 'AUTH_ERROR' && (
             <button
               onClick={() => useAppStore.getState().setCurrentView('settings')}

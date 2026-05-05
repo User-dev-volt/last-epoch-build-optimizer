@@ -28,10 +28,13 @@ export function OpenRouterInput({ isConfigured, onConfigured }: Props) {
   const [keyValue, setKeyValue] = useState('')
   const [inlineError, setInlineError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [isTesting, setIsTesting] = useState(false)
+  const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null)
   const cancelledRef = useRef(false)
 
   async function handleSave() {
     setInlineError(null)
+    setTestResult(null)
     setIsSaving(true)
     cancelledRef.current = false
     try {
@@ -54,6 +57,21 @@ export function OpenRouterInput({ isConfigured, onConfigured }: Props) {
     setIsSaving(false)
     setKeyValue('')
     setInlineError(null)
+    setTestResult(null)
+  }
+
+  async function handleTest() {
+    setTestResult(null)
+    setIsTesting(true)
+    try {
+      const result = await invokeCommand<string>('validate_openrouter_key')
+      setTestResult({ ok: true, message: result as string })
+    } catch (err) {
+      const msg = typeof err === 'string' ? err : (err as AppError).message ?? 'Test failed'
+      setTestResult({ ok: false, message: msg })
+    } finally {
+      setIsTesting(false)
+    }
   }
 
   const saveDisabled = isSaving || keyValue.trim().length === 0
@@ -73,7 +91,7 @@ export function OpenRouterInput({ isConfigured, onConfigured }: Props) {
           type="password"
           data-testid="openrouter-key-input"
           value={keyValue}
-          onChange={(e) => setKeyValue(e.target.value)}
+          onChange={(e) => { setKeyValue(e.target.value); setTestResult(null) }}
           disabled={isSaving}
           placeholder={isConfigured ? 'OpenRouter API key saved ✓' : 'sk-or-...'}
           className="rounded px-3 py-2 text-sm w-full"
@@ -90,6 +108,14 @@ export function OpenRouterInput({ isConfigured, onConfigured }: Props) {
             {inlineError}
           </span>
         )}
+        {testResult && (
+          <span
+            className="text-xs mt-1"
+            style={{ color: testResult.ok ? 'var(--color-data-positive)' : 'var(--color-data-negative)' }}
+          >
+            {testResult.message}
+          </span>
+        )}
       </div>
 
       <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
@@ -97,7 +123,7 @@ export function OpenRouterInput({ isConfigured, onConfigured }: Props) {
         when free-tier limits are reached.
       </p>
 
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center flex-wrap">
         <button
           onClick={handleSave}
           data-testid="save-openrouter-btn"
@@ -119,6 +145,7 @@ export function OpenRouterInput({ isConfigured, onConfigured }: Props) {
           {isSaving && <Spinner />}
           {isSaving ? 'Saving…' : 'Save'}
         </button>
+
         {isSaving && (
           <button
             onClick={handleReset}
@@ -131,6 +158,31 @@ export function OpenRouterInput({ isConfigured, onConfigured }: Props) {
             }}
           >
             Reset
+          </button>
+        )}
+
+        {isConfigured && !isSaving && (
+          <button
+            onClick={handleTest}
+            data-testid="test-openrouter-btn"
+            disabled={isTesting}
+            className="flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold"
+            style={
+              isTesting
+                ? {
+                    backgroundColor: 'var(--color-bg-elevated)',
+                    color: 'var(--color-text-muted)',
+                    opacity: 0.5,
+                  }
+                : {
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-text-secondary)',
+                    border: '1px solid var(--color-bg-hover)',
+                  }
+            }
+          >
+            {isTesting && <Spinner />}
+            {isTesting ? 'Testing…' : 'Test Connection'}
           </button>
         )}
       </div>
