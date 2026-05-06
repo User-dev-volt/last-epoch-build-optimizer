@@ -203,6 +203,22 @@ All rules in `project-context.md` remain in force. Key constraints that shape Ph
 
 ---
 
+## Phase 2 Workflow Progress
+
+Track completion of each required planning and implementation step. Update the status column as each step finishes.
+
+| Step | Skill | Type | Status | Notes |
+|------|-------|------|--------|-------|
+| 1 | `bmad-create-prd` | Required | `[ ] Not Started` | New PRD scoped to Phase 2 three pillars — run in fresh context using this intent as source |
+| 2 | `bmad-create-ux-design` | Strongly Recommended | `[ ] Not Started` | Skill picker grid, icon nodes, Weaver Tree layout, item search, affix sliders, optimization slider |
+| 3 | `bmad-create-architecture` | Required | `[ ] Not Started` | New systems: Steam/icon pipeline, item DB + manifest v2, BuildState schema v2, Weaver Tree renderer |
+| 4 | `bmad-create-epics-and-stories` | Required | `[ ] Not Started` | Break three pillars into epics; Weaver Tree research spike is its own story |
+| 5 | `bmad-check-implementation-readiness` | Required | `[ ] Not Started` | Gate: PRD + UX + Architecture + Epics must all align before any code |
+| 6 | `gds-sprint-planning` | Required | `[ ] Not Started` | Generates Phase 2 sprint-status.yaml |
+| 7 | Dev Loop | Required | `[ ] Not Started` | `gds-create-story` → `gds-dev-story` → `gds-code-review` → repeat until all epics done |
+
+---
+
 ## Decisions Log
 
 | Date | Decision | Reason |
