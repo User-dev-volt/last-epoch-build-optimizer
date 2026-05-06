@@ -372,6 +372,8 @@ So that I can quickly find and assign any skill to an active slot tab.
 
 **And** the SkillPickerGrid component passes vitest-axe with zero violations (UX-DR15)
 
+**And** each skill picker cell renders its game icon via `<img src={localCachePath}>` (using `invokeCommand('get_icon_cache_path', { skillId })`) when the icon pipeline has initialized and the returned path is non-null; when the path is null or the pipeline has not yet completed, the cell renders a placeholder hex div using `--color-node-available` fill — per Architecture Decision 8
+
 ---
 
 ### Story 1.4: Active Skill Tab → Skill Picker Integration
@@ -796,39 +798,7 @@ So that finding items feels like filtering a known list, not waiting for a datab
 
 ---
 
-### Story 5.3: GearSlot Component with Typeahead Item Search
-
-As a theory-crafter,
-I want to type an item name in a gear slot and select from instant search results, with the item card pre-populating all known affixes at median tier,
-So that I can quickly represent my actual equipped gear without manual data entry.
-
-**Acceptance Criteria:**
-
-**Given** a gear slot is in "empty" state
-**When** the player clicks the slot or its "Search items…" placeholder
-**Then** a Headless UI Combobox opens with role="combobox", aria-expanded="true", aria-autocomplete="list" (UX-DR4, NFR14)
-
-**Given** the player types ≥1 character in the Combobox input
-**When** `searchItems` returns results
-**Then** up to 6 results appear in the dropdown within 50ms; each result shows item name and base type; the dropdown is scrollable if more than 6 results
-
-**Given** the player selects an item from the dropdown (click or Enter)
-**When** the item is selected
-**Then** the GearSlot transitions to "populated-database" state: a card shows item name (14px/600) and base type; the item's known affixes are listed below at their median tier values (AffixTierControl components, implemented in Story 5.4)
-
-**Given** a slot is in "populated-database" state
-**When** the player clicks the × button
-**Then** the slot returns to "empty" state; the selection is cleared from useBuildStore
-
-**And** GearSlot is at `src/features/item-database/GearSlot.tsx`; the component has role="group" aria-label="{slotName} slot" (UX-DR4)
-
-**And** GearSlot.test.tsx passes vitest-axe with zero violations (UX-DR15)
-
-**And** the right panel layout is updated to split into Gear Context (upper, independently scrollable) and Optimization (lower, pinned to bottom) sections as defined by UX-DR9
-
----
-
-### Story 5.4: AffixTierControl — Pip-Based Tier Selection
+### Story 5.3: AffixTierControl — Pip-Based Tier Selection
 
 As a theory-crafter,
 I want to adjust each affix's tier using a row of pips (T1–T7) that I click or navigate with arrow keys, with the current value displayed in monospace next to the pips,
@@ -860,6 +830,38 @@ So that I can quickly set affix tiers to match my actual item rolls without typi
 
 ---
 
+### Story 5.4: GearSlot Component with Typeahead Item Search
+
+As a theory-crafter,
+I want to type an item name in a gear slot and select from instant search results, with the item card pre-populating all known affixes at median tier,
+So that I can quickly represent my actual equipped gear without manual data entry.
+
+**Acceptance Criteria:**
+
+**Given** a gear slot is in "empty" state
+**When** the player clicks the slot or its "Search items…" placeholder
+**Then** a Headless UI Combobox opens with role="combobox", aria-expanded="true", aria-autocomplete="list" (UX-DR4, NFR14)
+
+**Given** the player types ≥1 character in the Combobox input
+**When** `searchItems` returns results
+**Then** up to 6 results appear in the dropdown within 50ms; each result shows item name and base type; the dropdown is scrollable if more than 6 results
+
+**Given** the player selects an item from the dropdown (click or Enter)
+**When** the item is selected
+**Then** the GearSlot transitions to "populated-database" state: a card shows item name (14px/600) and base type; the item's known affixes are listed below at their median tier values using the AffixTierControl component (Story 5.3)
+
+**Given** a slot is in "populated-database" state
+**When** the player clicks the × button
+**Then** the slot returns to "empty" state; the selection is cleared from useBuildStore
+
+**And** GearSlot is at `src/features/item-database/GearSlot.tsx`; the component has role="group" aria-label="{slotName} slot" (UX-DR4)
+
+**And** GearSlot.test.tsx passes vitest-axe with zero violations (UX-DR15)
+
+**And** the right panel layout is updated to split into Gear Context (upper, independently scrollable) and Optimization (lower, pinned to bottom) sections as defined by UX-DR9
+
+---
+
 ### Story 5.5: Custom Affix Addition and Free-Text Fallback
 
 As a theory-crafter,
@@ -874,7 +876,7 @@ So that I can represent any item in the game regardless of its affix configurati
 
 **Given** the player selects a custom affix
 **When** it is added to the slot
-**Then** it appears in the affix list with a tier control; the player can set its tier/value using the same AffixTierControl from Story 5.4; the affix is stored with `affixId?` = the selected affix's ID
+**Then** it appears in the affix list with a tier control; the player can set its tier/value using the same AffixTierControl from Story 5.3; the affix is stored with `affixId?` = the selected affix's ID
 
 **Given** a gear slot is in "empty" state
 **When** the player clicks the "Free text mode" ghost link
@@ -1241,8 +1243,8 @@ So that I can iterate on my build without stale suggestions cluttering the panel
 - UX-DR1: Story 1.3 (SkillPickerGrid)
 - UX-DR2: Story 7.1 (OptimizationSlider)
 - UX-DR3: Story 7.2 (FineTunePanel)
-- UX-DR4: Story 5.3 (GearSlot)
-- UX-DR5: Story 5.4 (AffixTierControl)
+- UX-DR4: Story 5.4 (GearSlot)
+- UX-DR5: Story 5.3 (AffixTierControl)
 - UX-DR6: Stories 5.6 + 6.4 (StalenessBar full two-banner)
 - UX-DR7: Story 3.1 (UnspentCounter)
 - UX-DR8: Story 3.1 (BudgetToggle)
@@ -1268,7 +1270,7 @@ So that I can iterate on my build without stale suggestions cluttering the panel
 - NFR11 (item DB load failure): Epic 5 Story 5.1
 - NFR12 (focus rings): Distributed — each epic's component stories include focus ring AC
 - NFR13 (slider keyboard): Epic 7 Story 7.1
-- NFR14 (combobox ARIA): Epic 5 Story 5.3
+- NFR14 (combobox ARIA): Epic 5 Story 5.4
 - NFR15 (aria-live): Stories 3.1, 5.6
 - NFR16 (reduced motion): Stories 1.2, 2.4, 7.2
 - NFR17 (vitest-axe zero violations): Stories 1.3, 3.3, 4.2, 5.3, 5.4, 7.1, 7.2
