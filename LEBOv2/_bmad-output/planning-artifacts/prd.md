@@ -1,53 +1,79 @@
 ---
-stepsCompleted: ['step-01-init', 'step-02-discovery', 'step-02b-vision', 'step-02c-executive-summary', 'step-03-success', 'step-04-journeys', 'step-05-domain', 'step-06-innovation', 'step-07-project-type', 'step-08-scoping', 'step-09-functional', 'step-10-nonfunctional', 'step-11-polish', 'step-12-complete', 'step-e-01-discovery', 'step-e-02-review', 'step-e-03-edit']
-workflowStatus: complete
-completedAt: '2026-04-17'
-lastEdited: '2026-04-17'
-editHistory:
-  - date: '2026-04-17'
-    changes: 'Validation-driven edits: FR21-23 reformatted to user-capability format; FR27-29 input contract specified (structured form with auto-fill/search); FR30 converted to scoping note; FR39 active voice; FR40 specific offline message; FR6/7/41/42 traceability annotations; NFR6 quantified to ≤100ms; NFR11 subjective language removed'
-inputDocuments: ['_bmad-output/project-intent.md']
+stepsCompleted:
+  [
+    'step-01-init',
+    'step-02-discovery',
+    'step-02b-vision',
+    'step-02c-executive-summary',
+    'step-03-success',
+    'step-04-journeys',
+    'step-05-domain',
+    'step-06-innovation',
+    'step-07-project-type',
+    'step-08-scoping',
+    'step-09-functional',
+    'step-10-nonfunctional',
+    'step-11-polish',
+    'step-12-complete',
+  ]
+inputDocuments:
+  [
+    '_bmad-output/project-intent-phase2.md',
+    '_bmad-output/project-context.md',
+    'docs/game-data-source.md',
+    'docs/pixi-spike-report.md',
+  ]
 workflowType: 'prd'
-briefCount: 0
-researchCount: 0
-brainstormingCount: 0
-projectDocsCount: 0
 classification:
-  projectType: desktop_app
-  domain: general
-  complexity: high
-  projectContext: greenfield
+  projectType: 'desktop_app'
+  domain: 'gaming_companion'
+  complexity: 'medium'
+  projectContext: 'brownfield'
+documentCounts:
+  briefCount: 0
+  researchCount: 2
+  brainstormingCount: 0
+  projectDocsCount: 2
 ---
 
-# Product Requirements Document — LEBOv2 (Last Epoch Build Optimizer)
+# Product Requirements Document — LEBOv2 Phase 2
 
 **Author:** Alec
-**Date:** 2026-04-17
+**Date:** 2026-05-06
+**Phase:** 2 of 3
+**Supersedes:** Phase 1 PRD (archived in `_bmad-output/_phase1-archive/planning-artifacts/prd.md`)
+**Status:** Complete — ready for UX Design, Architecture, and Epic Breakdown
 
 ---
 
 ## Executive Summary
 
-LEBOv2 is an AI-powered desktop build optimizer for Last Epoch. Users input or import their current skill tree state; the AI engine analyzes it against a chosen optimization goal (damage / survivability / speed / balanced) and delivers prioritized, specific node change recommendations — each with a quantified before/after delta across all three scoring dimensions and a plain-language technical explanation.
+LEBOv2 Phase 2 transforms the fully-shipped Phase 1 MVP into a production-quality Last Epoch companion app that matches lastepochtools.com in visual fidelity and surpasses it in AI-driven optimization depth. Phase 1 delivered: class/mastery skill tree display, build persistence (SQLite), free-text gear/skill/idol context, and streamed AI optimization suggestions. Phase 2 delivers three cohesive pillars designed together and implemented sequentially.
 
-**Target users:** Advanced Last Epoch players — min-maxers and theory-crafters who understand the game's systems and need smarter tooling than static build templates. The core pain: no existing tool bridges the gap between "here is an optimal build template" and "here is exactly what *your* build needs to change to get there." Users currently cross-reference multiple static tools and apply manual judgment — a slow, error-prone process with no quantifiable feedback loop.
+**Pillar 1 — Full Skill Tree Fidelity:** Every active skill for every class rendered with actual game icons in hexagonal nodes, multi-point allocation (left-click increment / right-click decrement), character-level budget enforcement toggle, and the Weaver Tree (pending data research spike). Skill picker grids organized by class/mastery with point-gate badges match lastepochtools.com exactly.
 
-**Project type:** Desktop application (Tauri preferred; Electron fallback) — local install, no backend required in MVP. Greenfield. High complexity: AI integration (Claude API), skill tree graph rendering, scoring engine, community game data modeling.
+**Pillar 2 — Item Database + Structured Gear Input:** Full item database (674 base items, 445 uniques, 1,112+ affixes) sourced from community data, stored locally with background freshness checks. Typeahead search per gear slot replaces free-text. Each item populates with known affixes at selectable tiers (T1–T7). Custom affix addition via searchable dropdown covers crafted/fractured items. Free-text fallback preserved.
+
+**Pillar 3 — Advanced Optimization UX:** A single Glass Cannon ↔ Juggernaut master slider replaces the current 4-button goal preset system. A "Fine Tune" expansion panel adds independent Damage / Survivability / Speed sub-sliders. Optimization is now level-budget-aware when enforcement is ON. Skill-tree optimization is the sole focus of Phase 2; item and full-build optimization are Phase 3.
+
+**Target users:** Advanced Last Epoch players and theory-crafters who currently use lastepochtools.com as their primary reference. Phase 2 makes LEBOv2 the replacement, not a supplement.
+
+**Delivery:** Auto-update to existing installed base (Tauri updater, built in Phase 1 Epic 5). No web version. Windows 10/11 + macOS 12+.
 
 ### What Makes This Special
 
-Every competing tool — lastepochtools.com, Maxroll guides — is a static planner that answers "what does an optimal build look like?" LEBOv2 answers a harder question: "given *my* current build, what are the highest-impact changes I should make right now, and by how much will each change improve my character?"
+No existing tool combines icon-accurate, interactive skill tree planning with AI-driven optimization. lastepochtools.com has the visual fidelity but no AI layer. Path of Building for Last Epoch has calculation depth but no AI explanations. LEBOv2 Phase 2 is the first tool where a player can see their exact build visually, adjust it interactively, and immediately receive AI suggestions constrained by their actual character level — all in one workflow.
 
-The core differentiator is the before/after scoring system paired with AI-generated change-specific explanations. This transforms build optimization from a research task into a guided, iterative improvement loop. The user's current build is the starting point — every suggestion is ranked by quantified impact.
+The Glass Cannon ↔ Juggernaut slider is the UX innovation: a single continuous spectrum replaces the cognitive overhead of picking from four abstract presets. Players speak in archetypes ("I want to face-tank everything"), not optimization categories ("Maximize Survivability"). The slider maps natural intent to weighted optimization scoring directly.
 
-The skill tree visualizer is the hero UI element: fully interactive, full-fidelity, and the surface through which all AI suggestions are presented. This mirrors the Path of Building (PoB) paradigm advanced players rely on in adjacent games, extended with an AI advisory layer no comparable tool offers.
+Asset auto-extraction from the Steam install removes the last friction point: icons appear automatically without any user action. Players who don't have the game installed still get icons via community CDN fallback — they are never blocked.
 
-| Tool | Interactive Tree | AI Suggestions | Per-Change Delta | Explanation |
-|------|----------------|---------------|-----------------|-------------|
-| lastepochtools.com | ✓ | ✗ | ✗ | ✗ |
-| Maxroll Guides | ✗ | ✗ | ✗ | Narrative only |
-| Path of Building (PoE) | ✓ | ✗ | Manual calc | ✗ |
-| **LEBOv2** | **✓** | **✓** | **✓** | **✓** |
+## Project Classification
+
+- **Type:** Tauri 2.x desktop application (Windows 10/11, macOS 12+)
+- **Domain:** Gaming / ARPG theory-crafting companion
+- **Complexity:** Medium — no regulatory compliance; complexity driven by PixiJS rendering, game data integration, Rust/TypeScript IPC, and AI streaming
+- **Context:** Brownfield — Phase 1 (6 epics) fully complete; Phase 2 extends the existing codebase under all Phase 1 architectural constraints
 
 ---
 
@@ -55,352 +81,401 @@ The skill tree visualizer is the hero UI element: fully interactive, full-fideli
 
 ### User Success
 
-- User imports an existing build or creates one from scratch and receives a ranked AI suggestion list within 30 seconds
-- Each suggestion shows quantified before/after deltas across damage, survivability, and speed — magnitude of each change is immediately clear
-- Skill tree visualizer is smooth and full-fidelity across all 5 classes and 15 masteries — no rendering lag or node data gaps
-- Explanations are technical but readable — a min-maxer understands *why* each change is recommended without cross-referencing external resources
-- "Aha moment": user sees their build's specific weaknesses named and ranked with a trusted improvement path
+- A player can open any active skill's full tree, see icon-accurate hexagonal nodes, click to allocate points up to node maximum, right-click to deallocate, and see the `current/max` counter update in real time — for all 133 skills across all 5 classes.
+- A player can search their equipped items by name, select from the database, and dial in actual affix tiers without typing free-form text.
+- A player can drag the Glass Cannon ↔ Juggernaut slider to either extreme and immediately receive AI optimization suggestions weighted to that archetype.
+- A player with "Enforce level budget" ON cannot over-allocate passive points beyond what their character level allows. The unspent counter is always accurate.
+- A player whose save was created in Phase 1 loads Phase 2 without data loss; their free-text gear context migrates cleanly to the v2 schema.
 
 ### Business Success
 
-- MVP ships with all 5 classes (Sentinel, Mage, Primalist, Acolyte, Rogue) and all 15 masteries — no artificial limitation
-- Users return to re-optimize as their character progresses (repeat engagement, not one-time use)
-- Community adoption in Last Epoch theory-crafting spaces (Discord, Reddit, forums) via organic word-of-mouth
-- No monetization required for MVP — success is adoption and community validation
+- All three pillars ship as updates to the existing installed base via the Phase 1 auto-update system — no new installer required.
+- Phase 2 reduces the primary user reason to visit lastepochtools.com to zero (visual fidelity gap closed).
+- Icon auto-extraction works silently on Windows Steam installs for ≥90% of users who have the game installed; CDN fallback serves the remaining users without user-visible failure.
 
 ### Technical Success
 
-- Skill tree graph renders at interactive frame rates with full node data across all masteries
-- Claude API integration is reliable — suggestions generated and returned without timeouts or failures
-- Community data pipeline stays current with game patches — staleness is visible to users when it occurs
-- App packages, installs, and updates cleanly on Windows (primary) and macOS (secondary)
-- Desktop app calls Claude API directly — no server infrastructure required in MVP
+- PixiJS canvas maintains ≥60fps at actual game node counts (~47 passive + up to 5×29 skill nodes = ~192 nodes max per view) on the Phase 1 benchmark hardware (Intel i5, integrated graphics, 8 GB RAM).
+- BuildState v1 → v2 migration in `migrateBuildState` is lossless: all existing saves load without errors, free-text affixes preserved as `{ name: affix, tier: undefined }`.
+- Item database manifest v2 with `itemDataVersion` and `iconCacheVersion` fields correctly drives background freshness checks on launch.
+- All new Tauri commands follow the existing pattern: implemented in Rust → registered in `lib.rs` → called via `invokeCommand<T>()` in TypeScript. Zero raw `invoke()` calls.
 
 ### Measurable Outcomes
 
-| Metric | Target |
-|--------|--------|
-| Time-to-first-suggestion | < 30 seconds from build import |
-| Class coverage at launch | 100% (5 classes, 15 masteries) |
-| Rendering performance | ≥ 60fps on mid-range hardware |
-| Data currency | Within 1 patch cycle of current game version |
+| Outcome | Measure |
+|---------|---------|
+| Icon rendering latency | Icons load into PixiJS nodes within 200ms of tree view opening |
+| Build migration | 0 errors on loading any Phase 1 save in Phase 2 build |
+| Skill tree coverage | All 133 skills × 5 classes interactive with correct node data |
+| Item database completeness | ≥674 base items, ≥445 uniques, ≥1,112 affixes searchable at launch |
+| Canvas FPS | ≥60fps idle; ≥45fps sustained under any interaction on benchmark hardware |
+| Slider → optimization latency | AI stream begins within same latency budget as Phase 1 (no regression) |
 
 ---
 
 ## Product Scope
 
-### MVP — Minimum Viable Product
+### MVP — Phase 2
 
-1. **Class & Mastery Selector** — all 5 classes, all 15 masteries
-2. **Skill Tree Visualizer** — interactive, full-fidelity passive and active skill trees
-3. **Build Input** — create from scratch or import/paste an existing build
-4. **Optimization Goal Selector** — damage / survivability / speed / balanced
-5. **AI Optimization Engine** — analyzes skill tree state, generates ranked change suggestions
-6. **Before/After Scoring System** — numeric scores across damage, survivability, speed with per-suggestion delta
-7. **Suggestion Explanations** — plain-language technical reasoning for each recommendation
-8. **Context Panel** — gear, active skills, and idol slots shown as context for AI (read-only in MVP)
+All three pillars fully delivered:
 
-**MVP philosophy:** Experience MVP — all three pillars (interactive tree + AI suggestions + before/after scoring) must ship together. A partial MVP would not validate the core innovation or be useful to the target audience.
+**Pillar 1:**
+- Skill picker grid for all classes/masteries with icon, name, unlock level, and mastery-gate badges
+- Active skill trees with icon-accurate hexagonal nodes, multi-point left/right-click allocation, `current/max` counter, prerequisite validation
+- Passive skill trees with structured horizontal-row layout, mastery-locked nodes at thresholds
+- Character level input → passive point budget calculation; active skill level input → skill tree budget
+- "Enforce level budget" toggle (default OFF); unspent points counter always visible
+- Search bar per tree: highlights matching nodes, dims non-matching
+- RESET button per tree
+- Icon pipeline: auto-detect Steam install path, extract and cache icons; community CDN fallback when game not installed
+- Weaver Tree: research spike first; if data is available, rendered in web/radial PixiJS layout — gated behind spike completion
 
-### Growth Features (Post-MVP)
+**Pillar 2:**
+- Local item database (base items, uniques, affixes) with background freshness check on launch
+- Typeahead item search per gear slot with fuzzy matching
+- Selected item pre-populates known affixes at default/median tier
+- Tier slider (T1–T7) per affix for customization
+- "+" button to add custom affixes via searchable dropdown of full affix database
+- Free-text gear input preserved as fallback escape hatch
+- BuildState schema v2 with `itemId?`, `affixId?`, `tier?`, `value?` per affix; `migrateBuildState` handles v1 upgrade
 
-- Build sharing and export URLs
-- Historical build versioning ("compare to my previous state")
-- Meta-tier context overlay ("similar to current S-tier meta builds")
-- Idol optimization layer
-- Enhanced import formats (multiple community build code formats)
+**Pillar 3:**
+- Glass Cannon ↔ Juggernaut master slider replacing 4-button goal preset system
+- Fine Tune expansion panel with independent Damage / Survivability / Speed sub-sliders (0–100 each); Fine Tune overrides master slider when expanded
+- Level-budget-aware AI context: when "Enforce level budget" is ON, AI receives character level, available passive points, and skill levels as hard constraints
 
-### Vision (Future)
+### Growth Features — Phase 3
 
-- Full item/gear recommendation layer
-- Web version
-- Multi-character roster management
-- Community build database with AI-ranked meta analysis
-- Live game state integration (if Last Epoch adds export capability)
+- **Item Optimizer:** AI suggests gear improvements; toggle for specific-item vs. stat-priority mode
+- **Full Build Optimizer:** Holistic skills + gear analysis using the same Glass Cannon ↔ Juggernaut weighting; produces unified build direction report
+- **Build sharing:** Export builds as shareable files or links
+
+### Vision — Phase 3+
+
+- Meta context: "This build aligns with current S-tier Void Knight meta" — requires community meta data integration
+- EHG official API integration if/when publicly available (replaces static bundle as primary source)
+- Partner request to EHG post-Phase 2 launch
+
+### Explicit Exclusions (Phase 2)
+
+- Item optimization (suggesting item swaps) — Phase 3
+- Full build optimizer (skills + gear combined) — Phase 3
+- Build sharing / export URLs — Phase 3+
+- Multiplayer, social features, or leaderboards — permanently out of scope
+- Mobile version — permanently out of scope
+- Monetization — not in Phase 2
 
 ---
 
 ## User Journeys
 
-### Journey 1: The Frustrated Min-Maxer (Happy Path — Import & Optimize)
+### Journey 1 — The Theory-Crafter: Optimizing a Void Knight Build
 
-**Persona:** Kira, 28. 300 hours on her Falconer Rogue. DPS has plateaued at endgame corruption. She's read three Maxroll guides — all slightly different, none written for her exact build state.
+**Opening scene:** Marcus has been playing his Void Knight for 80 hours. He's hit a wall — his damage feels solid but he's dying too often in monoliths. He opens LEBOv2 Phase 2.
 
-Kira opens LEBOv2, pastes her build code from lastepochtools.com. Her full skill tree renders in seconds — nodes highlighted, connections drawn, matching her in-game state exactly. She selects "Maximize Damage" and clicks Optimize. Within 20 seconds:
+**Rising action:** Marcus selects his Sentinel → Void Knight build. The passive tree loads instantly with icon-accurate hexagonal nodes. He can see his current allocation and the unspent points counter shows 3 remaining. He switches to his Rive skill tab — the full radial skill tree appears, icons he recognizes from the game rendering in each node. He clicks a defensive node to increment it from 2/4 to 3/4. He opens the gear panel and types "Juggernaut" in the Chest slot — the typeahead suggests "Juggernaut Plate" instantly. He selects it, the pre-loaded affixes appear. His actual chest has T4 health and T2 armor — he sets the sliders to match.
 
-1. "Reallocate 4 pts from Efficiency → Falcon Strikes: +18% Damage Score (42 → 51)" — *You're not cooldown-capped. Efficiency offers diminishing returns here; Falcon Strikes directly scales your primary damage source.*
-2. "Remove 2 pts from Dodge Rating → Predator's Instinct: +11% Damage Score (51 → 57)" — *Your survivability score has headroom at this corruption level; Predator's Instinct scales with attack speed, which you're already stacking.*
+**Climax:** Marcus drags the master slider toward Juggernaut. The slider sits at ~70% survivability. He clicks Optimize. The AI streams back a specific suggestion: "Allocate the remaining 3 passive points to Void Shield (your gear already provides max fire res, so the additional fire scaling in Righteous Cleave is redundant). This increases your effective HP pool by approximately 12% with no damage loss given your current gear." Marcus sees exactly which node to change, and why, in the context of his actual gear.
 
-She clicks suggestion #1; the tree updates visually with the before/after state. She applies both changes in-game and notices the difference. She posts a screenshot to her guild Discord — three members download it that evening.
+**Resolution:** Marcus loads the game, makes the change. He clears the monolith wave without dying for the first time. LEBOv2 Phase 2 is now his primary planning tool — he has no reason to open a browser tab.
 
-*Capabilities: build import, skill tree rendering, optimization goal selector, AI engine, ranked suggestion list with deltas, per-suggestion explanations, visual before/after preview.*
-
----
-
-### Journey 2: The Theorycraft Builder (From Scratch — Season Start)
-
-**Persona:** Marcus, 35. Veteran ARPG player, first time on Forge Guard (Sentinel). Refuses to follow guides — wants to understand *why* a build works.
-
-Marcus selects Sentinel → Forge Guard. A blank skill tree appears. He allocates 40 nodes by intuition, selects "Balanced," and clicks Optimize. The AI suggests targeted changes; he accepts two, declines one, re-runs. After three optimize → adjust → re-optimize cycles, he has a build that feels like his own and has been stress-tested by the AI — he understands every node because the AI explained what each cluster does together.
-
-*Capabilities: class/mastery selector, interactive skill tree (click-to-allocate), optimization goal selector, AI engine, suggestion accept/decline, iterative optimize workflow.*
+**Journey requirements revealed:** Icon rendering in skill nodes; typeahead gear search; tier sliders; level-budget-aware AI context; Glass Cannon ↔ Juggernaut slider; streaming optimization display.
 
 ---
 
-### Journey 3: Edge Case — Partial Import / Data Gap
+### Journey 2 — The Returning Player: Post-Patch Build Update
 
-**Persona:** Sam imports a build string from Discord. It's from a previous patch; two passive node IDs no longer exist.
+**Opening scene:** Priya played Acolyte extensively in patch 1.3, saved her Bone Curse build in LEBOv2. After the 1.4 patch, Bone Curse received significant changes. She updates LEBOv2 and launches it.
 
-LEBOv2 resolves 98% of the build — the two unknown nodes are highlighted in amber: "Node ID [X] not found in current data — may be from an older patch." Sam can see the rest of their build, run optimization on the resolved portion, and manually handle the flagged nodes.
+**Rising action:** Her old build loads cleanly — the v1 → v2 migration ran silently, her free-text gear context migrated to structured format. The staleness indicator shows: "Game data updated to 1.4.4. Would you like to refresh?" She refreshes. The Bone Curse skill tree reloads with updated node values. She notices two nodes she'd allocated are now nerfed. She uses the search bar to find "Bone" nodes — matching nodes highlight in gold while others dim.
 
-*Capabilities: graceful partial import, per-node resolution status, data-staleness messaging, optimize-on-partial-build.*
+**Climax:** She sees the patch shifted the meta toward a minion synergy node she'd ignored. She right-clicks her old nodes to deallocate (decrement to 0) and left-clicks the new node. The prerequisite chain enforces correctly — she can't skip nodes. The unspent counter tracks her reallocation in real time.
+
+**Resolution:** In under 5 minutes, her build is updated for the new patch. The structured gear context from v2 means the AI suggestions in Phase 2 are richer than Phase 1's free-text interpretation.
+
+**Journey requirements revealed:** BuildState v1 → v2 migration; game data freshness check and update prompt; per-node right-click decrement with prerequisite validation; search highlight within trees.
 
 ---
 
-### Journey 4: Edge Case — Offline / API Unavailable
+### Journey 3 — The New Theory-Crafter: Exploring the Weaver Tree
 
-**Persona:** Alex opens LEBOv2 at a LAN party with spotty internet.
+**Opening scene:** Jordan is new to Last Epoch, level 40 Mage. He's heard about the Weaver Tree and wants to understand it before committing points. He opens LEBOv2 and clicks the Weaver Tree tab.
 
-Their saved build renders from local cache. Alex clicks Optimize — the button is grayed: "AI suggestions require an active internet connection. Your build is saved locally." They browse the tree and make manual edits. When back online, optimization works normally. No data is lost.
+**Rising action:** The Weaver Tree opens in a web/radial layout with a central node. Nodes he can't reach yet show lock icons. He inputs his character level (40) and turns on "Enforce level budget." The unspent Weaver points counter shows his current allocation. He clicks a reachable node to see its tooltip, then allocates a point. He tries to click a locked node — the tooltip explains the requirement.
 
-*Capabilities: local build save/load, offline-safe skill tree viewer, API connectivity status, graceful degradation.*
+**Climax:** Jordan uses the search bar to find "Mana" — nodes with mana effects highlight. He reallocates points to the mana synergy cluster. He clicks Optimize with Fine Tune expanded and Damage Weight maxed — the AI responds with skill tree suggestions that account for his Weaver mana investments.
+
+**Resolution:** Jordan understands the Weaver Tree well enough to make an informed commitment in-game.
+
+**Journey requirements revealed:** Weaver Tree rendering (research spike first); lock icon with requirement tooltip; level budget enforcement for Weaver; search within Weaver Tree; optimization AI aware of Weaver allocations.
+
+---
+
+### Journey 4 — The Data Update Scenario: Post-Game-Patch Manual Refresh
+
+**Opening scene:** EHG ships patch 1.5 with changes to the Primalist passive tree. Alec (the developer) updates the bundled JSON files and ships a new LEBOv2 data update.
+
+**Rising action:** User opens LEBOv2 the morning after the LEBOv2 data update. The app checks `manifest.json gameVersion` against the remote version file on launch. The staleness banner appears: "Updated data available (1.5.0). Update now?" The user clicks Update. The Rust command downloads the new manifest and class JSON, replaces local files, and reloads.
+
+**Resolution:** The Primalist tree displays the correct 1.5 nodes. No app reinstall required. Item database freshness follows the same pattern via `itemDataVersion`.
+
+**Journey requirements revealed:** Background freshness check on launch; staleness banner UI; Rust data update command; separate versioning for game data vs. item data; no user interaction required for icon cache refresh.
 
 ### Journey Requirements Summary
 
-| Capability | Required By |
-|-----------|-------------|
-| Build import (paste/code) | J1, J3 |
-| Class & mastery selector | J1, J2 |
-| Interactive skill tree (render + click-to-allocate) | J1, J2, J3, J4 |
-| Optimization goal selector | J1, J2 |
-| AI Optimization Engine | J1, J2 |
-| Ranked suggestion list with before/after deltas | J1, J2 |
-| Per-suggestion plain-language explanations | J1, J2 |
-| Visual before/after tree preview | J1 |
-| Partial import with per-node resolution status | J3 |
-| Data staleness messaging | J3 |
-| Local build save/load | J4 |
-| Offline-safe skill tree viewer | J4 |
-| API connectivity status / graceful degradation | J4 |
+| Capability Area | Journeys Covered |
+|-----------------|-----------------|
+| Icon-accurate PixiJS skill tree rendering | 1, 2, 3 |
+| Multi-point node allocation with prerequisite validation | 1, 2, 3 |
+| Typeahead item search with tier sliders | 1 |
+| BuildState v1 → v2 migration | 2 |
+| Game data + item data freshness/update pipeline | 2, 4 |
+| Weaver Tree rendering | 3 |
+| Glass Cannon ↔ Juggernaut slider + Fine Tune | 1, 3 |
+| Level-budget enforcement toggle + unspent counter | 3 |
+| Search highlight within trees | 2, 3 |
 
 ---
 
-## Domain-Specific Requirements
+## Innovation & Novel Patterns
 
-No regulatory or compliance requirements. Technical domain constraints:
+### Detected Innovation Areas
 
-### Data Dependencies
+**1. Glass Cannon ↔ Juggernaut continuous spectrum slider**
+No existing Last Epoch build tool presents optimization intent as a continuous archetype spectrum. lastepochtools.com has no optimization at all. Prior LEBOv2 (Phase 1) used four discrete preset buttons. The slider maps natural player language ("I want to tank everything") directly to weighted optimization scoring. The Fine Tune expansion panel preserves power-user control without polluting the primary UX.
 
-- All skill tree, node, and passive data sourced from community Last Epoch database. Data accuracy is a hard dependency — stale or incorrect data produces wrong optimization suggestions. Data versioning must be tracked and surfaced to users.
-- Data consumption from lastepochtools.com and community sources must respect rate limits and terms of use — no scraping in violation of source site policies.
-- Claude API: AI suggestions depend on external API availability. Timeouts, rate limits, and outages must be handled gracefully without data corruption or crashes.
+**2. Zero-friction icon pipeline**
+Steam install auto-detection and silent icon extraction requires no user action. The community CDN fallback ensures users without the game installed are never blocked. This is a meaningful UX differentiation from tools requiring manual asset management or those that render placeholder icons.
 
-### Desktop Platform Constraints
+**3. Structured gear context replacing free-text AI input**
+Phase 1 sent gear context as unstructured strings. Phase 2 sends slot → item → affix → tier as structured data, enabling the AI to reason at the affix level ("your gear already provides max fire res, so...") rather than pattern-matching from prose. This is a qualitative improvement in AI suggestion quality, not just a UI change.
 
-- Tauri/Electron sandboxed environment — file system access for local save/load must use platform-appropriate APIs
-- Auto-update mechanisms handled per-platform (Windows installer, macOS .dmg)
-- No local game file access in MVP — community data is the exclusive source
+### Market Context & Competitive Landscape
 
-### Risk Mitigations
+| Tool | Skill Tree Visual Fidelity | AI Optimization | Item Database |
+|------|---------------------------|-----------------|---------------|
+| lastepochtools.com | Full (icon-accurate) | None | Partial |
+| Path of Building for LE | Functional, not icon-accurate | None | Partial |
+| LEBOv2 Phase 1 | Partial (no icons) | Streamed AI suggestions | Free-text only |
+| **LEBOv2 Phase 2** | **Full (icon-accurate)** | **AI + archetype slider** | **Full (structured)** |
 
-| Risk | Mitigation |
-|------|-----------|
-| Game patch breaks community data | Version-stamp data; display staleness warning; allow continuation with stale data |
-| Claude API unavailable | Graceful offline degradation; last suggestion set cached locally |
-| Community data source offline | Data snapshots cached locally; user notified when stale beyond threshold |
-| Import format changes | Versioned import parser; fail gracefully with per-node error reporting |
-
----
-
-## Innovation Analysis
-
-### Novel Combination: AI Advisory + Interactive Build Visualizer
-
-LEBOv2 is the first tool to combine a full-fidelity, interactive build planner with an AI advisory engine that treats the user's current build state as the optimization starting point. The innovation is the integration — AI reads the tree, tree displays suggestions, user iterates — not either component alone.
-
-### Quantified Per-Suggestion Impact
-
-No existing Last Epoch tool produces numeric before/after deltas at the individual node-change level. The scoring engine creates a feedback loop that transforms optimization from intuitive judgment into a data-driven iterative process.
-
-### Build-State-as-Input Paradigm
-
-Competitors answer "what does the optimal build look like?" LEBOv2 answers "what does *my* build need to become optimal?" This paradigm shift — template-first to build-state-first — is the core product insight. Path of Building (PoE) provides the visualizer but still requires the user to manually apply template knowledge. LEBOv2 automates the delta.
+Phase 2 closes the only remaining gap with lastepochtools.com (visual fidelity) while adding a capability no competing tool has (AI optimization).
 
 ### Validation Approach
 
-| Signal | Method |
-|--------|--------|
-| Suggestion quality | Does the top suggestion produce measurable improvement in-game? (Immediately user-testable) |
-| Novelty | Do users describe suggestions as "things they wouldn't have thought to change"? |
-| Value loop | Do users return to re-optimize after leveling or gear changes? |
-| Early validation | Alpha release to Last Epoch theory-crafting Discord/Reddit communities |
+- **Slider UX:** User acceptance validated by whether Phase 2 users use the slider over re-enabling a preset-style selection. If players consistently ask for presets back, evaluate whether named positions on the slider (e.g., labeled endpoints + midpoint) provide sufficient wayfinding.
+- **Icon pipeline:** Validated by silent successful extraction on ≥90% of Windows Steam installs during internal testing. CDN fallback validated by testing with game files moved/removed.
+- **Structured gear AI quality:** Validated qualitatively — do AI suggestions reference specific affix values? If yes, structured context is working.
 
-### Innovation Risks
+### Risk Mitigation
 
 | Risk | Mitigation |
 |------|-----------|
-| AI suggestions low-quality or wrong | Tight prompt engineering with full skill tree context; scoring engine provides ground-truth check |
-| Scoring model doesn't reflect game mechanics | Community feedback loop; versioned scoring model with visible assumptions |
-| Community data too incomplete for AI | Data completeness indicator; AI declines to suggest on nodes with missing data |
-| Users distrust AI recommendations | Mandatory explanations for every suggestion; citations to specific node interactions |
+| Steam path detection fails on non-standard installs | Log detection failure silently; fall through to CDN. Never show an error for this. |
+| Community CDN icons become unavailable | Cache icons locally on first successful fetch; serve from cache on subsequent loads |
+| Weaver Tree data unavailable from community sources | Research spike first; if no machine-readable data, defer Weaver Tree to a subsequent patch |
+| Item database significantly out of date at Phase 2 launch | Ship with manifest `itemDataVersion` freshness check on day one; prompt user to update |
 
 ---
 
 ## Desktop Application Requirements
 
-LEBOv2 is a native desktop application (Tauri preferred, Electron fallback). Runs locally; stores build data locally; calls external services (Claude API, community data) only when needed. No server infrastructure required in MVP.
+### Project-Type Overview
 
-### Platform Support
+LEBOv2 is a signed Tauri 2.x desktop application. All backend logic — API calls, file I/O, data parsing, Steam path detection, icon extraction — runs in Rust. The TypeScript/React frontend is a rendering layer only. No Node.js sidecars, no server components.
 
-| Platform | Priority | Distribution |
-|---------|---------|------------|
-| Windows 10/11 | Primary | .msi or .exe installer |
-| macOS 12+ | Secondary | .dmg / .app |
-| Linux | Not in MVP | Community-driven post-MVP |
+Phase 2 adds three new Rust system integrations: Steam path detection + icon extraction, item database loading, and manifest v2 versioning. All follow the existing Tauri command pattern.
 
-No app store distribution in MVP — direct download only.
+### Technical Architecture Considerations
 
-### System Integration
+**Four domain stores maximum (enforced):** Phase 2 extends `useGameDataStore` for item data (base items, uniques, affixes) and extends `useBuildStore` for BuildState v2 gear schema. No new top-level Zustand stores.
 
-- **File system:** Read/write for local build save/load (user's app data directory)
-- **Network:** Outbound HTTPS only — Claude API and community data endpoint
-- **Clipboard:** Read clipboard for build code paste (import UX)
-- No local game file access in MVP
-- No system tray, no background processes — user-launched, user-closed
+**SkillTreeCanvas props-only contract (enforced):** Icon rendering inside PixiJS nodes passes icon data via props. `SkillTreeCanvas` never accesses Zustand directly. Icon textures are loaded as PixiJS `Assets` and passed as resolved `Texture` references in `treeData`.
 
-### Update Strategy
+**No barrel files (enforced):** All new feature folders (`item-database/`, `icon-pipeline/`, `weaver-tree/`) follow direct-import convention. No `index.ts` re-exports.
 
-**App updates:** Built-in auto-updater (Tauri Updater or Electron auto-updater). Check on launch; user notified, not forced; silent download, user-triggered install.
+**API key security (enforced):** Optimization API calls remain fully in Rust. API key never crosses the IPC boundary to TypeScript.
 
-**Game data updates:** Versioned independently from app. On launch: check if local data version matches latest. If stale: prompt user (non-blocking — can continue with staleness warning).
+### Platform & Distribution Requirements
 
-### Offline Capability
+- **Platforms:** Windows 10/11 (`.msi`, code-signed), macOS 12+ (`.dmg`, notarized). No Linux in Phase 2.
+- **Auto-update:** All Phase 2 features ship via the Tauri updater built in Phase 1 Epic 5. No new installer required for existing users.
+- **Offline-first:** All game data, item data, and icon cache stored in `{app_data}/lebo/`. App functions fully offline after initial data load.
+- **Steam integration:** Read-only. App reads the Steam install directory to extract icon assets. No write operations to Steam directories.
 
-| Feature | Offline |
-|---------|---------|
-| Skill tree visualizer | ✓ — renders from local cache |
-| Saved builds | ✓ — stored locally |
-| Build editing (manual) | ✓ — no network needed |
-| AI Optimization Engine | ✗ — requires Claude API |
-| Game data update | ✗ — requires network |
+### Data Architecture — Phase 2 Additions
 
-### Implementation Guidance
+**New app data directory structure:**
+```
+{app_data}/lebo/
+  game-data/          ← existing (Phase 1)
+    manifest.json     ← extends with itemDataVersion, iconCacheVersion, iconSource
+    classes/
+    skills/
+  items/              ← new (Phase 2, Pillar 2)
+    base-items.json
+    uniques.json
+    affixes.json
+  icons/              ← new (Phase 2, Pillar 1)
+    skills/           ← extracted or CDN-fetched skill icons
+    items/            ← item icons (future / best-effort)
+```
 
-- **Tauri preferred** for performance and binary size; Electron if Tauri blocks the rendering library
-- **Frontend:** Web technologies (React/Vue/Svelte) bundled inside desktop shell
-- **Graph rendering:** Canvas or WebGL (D3.js, Cytoscape.js, or custom) — must hit ≥ 60fps; DOM-based rendering is not acceptable
-- **Local storage:** SQLite or flat JSON for build persistence
-- **API key:** Stored in OS keychain (Windows Credential Manager / macOS Keychain) — never in plain text
+**manifest.json v2 additions:**
+```json
+{
+  "itemDataVersion": "1.0.0",
+  "iconCacheVersion": "1.0.0",
+  "iconSource": "game-files" | "community-cdn"
+}
+```
+
+**BuildState schema v2 gear field:**
+```json
+{
+  "slot": "chest",
+  "itemId": "juggernaut-plate",
+  "itemName": "Juggernaut Plate",
+  "affixes": [
+    { "affixId": "health-flat", "name": "Health", "tier": 4, "value": 280 },
+    { "affixId": "armor-flat", "name": "Armor", "tier": 2, "value": 120 }
+  ]
+}
+```
+v1 gear (free-text affixes) migrates to: `{ name: affix, tier: undefined, value: undefined }`.
+
+### Implementation Considerations
+
+- **New Tauri commands required:** `detect_steam_path`, `extract_skill_icons`, `load_item_database`, `load_affix_database`, `get_icon_texture(skill_id)`, `check_item_data_freshness`, `update_item_data`.
+- **Icon loading pattern:** Icons preloaded into PixiJS `Assets` cache at tree view mount. `SkillTreeCanvas` receives `iconTextures: Map<string, Texture>` as a prop; renderer uses it to draw skill icons inside hexagonal nodes.
+- **Weaver Tree:** Research spike required before any implementation. Spike validates: (1) community data source for Weaver Tree node layout, (2) coordinate format compatibility with existing PixiJS renderer. If spike fails, Weaver Tree deferred.
 
 ---
 
-## Project Scoping
+## Project Scoping & Phased Development
 
-### MVP Strategy
+### MVP Strategy & Philosophy
 
-**Approach:** Experience MVP — all three pillars (interactive tree + AI suggestions + scoring) must ship together. A partial MVP would not validate the core innovation and would not be useful to the target audience.
+**MVP Approach:** Feature-complete Phase 2 (all three pillars) as a coherent product update. Phase 2 is not a partial release — all three pillars ship together because they form a single user experience: see the skill tree accurately (Pillar 1), know your gear context accurately (Pillar 2), optimize with archetype intent (Pillar 3).
 
-**Resources:** Solo developer or 2-person team. Breadth intentionally limited — no gear optimization, no sharing, no web version — to concentrate quality on the core experience.
+**Resource requirements:** Solo developer (Alec) + AI dev agents (BMAD). Sequential epic implementation.
 
-### MVP Feature Rationale
+### MVP Feature Set — Phase 2
 
-| Capability | Why It's MVP |
-|-----------|-------------|
-| Class & Mastery Selector (all 5/15) | Unsupported classes = tool is useless to those users |
-| Interactive Skill Tree Visualizer | Hero UI — without it, the product is a text list |
-| Build Import + Build Creator | Primary and secondary onboarding paths |
-| Optimization Goal Selector | Required for personalized AI suggestions |
-| AI Optimization Engine | The core differentiator |
-| Before/After Scoring | What separates LEBOv2 from every static planner |
-| Per-Suggestion Explanations | Trust — users won't act on unexplained suggestions |
-| Context Panel (read-only) | AI needs gear/skills/idol context to generate relevant suggestions. Note: Context Panel (Epic 4) ships after AI Optimization (Epic 3). During Epic 3 delivery, AI suggestions are generated on skill tree state only. The UI must disclose this inline: "Add gear and skills in the context panel for more relevant suggestions." Community alpha release should target Epic 4 completion, not Epic 3 completion, to maximise first-impression quality. |
-| Local Build Save/Load | Users must return to builds across sessions |
-| Data Staleness Indicator | Data integrity communication is non-negotiable |
-| API Connectivity / Offline Degradation | Graceful failure required for desktop apps |
+**Core user journeys supported:** All four journeys above.
 
-### Risk Mitigation
+**Must-have capabilities (all of Phase 2 scope):**
+- Skill picker grid with icons and mastery-gate badges
+- Icon-accurate hexagonal PixiJS skill nodes (Steam extraction + CDN fallback)
+- Multi-point left/right-click node allocation with prerequisite validation
+- Character level input → passive point budget; skill level input → skill tree budget
+- "Enforce level budget" toggle; unspent points counter
+- Search highlight within all trees; RESET button
+- Item database (base items, uniques, affixes) loaded locally
+- Typeahead item search per slot + tier sliders + custom affix addition
+- Free-text gear fallback
+- BuildState schema v2 + lossless v1 migration
+- Glass Cannon ↔ Juggernaut master slider
+- Fine Tune sub-slider expansion panel
+- Level-budget-aware AI optimization context
+- Game data + item data background freshness check on launch
 
-**Technical:**
-- *Highest:* Skill tree rendering performance (5 classes × 3 masteries × per-skill trees). Spike the rendering engine first; validate ≥60fps before full feature development. Canvas/WebGL only.
-- *Second:* Claude API prompt design quality. Build a test harness with known-good build states and expected suggestion outputs before shipping.
+**Gated behind research spike:**
+- Weaver Tree rendering (proceeds only if community data confirmed available)
 
-**Market:**
-- *Primary:* AI suggestion quality is the core promise — if suggestions are wrong or obvious, the product fails. Mitigate with alpha release to theory-crafting community before broader release.
-- *Data:* Community data incompleteness could limit AI context. Audit data completeness early; define minimum requirements per node type.
+### Risk Mitigation Strategy
 
-**Resource:**
-- All 5 classes in MVP means longer development before launch. This is a deliberate trade-off — a single-class tool wouldn't attract the target audience.
-- *Contingency:* If timeline extends, context panel can be reduced to placeholder display without removing it from the UI.
+**Technical risks:**
+- Icon extraction from game files: mitigated by CDN fallback; game files path is well-established in Steam convention
+- Weaver Tree data availability: mitigated by spike-first gating — no commitment before validation
+- PixiJS performance with icon textures: mitigated by Phase 1 benchmark (800-node proof) + texture atlas batching
+
+**Market risks:**
+- EHG patches significantly change skill trees before Phase 2 ships: mitigated by versioned JSON + staleness detection
+- lastepochtools.com improves their tool during Phase 2 development: Phase 2's AI layer is not replicable without significant investment; visual fidelity parity is the floor, not the ceiling
+
+**Resource risks:**
+- Three pillars scope creep: Weaver Tree is explicitly gated; item optimization is explicitly Phase 3; build sharing is explicitly Phase 3+
 
 ---
 
 ## Functional Requirements
 
-### Build Management
+### Skill Tree Visual Rendering
 
-- **FR1:** User can create a new build by selecting a class and mastery from all available options
-- **FR2:** User can import an existing build by pasting a build code string
-- **FR3:** System displays per-node resolution status when a build import contains unrecognized node IDs
-- **FR4:** User can save a build locally with a name for future retrieval
-- **FR5:** User can load a previously saved build
-- **FR6:** User can rename a saved build *(Source: Desktop Application Requirements — standard build management)*
-- **FR7:** User can delete a saved build *(Source: Desktop Application Requirements — standard build management)*
+- FR1: Players can view each active skill's full tree with actual game icons in hexagonal PixiJS nodes, for all 133 skills across all 5 classes.
+- FR2: Players can view each class's base passive tree and each mastery's passive tree with icon-accurate hexagonal nodes in a structured horizontal-row layout.
+- FR3: Players can view the Weaver Tree in a web/radial PixiJS layout with a central node (contingent on research spike confirming data availability).
+- FR4: Players can see node connectivity rendered as edges between hexagonal nodes in all tree views.
+- FR5: Players can see each node's mastery point unlock threshold displayed as a badge overlay (5, 10, 15, 20, 25, 35 points) in the skill picker and passive tree.
+- FR6: Players can see which nodes are locked (prerequisites unmet) vs. available (prerequisites met, points remaining) vs. allocated (points invested) vs. suggested (AI-recommended) through distinct visual states.
+- FR7: Players can search within any tree by node name; matching nodes highlight in gold, non-matching nodes dim; clearing the search field restores all nodes to normal state.
+- FR8: Players can RESET all allocations in any tree to zero with a single button action.
+- FR9: Players can see an unspent points counter above each tree reflecting their current remaining point budget.
+- FR10: Players can see the selected active skill's name, level, and unlock condition in the tree header area alongside other active skill slot indicators.
 
-### Skill Tree Visualization
+### Active Skill Management
 
-- **FR8:** User can view the full passive skill tree for their selected class and mastery
-- **FR9:** User can view the skill-specific trees for active skills associated with their build
-- **FR10:** User can allocate and deallocate skill tree nodes interactively
-- **FR11:** User can pan and zoom the skill tree to navigate large trees
-- **FR12:** User can view node details (name, effect, tags, connections) for any node
-- **FR13:** System visually distinguishes allocated, unallocated, and prerequisite-locked nodes
+- FR11: Players can open a skill picker for each active skill slot that shows all skills available to the selected class and mastery, organized by base class skills and mastery-gated groups.
+- FR12: Players can select any available skill from the picker to load that skill's full interactive tree under the active slot tab.
+- FR13: Players can left-click a node to increment its allocation by 1 point (up to node maximum).
+- FR14: Players can right-click a node to decrement its allocation by 1 point (down to 0).
+- FR15: Players can see each node's `current/max` point counter (e.g., `3/5`) rendered in the node.
+- FR16: The app prevents left-click increment on a node whose prerequisite nodes have insufficient allocation.
+- FR17: The app prevents right-click decrement on a node whose allocated points are required as prerequisites by currently-allocated dependent nodes.
 
-### Optimization Engine
+### Character Level & Budget System
 
-- **FR14:** User can select an optimization goal (maximize damage / maximize survivability / maximize speed / balanced) before triggering optimization
-- **FR15:** User can trigger AI optimization analysis for their current build state
-- **FR16:** System generates a ranked list of specific skill tree node change recommendations based on the selected goal
-- **FR17:** System calculates and displays a composite score (damage, survivability, speed) for the current build state
-- **FR18:** System includes context panel data (gear, active skills, idols) in the AI optimization request
-- **FR19:** System declines to generate suggestions for nodes where game data is missing or incomplete, and indicates which nodes were excluded
+- FR18: Players can input their character level (1–100); the app calculates and displays total available passive points based on level.
+- FR19: Players can input their active skill level (1–20) per skill slot; the app tracks the maximum allocatable points for that skill's tree.
+- FR20: Players can toggle "Enforce level budget" ON or OFF (default OFF); when ON, the app prevents allocation that would exceed the calculated point budget.
+- FR21: When "Enforce level budget" is OFF, the app allows free theory-craft allocation with no budget ceiling.
+- FR22: The unspent points counter updates immediately and accurately after every node allocation or deallocation action.
 
-### Suggestion Presentation
+### Item Database & Gear Input
 
-- **FR20:** User can view the ranked suggestion list ordered by impact on the selected optimization goal
-- **FR21:** User can view the exact node change specified in each suggestion (points to add/remove/reallocate, from/to which nodes)
-- **FR22:** User can view before/after numeric deltas for damage, survivability, and speed scores for each suggestion
-- **FR23:** User can view a plain-language technical explanation for each suggestion — each explanation must reference at least one specific node interaction, mechanic, or scaling relationship
-- **FR24:** User can preview the visual effect of a suggestion on the skill tree before applying it
-- **FR25:** User can accept or dismiss individual suggestions
-- **FR26:** User can re-run optimization on the current build state after making changes
+- FR23: The app loads a local item database containing ≥674 base items, ≥445 unique items, and ≥1,112 affixes, sourced from community data and bundled with the application.
+- FR24: Players can search any gear slot by item name using typeahead fuzzy search that queries the local item database and displays matching suggestions.
+- FR25: Selecting an item from the typeahead search populates the gear slot with the item's name, base type, and known affixes at default/median tier values.
+- FR26: Players can adjust each pre-loaded affix's tier using a per-affix tier slider (T1 through the item's maximum available tier) to match their actual rolled values.
+- FR27: Players can add affixes not pre-loaded to an item via a "+" action that opens a searchable dropdown of all affixes in the affix database.
+- FR28: Players can set value/tier for any custom-added affix from the full affix database.
+- FR29: Players can clear a gear slot's item selection to reset it to empty or free-text fallback.
+- FR30: Players can use free-text input as a fallback for any gear slot if they cannot find their item or prefer prose input.
+- FR31: The app passes structured gear context (slot, item name/ID, affix name/ID, tier, value) to the AI optimization engine when items are set via the database path.
+- FR32: The app passes free-text gear context (unchanged from Phase 1 behavior) to the AI optimization engine when items are set via the free-text path.
+- FR33: The app checks item database freshness on launch and displays a staleness indicator when a newer `itemDataVersion` is available; users can trigger an update.
 
-### Context Panel
+### Optimization UX & AI Integration
 
-- **FR27:** User can input gear items via a searchable structured form — item name auto-fills from game data; affix fields are selectable from the item's valid affix list
-- **FR28:** User can input active skill selections via a searchable skill selector — skill names auto-fill from the class's available active skills
-- **FR29:** User can input idol slot contents via a searchable structured form — idol type and modifiers auto-fill from game data
+- FR34: Players can set optimization intent using a continuous Glass Cannon ↔ Juggernaut master slider; fully left = maximum survivability weighting; fully right = maximum damage weighting; center = balanced.
+- FR35: Players can expand a "Fine Tune" panel revealing independent Damage Weight, Survivability Weight, and Speed Weight sub-sliders (each 0–100); Fine Tune values override the master slider when the panel is expanded.
+- FR36: The app maps the Glass Cannon ↔ Juggernaut slider position to the weighted scoring system such that Phase 1 preset positions (Maximize Damage, Balanced, Maximize Survivability, Maximize Speed) remain accessible as positions on the spectrum for backwards compatibility.
+- FR37: When "Enforce level budget" is ON, the app includes character level, available passive points, and per-skill skill levels in the AI optimization request as hard constraints.
+- FR38: When "Enforce level budget" is OFF, the app sends optimization requests without point-budget constraints, allowing the AI to suggest ideal allocations as theory-craft targets.
+- FR39: The app streams AI optimization suggestions incrementally as they arrive, rendering partial results while the stream continues (no regression from Phase 1 behavior).
+- FR40: Players can see before/after scoring comparison for each AI suggestion (no regression from Phase 1 behavior).
+- FR41: The optimization engine uses structured gear context (when available from Phase 2 item database input) to provide affix-level reasoning in suggestions.
+- FR42: Players can clear all suggestions and re-run optimization with updated build state or slider position.
 
-- **FR30 [Scoping Note — Not a user-facing requirement]:** The AI Optimization Engine does not generate optimization suggestions for gear, active skills, or idol slots in MVP. Context panel data (FR27–FR29) is passed to Claude as supplementary read-only context for skill tree node analysis only. Gear, skill, and idol optimization are Post-MVP features. *(This note was preserved as FR30 to maintain traceability to the original requirement discussion.)*
+### Data Pipeline & Asset Management
 
-*Scoping note: Context panel data (FR27–FR29) is included in AI optimization requests as read-only context. The AI engine does not generate optimization suggestions for gear, active skills, or idols in MVP — skill tree nodes only.*
+- FR43: The app auto-detects the Last Epoch Steam install path on first launch (`C:\Program Files (x86)\Steam\steamapps\common\Last Epoch` convention; reads registry or filesystem) without user interaction.
+- FR44: The app silently extracts skill icons from game files on first launch when the Steam install is detected; extracted icons are cached locally in `{app_data}/lebo/icons/skills/`.
+- FR45: The app falls back to community CDN icon sources when game files are not detected or extraction fails; players are never shown an error or blocked by missing icons.
+- FR46: The app caches CDN-fetched icons locally; subsequent launches serve icons from local cache without network requests.
+- FR47: The app checks game data freshness on launch using manifest `gameVersion` and displays a staleness indicator when community data has a newer version; users can trigger an update.
+- FR48: The app checks item data freshness on launch using manifest `itemDataVersion` and displays a staleness indicator when a newer version is available; users can trigger an update.
+- FR49: The app records `iconSource` in the manifest (`game-files` or `community-cdn`) so the icon pipeline is deterministic and auditable.
+- FR50: The app's data update flow downloads updated manifest and data files, replaces local files atomically, and reloads affected data in the running session without requiring app restart.
 
-### Game Data Management
+### Build Persistence & Migration
 
-- **FR31:** System loads skill tree, passive tree, and node data for all 5 Last Epoch classes and 15 masteries
-- **FR32:** System checks for updated game data on application launch
-- **FR33:** User can manually trigger a game data update
-- **FR34:** System displays the current game data version and last-updated date
-- **FR35:** System displays a staleness warning when local data version is behind the current game version
-- **FR36:** User can acknowledge a staleness warning and continue with outdated data
-
-### Application & System
-
-- **FR37:** User can configure their Claude API key in application settings
-- **FR38:** System displays current API connectivity status in the UI
-- **FR39:** User can access the skill tree visualizer and saved builds when offline
-- **FR40:** AI optimization features are disabled when offline; the UI displays: "AI optimization requires internet connectivity. Connect to the internet and retry."
-- **FR41:** Application checks for app updates on launch and notifies the user when a new version is available *(Source: Desktop Application Requirements — Update Strategy)*
-- **FR42:** User can install application updates from within the application *(Source: Desktop Application Requirements — Update Strategy)*
+- FR51: The app migrates all existing Phase 1 (schema v1) saves to BuildState schema v2 via `migrateBuildState` on load, losslessly converting free-text affixes to `{ name: affix, tier: undefined, value: undefined }` objects.
+- FR52: The app saves all Phase 2 builds in BuildState schema v2 format with structured gear data.
+- FR53: The app preserves all existing Phase 1 build management capabilities: save, load, rename, delete (no regression).
+- FR54: The schema migration is idempotent: loading a v2 build through `migrateBuildState` produces an identical v2 build with no data modification.
+- FR55: The app exposes the current manifest `gameVersion` and `itemDataVersion` in the settings panel so players can verify their data currency.
 
 ---
 
@@ -408,29 +483,61 @@ No app store distribution in MVP — direct download only.
 
 ### Performance
 
-- **NFR1:** Skill tree graph renders at ≥ 60fps on mid-range hardware (Intel Core i5 equivalent, integrated graphics) during pan, zoom, hover, and node click
-- **NFR2:** Application cold-start to interactive: ≤ 5 seconds
-- **NFR3:** Build import (paste to rendered tree): ≤ 3 seconds for a complete build
-- **NFR4:** AI optimization results returned and displayed: ≤ 30 seconds under normal network conditions
-- **NFR5:** Game data initial load (all 5 classes): ≤ 10 seconds on first launch after install
-- **NFR6:** UI input latency remains ≤ 100ms during AI optimization request processing — no freeze or blocked interaction while awaiting Claude API response
+- The PixiJS canvas renders at ≥60fps idle and ≥45fps sustained under continuous pan/zoom/hover interaction for any single tree view containing up to 200 nodes, as measured on the benchmark hardware (Intel i5, integrated graphics, 8 GB RAM, 1080p display).
+- Icon textures loaded into PixiJS `Assets` cache complete within 200ms of tree view mount for the first load; subsequent loads within the same session serve from cache with no measurable delay.
+- Item typeahead search returns ranked results within 50ms of each keystroke for the full 674+ base item + 445+ unique item corpus, using local in-memory querying.
+- AI optimization stream begins emitting within the same latency budget as Phase 1 (no regression introduced by structured gear context marshaling).
 
 ### Security
 
-- **NFR7:** Claude API key stored in an encrypted credential vault (`tauri-plugin-stronghold`) — never in plain text in config files, application state, or IPC responses. Stronghold provides AES-256 encryption at rest. Note: this is Tauri's cross-platform encrypted vault, not OS-native credential managers (Windows Credential Manager / macOS Keychain); OS-native integration is a post-MVP enhancement.
-- **NFR8:** All Claude API and game data requests transmitted over HTTPS
-- **NFR9:** No user build data or personal information transmitted to any service other than the Claude API (limited to build state required for optimization)
-- **NFR10:** Application does not execute any code received from remote sources
-
-### Integration Reliability
-
-- **NFR11:** Claude API failures (timeout, rate limit, 5xx) surfaced to user with an error message identifying the failure type and a retry option — no silent failures, no empty results
-- **NFR12:** Claude API requests time out after 45 seconds maximum; user notified and able to retry
-- **NFR13:** Game data download failures do not prevent app launch — fallback to cached data with visible staleness warning
-- **NFR14:** Application remains functional (build view, saved builds, manual editing) when all external services are unavailable
+- The Anthropic/OpenRouter API key never crosses the Tauri IPC boundary into TypeScript; all API calls remain in Rust commands following Phase 1 architecture.
+- Steam directory access is read-only; no write operations are performed to any Steam or game installation directory.
+- Icon files extracted from game directories are cached in the app's sandboxed data directory; no extracted assets are transmitted externally.
+- The `VAULT_PASSWORD` static constant in `keychain_service.rs` remains as the known Phase 1 deferred item; no change in Phase 2.
 
 ### Accessibility
 
-- **NFR15:** All interactive controls (nodes, buttons, inputs) are keyboard-accessible
-- **NFR16:** Skill tree node tooltips and suggestion panel content are readable at 100% system font scale without truncation
-- **NFR17:** Node state (allocated / unallocated / locked) is indicated by shape, icon, or label — not color alone
+- All new interactive UI elements (slider, Fine Tune expansion panel, tier sliders, typeahead dropdown, custom affix picker) have a `2px solid accent-gold` focus ring; `outline: none` is never used without a replacement.
+- The Glass Cannon ↔ Juggernaut slider is keyboard-navigable (arrow keys increment/decrement position) and has an `aria-label` describing the current position as a percentage.
+- The item typeahead dropdown follows ARIA combobox pattern with `role="combobox"`, `aria-expanded`, and `aria-activedescendant` for screen reader compatibility.
+- The staleness indicator and data update progress region use `aria-live="polite"`.
+- `prefers-reduced-motion` gates all animated transitions in new components; `useReducedMotion()` hook is used consistently.
+- All new views and components pass `vitest-axe` checks in CI with zero violations.
+
+### Reliability
+
+- BuildState v1 → v2 migration is lossless under all Phase 1 save variants: free-text gear, null gear, partial gear, empty builds.
+- Data update operations are atomic: if a download fails mid-transfer, the existing local data files are not corrupted; the app retains the last valid state.
+- Icon extraction failure (game files inaccessible, format change) degrades gracefully to CDN fallback without user-visible error; the app logs the failure internally.
+- Item database load failure at startup is recoverable: the app displays the free-text gear input fallback for all slots and continues to function for skill tree and optimization features.
+
+---
+
+## Technical Constraints Carried Forward
+
+All rules in `project-context.md` remain in force. The following Phase 1 constraints directly shape Phase 2 implementation:
+
+| Constraint | Phase 2 Impact |
+|------------|---------------|
+| Four domain stores only | Extend `useGameDataStore` for item data; extend `useBuildStore` for v2 gear schema — no new stores |
+| SkillTreeCanvas is props-only | Icon textures passed via `iconTextures: Map<string, Texture>` prop; canvas never reads stores |
+| No barrel files | `item-database/`, `icon-pipeline/`, `weaver-tree/` use direct imports |
+| Tauri commands in Rust | Steam detection, icon extraction, item DB loading, freshness checks all in Rust |
+| API key never crosses to frontend | Unchanged; optimization calls stay fully in Rust |
+| Schema migration | `migrateBuildState` handles v1 → v2; existing saves must load cleanly |
+| No React Router | Weaver Tree tab is a view within the existing tab system; no new routing |
+| WebGL patch at module load | Already applied in `pixiRenderer.ts`; do not re-inject |
+
+---
+
+## Phase 2 Workflow Progress
+
+| Step | Skill | Status |
+|------|-------|--------|
+| 1 | `bmad-create-prd` | `[x] Complete` |
+| 2 | `bmad-create-ux-design` | `[ ] Not Started` |
+| 3 | `bmad-create-architecture` | `[ ] Not Started` |
+| 4 | `bmad-create-epics-and-stories` | `[ ] Not Started` |
+| 5 | `bmad-check-implementation-readiness` | `[ ] Not Started` |
+| 6 | `gds-sprint-planning` | `[ ] Not Started` |
+| 7 | Dev Loop | `[ ] Not Started` |
