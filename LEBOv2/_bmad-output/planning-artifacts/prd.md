@@ -535,7 +535,7 @@ All rules in `project-context.md` remain in force. The following Phase 1 constra
 | Step | Skill | Status |
 |------|-------|--------|
 | 1 | `bmad-create-prd` | `[x] Complete` |
-| 2 | `bmad-create-ux-design` | `[ ] Not Started` |
+| 2 | `bmad-create-ux-design` | `[x] Complete` |
 | 3 | `bmad-create-architecture` | `[ ] Not Started` |
 | 4 | `bmad-create-epics-and-stories` | `[ ] Not Started` |
 | 5 | `bmad-check-implementation-readiness` | `[ ] Not Started` |

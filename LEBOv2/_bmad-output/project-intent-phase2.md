@@ -210,7 +210,7 @@ Track completion of each required planning and implementation step. Update the s
 | Step | Skill | Type | Status | Notes |
 |------|-------|------|--------|-------|
 | 1 | `bmad-create-prd` | Required | `[x] Complete` | PRD written to `_bmad-output/planning-artifacts/prd.md` — 2026-05-06 |
-| 2 | `bmad-create-ux-design` | Strongly Recommended | `[ ] Not Started` | Skill picker grid, icon nodes, Weaver Tree layout, item search, affix sliders, optimization slider |
+| 2 | `bmad-create-ux-design` | Strongly Recommended | `[x] Complete` | Skill picker grid, icon nodes, Weaver Tree layout, item search, affix sliders, optimization slider — 2026-05-06 |
 | 3 | `bmad-create-architecture` | Required | `[ ] Not Started` | New systems: Steam/icon pipeline, item DB + manifest v2, BuildState schema v2, Weaver Tree renderer |
 | 4 | `bmad-create-epics-and-stories` | Required | `[ ] Not Started` | Break three pillars into epics; Weaver Tree research spike is its own story |
 | 5 | `bmad-check-implementation-readiness` | Required | `[ ] Not Started` | Gate: PRD + UX + Architecture + Epics must all align before any code |
