@@ -212,7 +212,7 @@ Track completion of each required planning and implementation step. Update the s
 | 1 | `bmad-create-prd` | Required | `[x] Complete` | PRD written to `_bmad-output/planning-artifacts/prd.md` — 2026-05-06 |
 | 2 | `bmad-create-ux-design` | Strongly Recommended | `[x] Complete` | Skill picker grid, icon nodes, Weaver Tree layout, item search, affix sliders, optimization slider — 2026-05-06 |
 | 3 | `bmad-create-architecture` | Required | `[x] Complete` | Written to `_bmad-output/planning-artifacts/architecture.md` — 2026-05-06 |
-| 4 | `bmad-create-epics-and-stories` | Required | `[ ] Not Started` | Break three pillars into epics; Weaver Tree research spike is its own story |
+| 4 | `bmad-create-epics-and-stories` | Required | `[x] Complete` | 7 epics, 32 stories written to `_bmad-output/planning-artifacts/epics.md` — 2026-05-06 |
 | 5 | `bmad-check-implementation-readiness` | Required | `[ ] Not Started` | Gate: PRD + UX + Architecture + Epics must all align before any code |
 | 6 | `gds-sprint-planning` | Required | `[ ] Not Started` | Generates Phase 2 sprint-status.yaml |
 | 7 | Dev Loop | Required | `[ ] Not Started` | `gds-create-story` → `gds-dev-story` → `gds-code-review` → repeat until all epics done |
