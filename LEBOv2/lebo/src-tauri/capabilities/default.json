@@ -10,7 +10,12 @@
     "sql:allow-select",
     "sql:allow-close",
     "sql:allow-load",
-    "http:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://raw.githubusercontent.com/alec-vautherot/**" }
+      ]
+    },
     "store:default",
     "updater:default",
     "stronghold:default"

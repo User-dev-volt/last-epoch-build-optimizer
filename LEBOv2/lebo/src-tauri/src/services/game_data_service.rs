@@ -67,9 +67,18 @@ pub fn load_class_data(data_dir: &Path, class_id: &str) -> Result<RawClassData, 
         .map_err(|e| format!("STORAGE_ERROR: parse class {}: {}", class_id, e))
 }
 
+fn http_client() -> Result<reqwest::Client, String> {
+    reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .map_err(|e| format!("NETWORK_ERROR: build http client: {}", e))
+}
+
 pub async fn fetch_remote_manifest(base_url: &str) -> Result<GameDataManifest, String> {
     let url = format!("{}/manifest.json", base_url);
-    let response = reqwest::get(&url)
+    let response = http_client()?
+        .get(&url)
+        .send()
         .await
         .map_err(|e| format!("NETWORK_ERROR: fetch remote manifest: {}", e))?;
     if !response.status().is_success() {
@@ -92,9 +101,12 @@ pub async fn download_class_files(
     std::fs::create_dir_all(&classes_dir)
         .map_err(|e| format!("STORAGE_ERROR: create classes dir: {}", e))?;
 
+    let client = http_client()?;
     for class_id in classes {
         let url = format!("{}/classes/{}.json", base_url, class_id);
-        let response = reqwest::get(&url)
+        let response = client
+            .get(&url)
+            .send()
             .await
             .map_err(|e| format!("NETWORK_ERROR: fetch class {}: {}", class_id, e))?;
         if !response.status().is_success() {

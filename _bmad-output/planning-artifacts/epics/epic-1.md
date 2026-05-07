@@ -48,28 +48,32 @@
 
 ---
 
-## Story 1.3 — Community Game Data Fetch & Cache
+## Story 1.3 — Game Data Fetch & Versioned Cache
 
 **As a** user  
-**I want** the app to automatically fetch Last Epoch game data on first launch  
-**So that** all class/mastery/skill tree data is available without manual setup
+**I want** the app to check for updated game data on launch and download it when newer data is available  
+**So that** my build analysis always uses current passive tree and skill data without manual setup
 
 **Acceptance Criteria:**
-- [ ] On launch, app checks `data_meta.last_fetched`
-- [ ] If absent or > 7 days old: fetch from community API
-- [ ] All 5 classes, 15 masteries, passive trees, skills, and skill trees stored in SQLite
-- [ ] If fetch fails: show error with retry button; do not crash
-- [ ] Loading progress shown in UI (e.g., "Loading game data... 3/15 masteries")
-- [ ] `data_meta.last_fetched` updated on successful fetch
-- [ ] Subsequent launches use cached data (no re-fetch if fresh)
+- [ ] On launch, bundled resources are copied to the app data directory if no local manifest exists (first-launch bootstrap)
+- [ ] App performs a non-blocking background version check: compares `game_version` in local `manifest.json` against the remote manifest
+- [ ] If remote `game_version` differs: `DataStalenessBar` shows "{N} version(s) behind. Suggestions may be inaccurate." with an "Update Now" button
+- [ ] User can click "Update Now" to trigger a download; button shows "Downloading…" and is disabled during download
+- [ ] All class JSON files are downloaded and validated before `manifest.json` is written; a failed download leaves existing data intact
+- [ ] On download success: staleness bar dismisses; store reflects updated `game_version`
+- [ ] On download failure: staleness bar shows "Update failed: {message}" with a "Retry" button and a "Continue with current data" dismiss
+- [ ] Network requests time out after 30 seconds
+- [ ] If the background version check fails (network unavailable): failure is silently swallowed; app loads normally on local data with no error shown
+- [ ] All classes listed in `manifest.json` are stored as flat JSON files under `app_data_dir/lebo/game-data/classes/`
+- [ ] `http:default` capability restricts allowed outbound URLs to `https://raw.githubusercontent.com/alec-vautherot/**`
 
 **Technical Notes:**
-- Rust `reqwest` HTTP client for data fetch
-- Schema-validate all API responses before DB insertion (reject malformed data)
-- Tauri command: `fetch_game_data(force: bool)` — `force=false` respects cache
-- Emit progress events to frontend: `game-data-progress` with `{ current, total, step }`
-- Community data source: lastepochtools.com API or agreed-upon community dataset
-- Store raw JSON in a fallback static file for offline use
+- Data source: `https://raw.githubusercontent.com/alec-vautherot/lebo-data/main` — a curated GitHub raw file repo with `manifest.json` + `classes/{id}.json`
+- HTTP client: `tauri-plugin-http` (`reqwest`) built with `timeout(30s)`; single client instance reused across all requests in a download batch
+- Schema validation: `serde_json::from_str::<RawClassData>` before writing each class file; rejects malformed data without touching disk
+- Partial-write safety: class files written before `manifest.json`; a mid-download failure leaves the old manifest intact
+- IPC commands: `initialize_game_data`, `check_data_version`, `download_game_data_update`, `get_manifest`, `load_game_data`
+- Download is blocked while optimization is running (`isOptimizing` guard in `DataStalenessBar`)
 
 ---
 
