@@ -36,6 +36,14 @@ export interface GameData {
   classes: Record<string, ClassData>
 }
 
+export interface SkillEntry {
+  skillId: string
+  skillName: string
+  masteryId: string | null
+  masteryName: string | null
+  masteryGatePoints: number | null
+}
+
 export interface DataVersionCheckResult {
   isStale: boolean
   localVersion: string

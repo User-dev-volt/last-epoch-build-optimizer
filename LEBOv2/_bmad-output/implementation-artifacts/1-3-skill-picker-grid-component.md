@@ -1,6 +1,6 @@
 # Story 1.3: Skill Picker Grid Component
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -44,16 +44,16 @@ So that I can quickly find and assign any skill to an active slot tab.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `SkillEntry` type to shared game data types (AC: #1, #2, #4)
-  - [ ] `src/shared/types/gameData.ts`: Add exported interface `SkillEntry { skillId: string; skillName: string; masteryId: string | null; masteryName: string | null; masteryGatePoints: number | null }` — `masteryId: null` means a base class skill with no mastery gate
+- [x] Task 1: Add `SkillEntry` type to shared game data types (AC: #1, #2, #4)
+  - [x] `src/shared/types/gameData.ts`: Add exported interface `SkillEntry { skillId: string; skillName: string; masteryId: string | null; masteryName: string | null; masteryGatePoints: number | null }` — `masteryId: null` means a base class skill with no mastery gate
 
-- [ ] Task 2: Add CSS tokens to global stylesheet (AC: #7, #8)
-  - [ ] `src/assets/styles/global.css`: In the `@theme` block, add `--hex-clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)` — pointy-top hexagon, visually matches the LE hexagonal node aesthetic
-  - [ ] `src/assets/styles/global.css`: In the `@theme` block, add `--color-badge-mastery-gate: #1A1208` with inline comment `/* PixiJS: 0x1A1208 — dark warm overlay for mastery gate badge */`
+- [x] Task 2: Add CSS tokens to global stylesheet (AC: #7, #8)
+  - [x] `src/assets/styles/global.css`: In the `@theme` block, add `--hex-clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)` — pointy-top hexagon, visually matches the LE hexagonal node aesthetic
+  - [x] `src/assets/styles/global.css`: In the `@theme` block, add `--color-badge-mastery-gate: #1A1208` with inline comment `/* PixiJS: 0x1A1208 — dark warm overlay for mastery gate badge */`
 
-- [ ] Task 3: Create `SkillPickerGrid` component (AC: #1–#6, #10)
-  - [ ] Create directory `src/features/skill-picker/` (no `index.ts`)
-  - [ ] `src/features/skill-picker/SkillPickerGrid.tsx`: Define and export component with props interface:
+- [x] Task 3: Create `SkillPickerGrid` component (AC: #1–#6, #10)
+  - [x] Create directory `src/features/skill-picker/` (no `index.ts`)
+  - [x] `src/features/skill-picker/SkillPickerGrid.tsx`: Define and export component with props interface:
     ```
     interface SkillPickerGridProps {
       baseClassName: string
@@ -63,27 +63,27 @@ So that I can quickly find and assign any skill to an active slot tab.
       onClose: () => void
     }
     ```
-  - [ ] Group skills into ordered sections: section 0 = base class skills (`masteryId === null`), sections 1-3 = skills grouped by `masteryId` in insertion order; render section header `<h3>` with title `"{baseClassName} Skills"` for section 0 and `"{masteryName} Skills"` for mastery sections
-  - [ ] Render grid container `<div role="grid" aria-label="Skill picker">` wrapping all sections
-  - [ ] Each cell: `<button role="gridcell" aria-label={...}>` (see AC #4 for label format); apply `clip-path: var(--hex-clip-path)` to the inner icon container; selected cell adds `border: 1px solid var(--color-accent-gold)`; mastery-gated cells add a `<span>` badge absolutely positioned at bottom edge showing `masteryGatePoints` with `background-color: var(--color-badge-mastery-gate)` and `color: var(--color-accent-gold-dim)` and `border: 1px solid var(--color-accent-gold-dim)`
-  - [ ] Keyboard navigation: track `focusedSkillId` in state; on `keydown` within grid — `ArrowLeft`/`ArrowUp` focus previous cell in flat skill order, `ArrowRight`/`ArrowDown` focus next cell, `Enter` calls `onSelect(focusedSkillId)`, `Escape` calls `onClose()`; implement roving tabindex: only the focused cell has `tabIndex={0}`, all others `tabIndex={-1}`; on initial render, focused cell is `selectedSkillId ?? skills[0]?.skillId`
-  - [ ] Focus management: use a `Map<skillId, HTMLButtonElement>` ref to store cell refs; after `focusedSkillId` state updates, call `.focus()` on the corresponding ref element
+  - [x] Group skills into ordered sections: section 0 = base class skills (`masteryId === null`), sections 1-3 = skills grouped by `masteryId` in insertion order; render section header `<h3>` with title `"{baseClassName} Skills"` for section 0 and `"{masteryName} Skills"` for mastery sections
+  - [x] Render grid container `<div role="grid" aria-label="Skill picker">` wrapping all sections
+  - [x] Each cell: `<button role="gridcell" aria-label={...}>` (see AC #4 for label format); apply `clip-path: var(--hex-clip-path)` to the inner icon container; selected cell adds `border: 1px solid var(--color-accent-gold)`; mastery-gated cells add a `<span>` badge absolutely positioned at bottom edge showing `masteryGatePoints` with `background-color: var(--color-badge-mastery-gate)` and `color: var(--color-accent-gold-dim)` and `border: 1px solid var(--color-accent-gold-dim)`
+  - [x] Keyboard navigation: track `focusedSkillId` in state; on `keydown` within grid — `ArrowLeft`/`ArrowUp` focus previous cell in flat skill order, `ArrowRight`/`ArrowDown` focus next cell, `Enter` calls `onSelect(focusedSkillId)`, `Escape` calls `onClose()`; implement roving tabindex: only the focused cell has `tabIndex={0}`, all others `tabIndex={-1}`; on initial render, focused cell is `selectedSkillId ?? skills[0]?.skillId`
+  - [x] Focus management: use a `Map<skillId, HTMLButtonElement>` ref to store cell refs; after `focusedSkillId` state updates, call `.focus()` on the corresponding ref element
 
-- [ ] Task 4: Implement icon loading (AC: #10)
-  - [ ] In `SkillPickerGrid.tsx`, add a `useState<Map<string, string>>(new Map())` named `iconPaths` to hold resolved paths
-  - [ ] Add a single `useEffect` (runs once on mount, deps: `skills`) that calls `invokeCommand<string | null>('get_icon_cache_path', { skillId })` for each skill entry, collects results as `[skillId, path]` pairs where path is non-null, then sets state with one `setIconPaths(new Map(pairs))` call — avoids per-cell re-renders
-  - [ ] Each cell renders `<img src={iconPaths.get(skill.skillId)} alt="" />` when the path is present in the map; otherwise renders `<div aria-hidden="true" style={{ backgroundColor: 'var(--color-node-available)', width: '100%', height: '100%' }} />`
+- [x] Task 4: Implement icon loading (AC: #10)
+  - [x] In `SkillPickerGrid.tsx`, add a `useState<Map<string, string>>(new Map())` named `iconPaths` to hold resolved paths
+  - [x] Add a single `useEffect` (runs once on mount, deps: `skills`) that calls `invokeCommand<string | null>('get_icon_cache_path', { skillId })` for each skill entry, collects results as `[skillId, path]` pairs where path is non-null, then sets state with one `setIconPaths(new Map(pairs))` call — avoids per-cell re-renders
+  - [x] Each cell renders `<img src={iconPaths.get(skill.skillId)} alt="" />` when the path is present in the map; otherwise renders `<div aria-hidden="true" style={{ backgroundColor: 'var(--color-node-available)', width: '100%', height: '100%' }} />`
 
-- [ ] Task 5: Write tests (AC: #4, #9)
-  - [ ] `src/features/skill-picker/SkillPickerGrid.test.tsx`: Create file co-located with component
-  - [ ] Mock `invokeCommand` via `vi.mock('../../shared/utils/invokeCommand', () => ({ invokeCommand: vi.fn().mockResolvedValue(null) }))` so icon loads resolve to null (placeholder path) synchronously-ish
-  - [ ] Test: renders section headers — base class section title matches `"{baseClassName} Skills"`, mastery section titles match `"{masteryName} Skills"` for each unique masteryId
-  - [ ] Test: mastery-gated cells show badge with correct point threshold text
-  - [ ] Test: selected skill cell has gold border style applied
-  - [ ] Test: `onSelect` called with correct skillId when Enter pressed on focused cell
-  - [ ] Test: `onClose` called when Escape pressed
-  - [ ] Test: `role="grid"` on container, `role="gridcell"` on each cell, `aria-label` correct format for base class and mastery-gated skills
-  - [ ] Test: `axe()` zero violations — import `{ axe }` from `'vitest-axe'` and `import 'vitest-axe/extend-expect'`; assert `expect(await axe(container)).toHaveNoViolations()`
+- [x] Task 5: Write tests (AC: #4, #9)
+  - [x] `src/features/skill-picker/SkillPickerGrid.test.tsx`: Create file co-located with component
+  - [x] Mock `invokeCommand` via `vi.mock('../../shared/utils/invokeCommand', () => ({ invokeCommand: vi.fn().mockResolvedValue(null) }))` so icon loads resolve to null (placeholder path) synchronously-ish
+  - [x] Test: renders section headers — base class section title matches `"{baseClassName} Skills"`, mastery section titles match `"{masteryName} Skills"` for each unique masteryId
+  - [x] Test: mastery-gated cells show badge with correct point threshold text
+  - [x] Test: selected skill cell has gold border style applied
+  - [x] Test: `onSelect` called with correct skillId when Enter pressed on focused cell
+  - [x] Test: `onClose` called when Escape pressed
+  - [x] Test: `role="grid"` on container, `role="gridcell"` on each cell, `aria-label` correct format for base class and mastery-gated skills
+  - [x] Test: `axe()` zero violations — import `{ axe }` from `'vitest-axe'` and `import 'vitest-axe/extend-expect'`; assert `expect(await axe(container)).toHaveNoViolations()`
 
 ## Dev Notes
 
@@ -178,6 +178,23 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+None.
+
 ### Completion Notes List
 
+- `SkillEntry` added to `shared/types/gameData.ts` with `masteryId: null` discriminating base-class vs mastery skills.
+- CSS tokens `--hex-clip-path` and `--color-badge-mastery-gate` added to `global.css @theme` block.
+- `SkillPickerGrid` component created with props-driven section grouping, roving tabindex keyboard nav, `Promise.allSettled` batch icon loading, mastery gate badge, and gold border for selected cell.
+- axe fix: section wrapper divs use `role="rowgroup"` with `aria-label` for AT; h3 inside each rowgroup is `aria-hidden="true"` (visual-only) to avoid `aria-required-children` violation while preserving visible section headers.
+- All 9 tests pass. 6 pre-existing `ProviderSelector`/`Settings` failures confirmed unchanged (not regressions).
+
 ### File List
+
+- `lebo/src/shared/types/gameData.ts` (modified — added `SkillEntry` interface)
+- `lebo/src/assets/styles/global.css` (modified — added `--hex-clip-path` and `--color-badge-mastery-gate` to `@theme`)
+- `lebo/src/features/skill-picker/SkillPickerGrid.tsx` (created)
+- `lebo/src/features/skill-picker/SkillPickerGrid.test.tsx` (created)
+
+## Change Log
+
+- 2026-05-07: Story 1.3 implemented — `SkillEntry` type, CSS tokens, `SkillPickerGrid` component with keyboard nav + icon loading, 9 tests (including axe zero-violations). (claude-sonnet-4-6)

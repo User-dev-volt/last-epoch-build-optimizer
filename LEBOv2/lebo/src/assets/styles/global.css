@@ -42,6 +42,10 @@
   --color-node-locked:    #2A2A35;
   --color-node-suggested: #7B68EE;
 
+  /* Skill picker */
+  --hex-clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  --color-badge-mastery-gate: #1A1208; /* PixiJS: 0x1A1208 — dark warm overlay for mastery gate badge */
+
   /* Text */
   --color-text-primary:   #F0EAE0;
   --color-text-secondary: #9E9494;
