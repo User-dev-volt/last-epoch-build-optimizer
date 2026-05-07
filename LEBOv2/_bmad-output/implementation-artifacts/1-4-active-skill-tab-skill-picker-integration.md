@@ -440,6 +440,20 @@ claude-sonnet-4-6
 - `SkillTreeStubPanel` removed from `SkillTreeView.tsx` (it was a Phase 1 placeholder).
 - Two `useSkillTree` instances in `SkillTreeView.tsx` run independently: `passiveInteraction` and `skillInteraction` (with `slotId`).
 
+### Review Findings
+
+- [ ] [Review][Decision] Slot ID mismatch — `SkillInput` uses `"skill1"`/`"skill2"` while `SkillTreeView` generates `"slot-0"`/`"slot-1"`; both write to `contextData.skills` with incompatible keys, causing picker-assigned skills and text-field-edited skills to be invisible to each other. Decide: unify on `"slot-0"…"slot-4"` (spec-specified) by updating `SkillInput.SKILL_SLOTS`, or remove manual text-entry from `SkillInput` entirely since the picker is now the canonical assignment path.
+- [ ] [Review][Decision] AC3/AC5: Tab bar renders only assigned-skill tabs — there is no tab for empty slots. Spec requires 5 always-visible skill slot tabs and "other active skill slot indicators visible in the tab bar row." Decide: render all 5 fixed tabs (empty slots show a dimmed placeholder label) so the user can click into any slot from the tab bar, or accept that empty-slot entry is only via the context panel.
+- [ ] [Review][Patch] `applySkillNodeChange` missing `isPersisted: false` — spreading `...activeBuild` preserves the prior `isPersisted` value; skill-node allocation changes won't mark the build dirty and auto-save will skip them. [buildStore.ts — `applySkillNodeChange`]
+- [ ] [Review][Patch] Passive tab click doesn't close open picker popover — `SkillTreeTabBar.onChange` is wired to `setActiveTabIndex` only; switching to the passive tree leaves the popover rendered with a stale `slotIndex`, and `handleSkillSelect` would assign the skill to the wrong slot. [SkillTreeView.tsx — `onChange={setActiveTabIndex}`]
+- [x] [Review][Defer] `applySkillNodeChange` not atomic (uses `get()`/`set()` TOCTOU) [buildStore.ts] — deferred, pre-existing pattern in `applyNodeChange`
+- [x] [Review][Defer] Dependent-blocking guard only fires at `newPoints === 0`, misses partial removal [buildStore.ts] — deferred, same as pre-existing `applyNodeChange` behaviour
+- [x] [Review][Defer] `buildPersistence.ts` bare-cast `skillNodeAllocations` without deep structural validation [buildPersistence.ts] — deferred, runtime safe (all reads guarded with `?? 0`), consistent with existing migration style
+- [x] [Review][Defer] Inactive `useSkillTree` instance may surface stale hover/error state on tab return [SkillTreeView.tsx] — deferred, pre-existing single-instance limitation; hooks rules block conditional calls
+- [x] [Review][Defer] Popover `position: fixed` rendered inline without React portal [SkillTreeView.tsx] — deferred, only breaks with CSS-transform ancestors (not present in current layout)
+- [x] [Review][Defer] `assignSkillToSlot` writes `{}` to cleared slot instead of removing the key [buildStore.ts] — deferred, harmless for correctness
+- [x] [Review][Defer] `transformSkillEntry` silently nulls `masteryName` for unknown `masteryId` [gameDataLoader.ts] — deferred, no downstream crash
+
 ### File List
 
 **Production files changed:**

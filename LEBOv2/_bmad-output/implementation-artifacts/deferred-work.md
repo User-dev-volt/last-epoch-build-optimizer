@@ -1,3 +1,13 @@
+## Deferred from: code review of 1-4-active-skill-tab-skill-picker-integration (2026-05-07)
+
+- **`applySkillNodeChange` not atomic** — `buildStore.ts` — Uses `get()`/`set()` pattern; stale snapshot on rapid clicks could lose intermediate undo states. Pre-existing pattern in `applyNodeChange`.
+- **Dependent-blocking only fires at `newPoints === 0`** — `buildStore.ts` — Partial removal that still leaves a dependent unsatisfied is not blocked. Same as pre-existing `applyNodeChange` behaviour.
+- **`buildPersistence.ts` bare-cast `skillNodeAllocations`** — `buildPersistence.ts` — Nested structure not deeply validated on load; runtime safe due to `?? 0` guards on all reads.
+- **Inactive `useSkillTree` instance stale state** — `SkillTreeView.tsx` — Two hook instances run simultaneously; inactive one retains hover/error state visible on tab return. Hooks rules block a conditional call fix.
+- **Popover `position: fixed` without React portal** — `SkillTreeView.tsx` — Inline fixed positioning breaks if any ancestor has a CSS transform. Not present in current layout.
+- **`assignSkillToSlot` leaves empty `{}` key** — `buildStore.ts` — Cleared slot writes `{}` rather than deleting the key; harmless for correctness but could confuse future slot-enumeration code.
+- **`transformSkillEntry` silently nulls unknown masteryId** — `gameDataLoader.ts` — Data integrity gap; unknown masteryId produces `masteryName: null` indistinguishable from a base-class skill.
+
 ## Deferred from: code review of 1-2-prerequisite-validation-with-visual-flash-feedback (2026-05-07)
 
 - **`flashNodeIds` never reset on success** — `useSkillTree.ts` — `flashNodeIds` stays non-null after first failure. Functionally safe (new array reference re-triggers effect on each failure), but semantically stale. Consider resetting to null on successful allocation.
