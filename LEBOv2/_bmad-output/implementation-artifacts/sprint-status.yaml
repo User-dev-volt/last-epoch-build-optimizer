@@ -46,7 +46,7 @@ development_status:
   epic-1: in-progress
   1-1-upgrade-nodeallocations-to-record-string-number-and-implement-multi-point-click-allocation: done
   1-2-prerequisite-validation-with-visual-flash-feedback: done
-  1-3-skill-picker-grid-component: review
+  1-3-skill-picker-grid-component: done
   1-4-active-skill-tab-skill-picker-integration: done
   1-5-tree-search-bar-and-reset-button: ready-for-dev
   epic-1-retrospective: optional

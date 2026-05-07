@@ -1,6 +1,6 @@
 # Story 1.3: Skill Picker Grid Component
 
-Status: review
+Status: done
 
 ## Story
 
