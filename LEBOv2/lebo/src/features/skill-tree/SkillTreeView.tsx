@@ -104,7 +104,7 @@ export function SkillTreeView() {
     [previewSuggestion, baseAllocatedNodes]
   )
 
-  const allocatedNodes = previewAllocatedNodes ?? baseAllocatedNodes
+  const nodeAllocations = previewAllocatedNodes ?? baseAllocatedNodes
 
   // Build preview color sets: red = node losing points, green = node gaining points
   const highlightedNodes = useMemo<HighlightedNodes>(() => {
@@ -124,9 +124,9 @@ export function SkillTreeView() {
   const treeData = useMemo(
     () =>
       classData && selectedMasteryId
-        ? buildTreeData(classData, selectedMasteryId, allocatedNodes)
+        ? buildTreeData(classData, selectedMasteryId, nodeAllocations)
         : null,
-    [classData, selectedMasteryId, allocatedNodes]
+    [classData, selectedMasteryId, nodeAllocations]
   )
 
   const {
@@ -207,7 +207,7 @@ export function SkillTreeView() {
           <>
             <SkillTreeCanvas
               treeData={treeData}
-              nodeAllocations={allocatedNodes}
+              nodeAllocations={nodeAllocations}
               highlightedNodes={highlightedNodes}
               onNodeClick={handleNodeClick}
               onNodeHover={handleNodeHover}
@@ -217,7 +217,7 @@ export function SkillTreeView() {
             {hoveredGameNode && !nodeError && (
               <NodeTooltip
                 gameNode={hoveredGameNode}
-                allocatedPoints={allocatedNodes[hoveredNodeId!] ?? 0}
+                allocatedPoints={nodeAllocations[hoveredNodeId!] ?? 0}
                 position={mousePosition}
               />
             )}
@@ -225,7 +225,7 @@ export function SkillTreeView() {
             {nodeError && errorGameNode && (
               <NodeTooltip
                 gameNode={errorGameNode}
-                allocatedPoints={allocatedNodes[nodeError.nodeId] ?? 0}
+                allocatedPoints={nodeAllocations[nodeError.nodeId] ?? 0}
                 position={mousePosition}
                 errorMessage={nodeError.message}
               />
@@ -234,7 +234,7 @@ export function SkillTreeView() {
             {keyboardGameNode && (
               <NodeTooltip
                 gameNode={keyboardGameNode}
-                allocatedPoints={allocatedNodes[keyboardFocusedNodeId!] ?? 0}
+                allocatedPoints={nodeAllocations[keyboardFocusedNodeId!] ?? 0}
                 position={keyboardPosition}
               />
             )}

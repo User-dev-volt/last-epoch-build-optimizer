@@ -1,6 +1,6 @@
 # Story 1.1: Upgrade nodeAllocations to Record<string, number> and Implement Multi-Point Click Allocation
 
-Status: review
+Status: done
 
 ## Story
 
@@ -336,8 +336,8 @@ N/A — no blocking issues encountered. `SuggestionsList.tsx` and `useSkillTree.
 
 ### Review Findings
 
-- [ ] [Review][Patch] Local var `allocatedNodes` uses deprecated name — rename to `nodeAllocations` [`lebo/src/features/skill-tree/SkillTreeView.tsx:107`]
-- [ ] [Review][Patch] Missing test for AC#4 maxPoints cap — add case that clicks root 6 times (maxPoints=5) and asserts no state change on 6th [`lebo/src/shared/stores/buildStore.test.ts`]
+- [x] [Review][Patch] Local var `allocatedNodes` uses deprecated name — rename to `nodeAllocations` [`lebo/src/features/skill-tree/SkillTreeView.tsx:107`]
+- [x] [Review][Patch] Missing test for AC#4 maxPoints cap — add case that clicks root 6 times (maxPoints=5) and asserts no state change on 6th [`lebo/src/shared/stores/buildStore.test.ts`]
 - [x] [Review][Defer] Silent failure on missing nodeId — `applyNodeChange` returns `{ success: false }` with no `error` field when node not found [`lebo/src/shared/stores/buildStore.ts:96`] — deferred, pre-existing defensive guard
 - [x] [Review][Defer] `new Text()` GC pressure — Text objects created/destroyed every `renderTree` call, no object pooling [`lebo/src/features/skill-tree/pixiRenderer.ts:245`] — deferred, pre-existing render pattern
 

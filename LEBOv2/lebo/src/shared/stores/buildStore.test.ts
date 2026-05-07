@@ -222,6 +222,23 @@ describe('buildStore — applyNodeChange', () => {
     expect(useBuildStore.getState().activeBuild!.nodeAllocations['root']).toBe(1)
   })
 
+  it('does not exceed maxPoints on repeated left-clicks (AC#4)', () => {
+    // root.maxPoints = 5; allocate 5 times then attempt a 6th
+    for (let i = 0; i < 5; i++) {
+      useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
+    }
+    expect(useBuildStore.getState().activeBuild!.nodeAllocations['root']).toBe(5)
+    const result = useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
+    expect(result.success).toBe(false)
+    expect(useBuildStore.getState().activeBuild!.nodeAllocations['root']).toBe(5)
+  })
+
+  it('does not go below 0 on right-click at zero allocation (AC#5)', () => {
+    const result = useBuildStore.getState().applyNodeChange('root', -1, mockTreeData)
+    expect(result.success).toBe(false)
+    expect(useBuildStore.getState().activeBuild).toBeNull()
+  })
+
   it('undoNodeChange restores previous allocations', () => {
     useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
     useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
