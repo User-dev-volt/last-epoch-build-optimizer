@@ -1,6 +1,6 @@
 # Story 1.2: Prerequisite Validation with Visual Flash Feedback
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -38,47 +38,47 @@ So that I build only valid skill tree configurations without needing to memorize
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Extend `ApplyNodeResult` to include `blockedByDependents` (AC: #5)
-  - [ ] `src/shared/types/build.ts`: Change `ApplyNodeResult` from `{ success: boolean; error?: string }` to `{ success: boolean; error?: string; blockedByDependents?: string[] }`
+- [x] Task 1: Extend `ApplyNodeResult` to include `blockedByDependents` (AC: #5)
+  - [x] `src/shared/types/build.ts`: Change `ApplyNodeResult` from `{ success: boolean; error?: string }` to `{ success: boolean; error?: string; blockedByDependents?: string[] }`
 
-- [ ] Task 2: Return `blockedByDependents` from `applyNodeChange` (AC: #5)
-  - [ ] `src/shared/stores/buildStore.ts`: In the dependents-block branch, return `{ success: false, error: '...', blockedByDependents: dependents }` where `dependents` is the array of dependent nodeIds already computed
-  - [ ] `src/shared/stores/buildStore.test.ts`: Add test asserting `blockedByDependents` contains the correct nodeId(s) when decrement is blocked
+- [x] Task 2: Return `blockedByDependents` from `applyNodeChange` (AC: #5)
+  - [x] `src/shared/stores/buildStore.ts`: In the dependents-block branch, return `{ success: false, error: '...', blockedByDependents: dependents }` where `dependents` is the array of dependent nodeIds already computed
+  - [x] `src/shared/stores/buildStore.test.ts`: Add test asserting `blockedByDependents` contains the correct nodeId(s) when decrement is blocked
 
-- [ ] Task 3: Add `triggerFlash` to `RendererInstance` interface and `SkillTreeCanvasProps` (AC: #1, #2)
-  - [ ] `src/features/skill-tree/types.ts`: Add `triggerFlash(nodeIds: string[]): void` to `RendererInstance` interface
-  - [ ] `src/features/skill-tree/types.ts`: Add `flashNodeIds?: string[]` to `SkillTreeCanvasProps`
+- [x] Task 3: Add `triggerFlash` to `RendererInstance` interface and `SkillTreeCanvasProps` (AC: #1, #2)
+  - [x] `src/features/skill-tree/types.ts`: Add `triggerFlash(nodeIds: string[]): void` to `RendererInstance` interface
+  - [x] `src/features/skill-tree/types.ts`: Add `flashNodeIds?: string[]` to `SkillTreeCanvasProps`
 
-- [ ] Task 4: Implement `triggerFlash` in `pixiRenderer.ts` (AC: #1, #2, #3)
-  - [ ] Add `flashContainer = new Container()` added to `worldContainer` ABOVE `hitAreaContainer` (in the `addChild` call order)
-  - [ ] Store `let lastRenderedNodeMap: Map<string, TreeNode> = new Map()` — set at the start of each `renderTree` call
-  - [ ] Implement `triggerFlash(nodeIds: string[])`: if `reducedMotionEnabled` OR `nodeIds.length === 0`, return immediately; create one `Graphics` per nodeId (circle with locked fill `0x2a2a35`, stroke `0x5a5050`), set initial scale 1.05, add to `flashContainer`; add a ticker callback that lerps scale from 1.05 → 1.0 over 150ms, then removes children and removes itself from the ticker
-  - [ ] `renderTree` does NOT clear or touch `flashContainer` — flash is managed independently
+- [x] Task 4: Implement `triggerFlash` in `pixiRenderer.ts` (AC: #1, #2, #3)
+  - [x] Add `flashContainer = new Container()` added to `worldContainer` ABOVE `hitAreaContainer` (in the `addChild` call order)
+  - [x] Store `let lastRenderedNodeMap: Map<string, TreeNode> = new Map()` — set at the start of each `renderTree` call
+  - [x] Implement `triggerFlash(nodeIds: string[])`: if `reducedMotionEnabled` OR `nodeIds.length === 0`, return immediately; create one `Graphics` per nodeId (circle with locked fill `0x2a2a35`, stroke `0x5a5050`), set initial scale 1.05, add to `flashContainer`; add a ticker callback that lerps scale from 1.05 → 1.0 over 150ms, then removes children and removes itself from the ticker
+  - [x] `renderTree` does NOT clear or touch `flashContainer` — flash is managed independently
 
-- [ ] Task 5: Wire flash trigger through `SkillTreeCanvas` (AC: #1, #2, #3)
-  - [ ] `src/features/skill-tree/SkillTreeCanvas.tsx`: Destructure `flashNodeIds` from props
-  - [ ] Add `useEffect(() => { if (!flashNodeIds || flashNodeIds.length === 0) return; rendererRef.current?.triggerFlash(flashNodeIds) }, [flashNodeIds])` — the ref-identity change of the `flashNodeIds` array (each failure creates a new array) drives re-triggering
+- [x] Task 5: Wire flash trigger through `SkillTreeCanvas` (AC: #1, #2, #3)
+  - [x] `src/features/skill-tree/SkillTreeCanvas.tsx`: Destructure `flashNodeIds` from props
+  - [x] Add `useEffect(() => { if (!flashNodeIds || flashNodeIds.length === 0) return; rendererRef.current?.triggerFlash(flashNodeIds) }, [flashNodeIds])` — the ref-identity change of the `flashNodeIds` array (each failure creates a new array) drives re-triggering
 
-- [ ] Task 6: Track flash signal in `useSkillTree` (AC: #1, #2)
-  - [ ] `src/features/skill-tree/useSkillTree.ts`: Add `flashNodeIds: string[] | null` state (starts `null`)
-  - [ ] In `handleNodeClick`: on failed allocation (left-click, blocked), `setFlashNodeIds([nodeId])` (always a new array reference); on failed decrement (right-click, blocked with dependents), `setFlashNodeIds([...result.blockedByDependents])` using the new `ApplyNodeResult` field; on failed decrement (no dependents info), `setFlashNodeIds([nodeId])`
-  - [ ] Add `flashNodeIds` to the returned `SkillTreeInteraction` object
-  - [ ] `src/features/skill-tree/SkillTreeInteraction` interface: add `flashNodeIds: string[] | null`
+- [x] Task 6: Track flash signal in `useSkillTree` (AC: #1, #2)
+  - [x] `src/features/skill-tree/useSkillTree.ts`: Add `flashNodeIds: string[] | null` state (starts `null`)
+  - [x] In `handleNodeClick`: on failed allocation (left-click, blocked), `setFlashNodeIds([nodeId])` (always a new array reference); on failed decrement (right-click, blocked with dependents), `setFlashNodeIds([...result.blockedByDependents])` using the new `ApplyNodeResult` field; on failed decrement (no dependents info), `setFlashNodeIds([nodeId])`
+  - [x] Add `flashNodeIds` to the returned `SkillTreeInteraction` object
+  - [x] `src/features/skill-tree/SkillTreeInteraction` interface: add `flashNodeIds: string[] | null`
 
-- [ ] Task 7: Pass `flashNodeIds` from `SkillTreeView` to `SkillTreeCanvas` (AC: #1, #2)
-  - [ ] `src/features/skill-tree/SkillTreeView.tsx`: Destructure `flashNodeIds` from `useSkillTree(...)`
-  - [ ] Pass `flashNodeIds={flashNodeIds ?? undefined}` to `<SkillTreeCanvas>`
+- [x] Task 7: Pass `flashNodeIds` from `SkillTreeView` to `SkillTreeCanvas` (AC: #1, #2)
+  - [x] `src/features/skill-tree/SkillTreeView.tsx`: Destructure `flashNodeIds` from `useSkillTree(...)`
+  - [x] Pass `flashNodeIds={flashNodeIds ?? undefined}` to `<SkillTreeCanvas>`
 
-- [ ] Task 8: Improve prerequisite tooltip to show names (AC: #6)
-  - [ ] `src/features/skill-tree/NodeTooltip.tsx`: Add optional prop `prerequisiteNames?: string[]`; when provided, display `prerequisiteNames` instead of `gameNode.prerequisiteNodeIds` in the "Requires:" line
-  - [ ] `src/features/skill-tree/SkillTreeView.tsx`: For `hoveredGameNode`, `errorGameNode`, `keyboardGameNode` — compute `prerequisiteNames` by mapping `gameNode.prerequisiteNodeIds.map(id => allGameNodes[id]?.name ?? id)` and pass to each `NodeTooltip`
+- [x] Task 8: Improve prerequisite tooltip to show names (AC: #6)
+  - [x] `src/features/skill-tree/NodeTooltip.tsx`: Add optional prop `prerequisiteNames?: string[]`; when provided, display `prerequisiteNames` instead of `gameNode.prerequisiteNodeIds` in the "Requires:" line
+  - [x] `src/features/skill-tree/SkillTreeView.tsx`: For `hoveredGameNode`, `errorGameNode`, `keyboardGameNode` — compute `prerequisiteNames` by mapping `gameNode.prerequisiteNodeIds.map(id => allGameNodes[id]?.name ?? id)` and pass to each `NodeTooltip`
 
-- [ ] Task 9: Update tests (AC: all)
-  - [ ] `src/shared/stores/buildStore.test.ts`: Add test for `blockedByDependents` presence in blocked decrement result
-  - [ ] `src/features/skill-tree/useSkillTree.test.ts`: Add tests: (a) flashNodeIds is set to `[nodeId]` on blocked left-click, (b) flashNodeIds is set to dependent nodeIds on blocked right-click, (c) flashNodeIds is null on successful click
-  - [ ] `src/features/skill-tree/SkillTreeCanvas.test.tsx`: Add test that `triggerFlash` is called with correct nodeIds when `flashNodeIds` prop changes
-  - [ ] Run `pnpm test` — verify all new tests pass; confirm pre-existing 6 Settings/ProviderSelector failures remain the only failures
-  - [ ] Run `pnpm tsc --noEmit` — zero errors required
+- [x] Task 9: Update tests (AC: all)
+  - [x] `src/shared/stores/buildStore.test.ts`: Add test for `blockedByDependents` presence in blocked decrement result
+  - [x] `src/features/skill-tree/useSkillTree.test.ts`: Add tests: (a) flashNodeIds is set to `[nodeId]` on blocked left-click, (b) flashNodeIds is set to dependent nodeIds on blocked right-click, (c) flashNodeIds is null on successful click
+  - [x] `src/features/skill-tree/SkillTreeCanvas.test.tsx`: Add test that `triggerFlash` is called with correct nodeIds when `flashNodeIds` prop changes
+  - [x] Run `pnpm test` — verify all new tests pass; confirm pre-existing 6 Settings/ProviderSelector failures remain the only failures
+  - [x] Run `pnpm tsc --noEmit` — zero errors required
 
 ## Dev Notes
 
@@ -315,18 +315,38 @@ Files **not to touch** (regression risk):
 
 ### Agent Model Used
 
-(to be filled at implementation)
+claude-sonnet-4-6
 
 ### Completion Notes List
 
-(to be filled at implementation)
+- Extended `ApplyNodeResult` with optional `blockedByDependents?: string[]` field (additive — no call sites broken)
+- `applyNodeChange` now returns dependent nodeIds in blocked decrement results; callers already using `result.error` are unaffected
+- `triggerFlash` implemented entirely in the renderer — React state only tracks the signal (array reference), not animation state; flash self-terminates via Pixi ticker
+- `flashContainer` sits between `labelContainer` and `hitAreaContainer` so flash circles render above labels but below interaction hit areas
+- `lastRenderedNodeMap` captures the latest node positions each `renderTree` call; flash uses this to position circles correctly without re-reading React state
+- `reducedMotionEnabled` gates the flash — if set, `triggerFlash` returns immediately (AC #1 requirement)
+- Each failed click creates a **new array reference** for `flashNodeIds`, ensuring `useEffect` re-fires even when the same node fails twice consecutively
+- `prerequisiteNames` prop on `NodeTooltip` is optional with graceful fallback to raw IDs — all three tooltip instances (hover, error, keyboard) now pass resolved names
+- All 6 pre-existing Settings/ProviderSelector failures confirmed unchanged; 0 new failures; 0 TypeScript errors
 
 ### File List
 
-(to be filled at implementation)
+- `lebo/src/shared/types/build.ts`
+- `lebo/src/shared/stores/buildStore.ts`
+- `lebo/src/features/skill-tree/types.ts`
+- `lebo/src/features/skill-tree/pixiRenderer.ts`
+- `lebo/src/features/skill-tree/SkillTreeCanvas.tsx`
+- `lebo/src/features/skill-tree/useSkillTree.ts`
+- `lebo/src/features/skill-tree/SkillTreeView.tsx`
+- `lebo/src/features/skill-tree/NodeTooltip.tsx`
+- `lebo/src/shared/stores/buildStore.test.ts`
+- `lebo/src/features/skill-tree/SkillTreeCanvas.test.tsx`
+- `lebo/src/features/skill-tree/useSkillTree.test.ts`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
 
 ## Change Log
 
 | Date | Change |
 |------|--------|
 | 2026-05-06 | Story 1.2 created: prerequisite flash animation, blockedByDependents extension, tooltip name lookup |
+| 2026-05-07 | Implemented all 9 tasks: ApplyNodeResult extended, triggerFlash in pixiRenderer, flash signal wired through useSkillTree→SkillTreeCanvas, prerequisiteNames in NodeTooltip, 8 new tests added |

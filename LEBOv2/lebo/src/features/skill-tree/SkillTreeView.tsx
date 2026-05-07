@@ -135,6 +135,7 @@ export function SkillTreeView() {
     nodeError,
     keyboardFocusedNodeId,
     keyboardPosition,
+    flashNodeIds,
     handleNodeClick,
     handleNodeHover,
     handleMouseMove,
@@ -194,6 +195,11 @@ export function SkillTreeView() {
       ? allGameNodes[keyboardFocusedNodeId]
       : null
 
+  function getPrerequisiteNames(gameNode: typeof hoveredGameNode): string[] {
+    if (!gameNode || gameNode.prerequisiteNodeIds.length === 0) return []
+    return gameNode.prerequisiteNodeIds.map((id) => allGameNodes[id]?.name ?? id)
+  }
+
   return (
     <div id="skill-tree-canvas" className="flex flex-col h-full">
       <SkillTreeTabBar
@@ -212,6 +218,7 @@ export function SkillTreeView() {
               onNodeClick={handleNodeClick}
               onNodeHover={handleNodeHover}
               onKeyboardNavigate={handleKeyboardNavigate}
+              flashNodeIds={flashNodeIds ?? undefined}
             />
 
             {hoveredGameNode && !nodeError && (
@@ -219,6 +226,7 @@ export function SkillTreeView() {
                 gameNode={hoveredGameNode}
                 allocatedPoints={nodeAllocations[hoveredNodeId!] ?? 0}
                 position={mousePosition}
+                prerequisiteNames={getPrerequisiteNames(hoveredGameNode)}
               />
             )}
 
@@ -228,6 +236,7 @@ export function SkillTreeView() {
                 allocatedPoints={nodeAllocations[nodeError.nodeId] ?? 0}
                 position={mousePosition}
                 errorMessage={nodeError.message}
+                prerequisiteNames={getPrerequisiteNames(errorGameNode)}
               />
             )}
 
@@ -236,6 +245,7 @@ export function SkillTreeView() {
                 gameNode={keyboardGameNode}
                 allocatedPoints={nodeAllocations[keyboardFocusedNodeId!] ?? 0}
                 position={keyboardPosition}
+                prerequisiteNames={getPrerequisiteNames(keyboardGameNode)}
               />
             )}
           </>

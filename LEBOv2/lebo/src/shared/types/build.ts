@@ -32,7 +32,7 @@ export interface BuildState {
   updatedAt: string
 }
 
-export type ApplyNodeResult = { success: boolean; error?: string }
+export type ApplyNodeResult = { success: boolean; error?: string; blockedByDependents?: string[] }
 
 export interface BuildMeta {
   id: string

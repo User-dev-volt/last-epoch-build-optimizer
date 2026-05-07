@@ -12,6 +12,7 @@ export function SkillTreeCanvas({
   onNodeClick,
   onNodeHover,
   onKeyboardNavigate,
+  flashNodeIds,
 }: SkillTreeCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -180,6 +181,12 @@ export function SkillTreeCanvas({
     const { treeData: td, nodeAllocations: na, highlightedNodes: hn } = dataRef.current
     r.renderTree(td, na, hn)
   }, [reducedMotion])
+
+  // Trigger flash animation — each failure creates a new array reference to re-run this effect
+  useEffect(() => {
+    if (!flashNodeIds || flashNodeIds.length === 0) return
+    rendererRef.current?.triggerFlash(flashNodeIds)
+  }, [flashNodeIds])
 
   function handleNodeKeyDown(e: React.KeyboardEvent<HTMLButtonElement>, id: string) {
     if (e.key === 'Enter' || e.key === ' ') {

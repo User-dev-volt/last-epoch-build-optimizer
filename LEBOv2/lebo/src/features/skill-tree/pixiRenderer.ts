@@ -1,5 +1,5 @@
 import { Application, Circle, Container, Graphics, Text } from 'pixi.js'
-import type { TreeData, HighlightedNodes, RendererCallbacks, RendererInstance } from './types'
+import type { TreeData, TreeNode, HighlightedNodes, RendererCallbacks, RendererInstance } from './types'
 
 // PixiJS v8's logPrettyShaderError calls .split() on getShaderSource/getShaderInfoLog results,
 // which throws if WebGL returns null (valid per spec). Patch before any Application init.
@@ -111,6 +111,8 @@ export async function initRenderer(
   const hitAreaContainer = new Container()
   // Text labels for point counts
   const labelContainer = new Container()
+  // Flash animation layer — above labels, below hit areas; managed independently of renderTree
+  const flashContainer = new Container()
 
   worldContainer.addChild(
     edgeGraphics,
@@ -122,6 +124,7 @@ export async function initRenderer(
     previewRemovedGraphics,
     previewAddedGraphics,
     labelContainer,
+    flashContainer,
     hitAreaContainer,
   )
 
@@ -172,11 +175,14 @@ export async function initRenderer(
     { passive: false }
   )
 
+  let lastRenderedNodeMap: Map<string, TreeNode> = new Map()
+
   function renderTree(
     data: TreeData,
     nodeAllocations: Record<string, number>,
     highlightedNodes: HighlightedNodes
   ) {
+    lastRenderedNodeMap = new Map(data.nodes.map((n) => [n.id, n]))
     edgeGraphics.clear()
     lockedGraphics.clear()
     availableGraphics.clear()
@@ -307,5 +313,49 @@ export async function initRenderer(
     return () => app.ticker.remove(cb)
   }
 
-  return { renderTree, resize, destroy, getViewport, addTickerListener, setReducedMotion }
+  function triggerFlash(nodeIds: string[]) {
+    if (reducedMotionEnabled || nodeIds.length === 0) return
+
+    flashContainer.removeChildren()
+
+    const DURATION = 150
+    const START_SCALE = 1.05
+
+    for (const nodeId of nodeIds) {
+      const node = lastRenderedNodeMap.get(nodeId)
+      if (!node) continue
+      const r = NODE_RADIUS[node.size]
+
+      const g = new Graphics()
+      g.circle(0, 0, r).fill(0x2a2a35)
+      g.circle(0, 0, r).stroke({ color: 0x5a5050, width: 2 })
+
+      const c = new Container()
+      c.x = node.x
+      c.y = node.y
+      c.scale.set(START_SCALE)
+      c.addChild(g)
+      flashContainer.addChild(c)
+    }
+
+    const startTime = performance.now()
+
+    const tick = () => {
+      const progress = Math.min((performance.now() - startTime) / DURATION, 1)
+      const scale = START_SCALE - (START_SCALE - 1.0) * progress
+
+      for (const child of flashContainer.children) {
+        child.scale.set(scale)
+      }
+
+      if (progress >= 1) {
+        flashContainer.removeChildren()
+        app.ticker.remove(tick)
+      }
+    }
+
+    app.ticker.add(tick)
+  }
+
+  return { renderTree, resize, destroy, getViewport, addTickerListener, setReducedMotion, triggerFlash }
 }

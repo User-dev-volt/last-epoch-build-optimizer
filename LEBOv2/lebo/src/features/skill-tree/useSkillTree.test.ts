@@ -98,4 +98,41 @@ describe('useSkillTree', () => {
     act(() => result.current.handleNodeClick('root', 0))
     expect(useBuildStore.getState().activeBuild).toBeNull()
   })
+
+  it('flashNodeIds is null initially', () => {
+    const { result } = renderHook(() => useSkillTree(mockTreeData))
+    expect(result.current.flashNodeIds).toBeNull()
+  })
+
+  it('flashNodeIds is set to [nodeId] on blocked left-click (prerequisite not met)', () => {
+    const { result } = renderHook(() => useSkillTree(mockTreeData))
+    // child requires root — clicking child without root allocated triggers prerequisite block
+    act(() => result.current.handleNodeClick('child', 0))
+    expect(result.current.flashNodeIds).toEqual(['child'])
+  })
+
+  it('flashNodeIds creates a new array on each blocked click (re-trigger on same node)', () => {
+    const { result } = renderHook(() => useSkillTree(mockTreeData))
+    act(() => result.current.handleNodeClick('child', 0))
+    const first = result.current.flashNodeIds
+    act(() => result.current.handleNodeClick('child', 0))
+    const second = result.current.flashNodeIds
+    expect(first).not.toBe(second)
+    expect(second).toEqual(['child'])
+  })
+
+  it('flashNodeIds is set to dependent nodeIds on blocked right-click decrement', () => {
+    const { result } = renderHook(() => useSkillTree(mockTreeData))
+    // Allocate root and child, then try to remove root (blocked by child dependency)
+    act(() => result.current.handleNodeClick('root', 0))
+    act(() => result.current.handleNodeClick('child', 0))
+    act(() => result.current.handleNodeClick('root', 2))
+    expect(result.current.flashNodeIds).toEqual(['child'])
+  })
+
+  it('flashNodeIds is null on successful click', () => {
+    const { result } = renderHook(() => useSkillTree(mockTreeData))
+    act(() => result.current.handleNodeClick('root', 0))
+    expect(result.current.flashNodeIds).toBeNull()
+  })
 })

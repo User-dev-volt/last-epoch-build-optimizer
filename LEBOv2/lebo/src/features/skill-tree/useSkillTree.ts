@@ -10,6 +10,7 @@ export interface SkillTreeInteraction {
   nodeError: { nodeId: string; message: string } | null
   keyboardFocusedNodeId: string | null
   keyboardPosition: { x: number; y: number }
+  flashNodeIds: string[] | null
   handleNodeClick: (nodeId: string, button: 0 | 2) => void
   handleNodeHover: (nodeId: string | null) => void
   handleMouseMove: (e: React.MouseEvent) => void
@@ -24,6 +25,7 @@ export function useSkillTree(treeData: TreeData | null): SkillTreeInteraction {
   const [nodeError, setNodeError] = useState<{ nodeId: string; message: string } | null>(null)
   const [keyboardFocusedNodeId, setKeyboardFocusedNodeId] = useState<string | null>(null)
   const [keyboardPosition, setKeyboardPosition] = useState({ x: 0, y: 0 })
+  const [flashNodeIds, setFlashNodeIds] = useState<string[] | null>(null)
 
   useEffect(() => {
     if (!nodeError) return
@@ -38,6 +40,11 @@ export function useSkillTree(treeData: TreeData | null): SkillTreeInteraction {
       const result = applyNodeChange(nodeId, delta, treeData)
       if (!result.success && result.error) {
         setNodeError({ nodeId, message: result.error })
+        if (button === 2 && result.blockedByDependents && result.blockedByDependents.length > 0) {
+          setFlashNodeIds([...result.blockedByDependents])
+        } else {
+          setFlashNodeIds([nodeId])
+        }
       }
     },
     [treeData, applyNodeChange]
@@ -66,6 +73,7 @@ export function useSkillTree(treeData: TreeData | null): SkillTreeInteraction {
     nodeError,
     keyboardFocusedNodeId,
     keyboardPosition,
+    flashNodeIds,
     handleNodeClick,
     handleNodeHover,
     handleMouseMove,

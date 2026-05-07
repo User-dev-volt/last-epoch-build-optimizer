@@ -222,6 +222,13 @@ describe('buildStore — applyNodeChange', () => {
     expect(useBuildStore.getState().activeBuild!.nodeAllocations['root']).toBe(1)
   })
 
+  it('blockedByDependents contains the dependent nodeId when decrement is blocked', () => {
+    useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
+    useBuildStore.getState().applyNodeChange('child', 1, mockTreeData)
+    const result = useBuildStore.getState().applyNodeChange('root', -1, mockTreeData)
+    expect(result.blockedByDependents).toEqual(['child'])
+  })
+
   it('does not exceed maxPoints on repeated left-clicks (AC#4)', () => {
     // root.maxPoints = 5; allocate 5 times then attempt a 6th
     for (let i = 0; i < 5; i++) {

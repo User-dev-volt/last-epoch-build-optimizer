@@ -15,6 +15,7 @@ const mockResize = vi.fn()
 const mockDestroy = vi.fn()
 
 const mockSetReducedMotion = vi.fn()
+const mockTriggerFlash = vi.fn()
 
 const mockRenderer: RendererInstance = {
   renderTree: mockRenderTree,
@@ -23,6 +24,7 @@ const mockRenderer: RendererInstance = {
   getViewport: mockGetViewport,
   addTickerListener: mockAddTickerListener,
   setReducedMotion: mockSetReducedMotion,
+  triggerFlash: mockTriggerFlash,
 }
 
 vi.mock('./pixiRenderer', () => ({
@@ -144,5 +146,28 @@ describe('SkillTreeCanvas keyboard overlay', () => {
       expect.any(Number),
       expect.any(Number)
     )
+  })
+
+  it('calls triggerFlash with correct nodeIds when flashNodeIds prop changes', async () => {
+    // Render without flashNodeIds first so renderer initializes, then rerender with flashNodeIds
+    const { rerender } = await renderCanvas()
+    await act(async () => {
+      rerender(<SkillTreeCanvas {...DEFAULT_PROPS} flashNodeIds={['node-a']} />)
+      await new Promise((r) => setTimeout(r, 0))
+    })
+    expect(mockTriggerFlash).toHaveBeenCalledWith(['node-a'])
+  })
+
+  it('calls triggerFlash again when flashNodeIds reference changes to same value', async () => {
+    const { rerender } = await renderCanvas()
+    await act(async () => {
+      rerender(<SkillTreeCanvas {...DEFAULT_PROPS} flashNodeIds={['node-b']} />)
+      await new Promise((r) => setTimeout(r, 0))
+    })
+    await act(async () => {
+      rerender(<SkillTreeCanvas {...DEFAULT_PROPS} flashNodeIds={['node-b']} />)
+      await new Promise((r) => setTimeout(r, 0))
+    })
+    expect(mockTriggerFlash).toHaveBeenCalledTimes(2)
   })
 })

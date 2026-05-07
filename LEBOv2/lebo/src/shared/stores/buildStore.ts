@@ -121,6 +121,7 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
         return {
           success: false,
           error: `Cannot remove — ${dependents.length} node(s) depend on this`,
+          blockedByDependents: dependents,
         }
       }
     }

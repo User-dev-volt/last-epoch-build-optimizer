@@ -10,9 +10,10 @@ interface NodeTooltipProps {
   allocatedPoints: number
   position: { x: number; y: number }
   errorMessage?: string
+  prerequisiteNames?: string[]
 }
 
-export function NodeTooltip({ gameNode, allocatedPoints, position, errorMessage }: NodeTooltipProps) {
+export function NodeTooltip({ gameNode, allocatedPoints, position, errorMessage, prerequisiteNames }: NodeTooltipProps) {
   const viewportWidth = window.innerWidth || 10000
   const viewportHeight = window.innerHeight || 10000
 
@@ -113,9 +114,9 @@ export function NodeTooltip({ gameNode, allocatedPoints, position, errorMessage 
         </div>
       )}
 
-      {gameNode.prerequisiteNodeIds.length > 0 && (
+      {(prerequisiteNames ?? gameNode.prerequisiteNodeIds).length > 0 && (
         <p style={{ color: 'var(--color-text-muted)', fontSize: '11px' }}>
-          Requires: {gameNode.prerequisiteNodeIds.join(', ')}
+          Requires: {(prerequisiteNames ?? gameNode.prerequisiteNodeIds).join(', ')}
         </p>
       )}
     </div>,

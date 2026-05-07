@@ -18,6 +18,7 @@ export interface RendererInstance {
   getViewport(): { x: number; y: number; scale: number }
   addTickerListener(fn: () => void): () => void
   setReducedMotion(enabled: boolean): void
+  triggerFlash(nodeIds: string[]): void
 }
 
 export interface SkillTreeCanvasProps {
@@ -27,4 +28,5 @@ export interface SkillTreeCanvasProps {
   onNodeClick: (nodeId: string, button: 0 | 2) => void
   onNodeHover: (nodeId: string | null) => void
   onKeyboardNavigate: (nodeId: string | null, screenX: number, screenY: number) => void
+  flashNodeIds?: string[]
 }
