@@ -1,4 +1,82 @@
-# LEBOv2 — Claude Code Notes
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Commands
+
+All commands run from `lebo/` (the Vite project root). Package manager is **pnpm**.
+
+```bash
+# Dev server (Vite, port 1420)
+pnpm dev
+
+# Type-check + production build
+pnpm build
+
+# Preview production build
+pnpm preview
+
+# Tauri desktop app (dev)
+pnpm tauri dev
+
+# Run all tests
+pnpm vitest
+
+# Run tests in watch mode
+pnpm vitest --watch
+
+# Run a single test file
+pnpm vitest src/features/skill-tree/treeDataTransformer.test.ts
+
+# Run tests matching a name pattern
+pnpm vitest -t "should calculate score"
+```
+
+No ESLint or Prettier config is present — TypeScript strict mode (`noUnusedLocals`, `noUnusedParameters`) enforces code quality at build time.
+
+## Architecture
+
+**Tauri 2 desktop app** — React 19 + TypeScript 5.8 + Vite 7 frontend, Rust backend (in `src-tauri/`). The frontend communicates with Rust via Tauri IPC using `shared/utils/invokeCommand.ts`.
+
+### State — Zustand stores (`shared/stores/`)
+
+Four stores hold all runtime state:
+- **appStore** — UI state: current view, panel collapse, LLM provider, update status
+- **buildStore** — Active build, saved builds, undo/redo stack
+- **gameDataStore** — Loaded game data + staleness metadata
+- **optimizationStore** — Optimization scores and suggestions
+
+`App.tsx` wires the stores together on startup: it initializes game data, loads saved builds from Tauri vault, detects the LLM provider (Claude or OpenRouter), and subscribes to build/gameData changes to trigger score recalculation.
+
+### Rendering split
+
+The UI uses two rendering stacks side by side:
+- **React + Tailwind** — All panels, dialogs, inputs, and overlays
+- **PixiJS 8 (WebGL)** — Skill tree canvas only (`features/skill-tree/`)
+
+The skill tree pipeline: `treeDataTransformer.ts` converts raw game data into a renderable tree → `pixiRenderer.ts` draws it via PixiJS → `useSkillTree.ts` handles interactivity (zoom, pan, node hover/click).
+
+### Feature layout (`src/features/`)
+
+Each feature folder is self-contained: component, hook, data file, and test co-located.
+
+| Feature | Responsibility |
+|---------|----------------|
+| `skill-tree/` | PixiJS canvas, class mastery selector, node tooltip |
+| `optimization/` | Scoring engine, goal selector, suggestions list, score gauge |
+| `context-panel/` | Gear / skill / idol inputs that define the build context |
+| `build-manager/` | Save/load/import/delete builds, auto-save hook |
+| `game-data/` | Game data loader, staleness bar |
+| `layout/` | AppHeader, LeftPanel, RightPanel, CenterCanvas, StatusBar |
+| `settings/` | API key input, provider selector, OpenRouter config |
+
+### Types (`shared/types/`)
+
+Central type definitions — `build.ts`, `gameData.ts`, `optimization.ts`, `treeData.ts`, `errors.ts`. Avoid duplicating these; all features import from here.
+
+### Testing
+
+Vitest with jsdom + React Testing Library + vitest-axe. Config lives inside `vite.config.ts` (no separate vitest.config). `test-setup.ts` provides ResizeObserver and matchMedia polyfills required by Headless UI.
 
 ## Model Routing — Haiku vs Sonnet
 
