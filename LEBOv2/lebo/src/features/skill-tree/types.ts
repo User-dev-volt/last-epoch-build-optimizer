@@ -1,43 +1,16 @@
-export type NodeSize = 'small' | 'medium' | 'large'
-export type NodeState = 'allocated' | 'available' | 'locked' | 'suggested'
+import type { TreeData, HighlightedNodes } from '../../shared/types/treeData'
 
-export interface HighlightedNodes {
-  glowing: Set<string>
-  dimmed: Set<string>
-  previewRemoved: Set<string>
-  previewAdded: Set<string>
-}
-
-export interface TreeNode {
-  id: string
-  x: number
-  y: number
-  size: NodeSize
-  maxPoints: number
-  connections: string[]
-  state: NodeState
-}
-
-export interface TreeEdge {
-  fromId: string
-  toId: string
-}
-
-export interface TreeData {
-  nodes: TreeNode[]
-  edges: TreeEdge[]
-}
+export type { NodeSize, NodeState, HighlightedNodes, TreeNode, TreeEdge, TreeData } from '../../shared/types/treeData'
 
 export interface RendererCallbacks {
-  onNodeClick: (nodeId: string) => void
-  onNodeRightClick: (nodeId: string) => void
+  onNodeClick: (nodeId: string, button: 0 | 2) => void
   onNodeHover: (nodeId: string | null) => void
 }
 
 export interface RendererInstance {
   renderTree(
     data: TreeData,
-    allocatedNodes: Record<string, number>,
+    nodeAllocations: Record<string, number>,
     highlightedNodes: HighlightedNodes
   ): void
   resize(w: number, h: number): void
@@ -49,10 +22,9 @@ export interface RendererInstance {
 
 export interface SkillTreeCanvasProps {
   treeData: TreeData
-  allocatedNodes: Record<string, number>
+  nodeAllocations: Record<string, number>
   highlightedNodes: HighlightedNodes
-  onNodeClick: (nodeId: string) => void
-  onNodeRightClick: (nodeId: string) => void
+  onNodeClick: (nodeId: string, button: 0 | 2) => void
   onNodeHover: (nodeId: string | null) => void
   onKeyboardNavigate: (nodeId: string | null, screenX: number, screenY: number) => void
 }

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { BuildState, BuildMeta, ApplyNodeResult, GearItem, ActiveSkill, IdolItem } from '../types/build'
-import type { GameNode } from '../types/gameData'
+import type { TreeData } from '../types/treeData'
 
 const MAX_UNDO_STACK = 10
 
@@ -22,8 +22,7 @@ interface BuildStore {
   applyNodeChange: (
     nodeId: string,
     delta: number,
-    gameNode: GameNode,
-    allGameNodes: Record<string, GameNode>
+    treeData: TreeData
   ) => ApplyNodeResult
   undoNodeChange: () => void
   updateContextGear: (gear: GearItem[]) => void
@@ -69,7 +68,7 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
     })
   },
 
-  applyNodeChange: (nodeId, delta, gameNode, allGameNodes) => {
+  applyNodeChange: (nodeId, delta, treeData) => {
     const state = get()
     let activeBuild = state.activeBuild
 
@@ -92,15 +91,20 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
       }
     }
 
+    const nodeMap = new Map(treeData.nodes.map((n) => [n.id, n]))
+    const node = nodeMap.get(nodeId)
+    if (!node) return { success: false }
+
     const current = activeBuild.nodeAllocations[nodeId] ?? 0
-    const newPoints = Math.max(0, Math.min(current + delta, gameNode.maxPoints))
+    const newPoints = Math.max(0, Math.min(current + delta, node.maxPoints))
 
     if (newPoints === current) {
       return { success: false }
     }
 
     if (delta > 0) {
-      const prereqsMet = gameNode.prerequisiteNodeIds.every(
+      const prerequisites = treeData.edges.filter((e) => e.toId === nodeId).map((e) => e.fromId)
+      const prereqsMet = prerequisites.every(
         (prereqId) => (activeBuild!.nodeAllocations[prereqId] ?? 0) > 0
       )
       if (!prereqsMet) {
@@ -109,11 +113,10 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
     }
 
     if (delta < 0 && newPoints === 0) {
-      const dependents = Object.values(allGameNodes).filter(
-        (n) =>
-          n.prerequisiteNodeIds.includes(nodeId) &&
-          (activeBuild!.nodeAllocations[n.id] ?? 0) > 0
-      )
+      const dependents = treeData.edges
+        .filter((e) => e.fromId === nodeId)
+        .map((e) => e.toId)
+        .filter((depId) => (activeBuild!.nodeAllocations[depId] ?? 0) > 0)
       if (dependents.length > 0) {
         return {
           success: false,

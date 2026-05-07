@@ -4,7 +4,8 @@ import { useBuildStore } from '../../shared/stores/buildStore'
 import { useGameDataStore } from '../../shared/stores/gameDataStore'
 import { useAppStore } from '../../shared/stores/appStore'
 import { isRetryable } from '../../shared/types/errors'
-import type { GameData, GameNode } from '../../shared/types/gameData'
+import type { GameData } from '../../shared/types/gameData'
+import { buildTreeData } from '../skill-tree/treeDataTransformer'
 import type { SuggestionResult } from '../../shared/types/optimization'
 import { SuggestionCard } from './SuggestionCard'
 
@@ -24,19 +25,6 @@ function getNodeName(
   )
 }
 
-function getAllGameNodes(
-  gameData: GameData | null,
-  classId: string,
-  masteryId: string
-): Record<string, GameNode> {
-  if (!gameData) return {}
-  const classData = gameData.classes[classId]
-  if (!classData) return {}
-  return {
-    ...classData.baseTree,
-    ...(classData.masteries[masteryId]?.nodes ?? {}),
-  }
-}
 
 const GOAL_LABELS: Record<string, string> = {
   maximize_damage: 'Maximize Damage',
@@ -203,7 +191,13 @@ export function SuggestionsList({ onRetry }: SuggestionsListProps) {
     const currentBuild = useBuildStore.getState().activeBuild
     if (!currentBuild) return
 
-    const allGameNodes = getAllGameNodes(gameData, currentBuild.classId, currentBuild.masteryId)
+    const classData = gameData?.classes[currentBuild.classId]
+    if (!classData) {
+      setApplyErrors((prev) => ({ ...prev, [suggestion.rank]: 'Cannot apply: class data not available' }))
+      return
+    }
+
+    const treeData = buildTreeData(classData, currentBuild.masteryId, currentBuild.nodeAllocations)
     const { nodeChange } = suggestion
     const { rank } = suggestion
 
@@ -212,37 +206,21 @@ export function SuggestionsList({ onRetry }: SuggestionsListProps) {
     if (nodeChange.fromNodeId) {
       const currentFromPoints = currentBuild.nodeAllocations[nodeChange.fromNodeId] ?? 0
       if (currentFromPoints > 0) {
-        const fromGameNode = allGameNodes[nodeChange.fromNodeId]
-        if (!fromGameNode) {
-          setApplyErrors((prev) => ({ ...prev, [rank]: 'Cannot apply: source node not found in game data' }))
-          return
-        }
-        const removeResult = applyNodeChange(nodeChange.fromNodeId, -currentFromPoints, fromGameNode, allGameNodes)
+        const removeResult = applyNodeChange(nodeChange.fromNodeId, -currentFromPoints, treeData)
         if (!removeResult.success) {
-          setApplyErrors((prev) => ({ ...prev, [rank]: mapApplyError(removeResult.error) }))
+          setApplyErrors((prev) => ({ ...prev, [rank]: mapApplyError(removeResult.error ?? 'source node not found in tree') }))
           return
         }
         fromRemovedPoints = currentFromPoints
       }
     }
 
-    const toGameNode = allGameNodes[nodeChange.toNodeId]
-    if (!toGameNode) {
-      if (nodeChange.fromNodeId && fromRemovedPoints !== null) {
-        const fromGameNode = allGameNodes[nodeChange.fromNodeId]
-        if (fromGameNode) applyNodeChange(nodeChange.fromNodeId, fromRemovedPoints, fromGameNode, allGameNodes)
-      }
-      setApplyErrors((prev) => ({ ...prev, [rank]: 'Cannot apply: target node not found in game data' }))
-      return
-    }
-
-    const result = applyNodeChange(nodeChange.toNodeId, nodeChange.pointsChange, toGameNode, allGameNodes)
+    const result = applyNodeChange(nodeChange.toNodeId, nodeChange.pointsChange, treeData)
     if (!result.success) {
       if (nodeChange.fromNodeId && fromRemovedPoints !== null) {
-        const fromGameNode = allGameNodes[nodeChange.fromNodeId]
-        if (fromGameNode) applyNodeChange(nodeChange.fromNodeId, fromRemovedPoints, fromGameNode, allGameNodes)
+        applyNodeChange(nodeChange.fromNodeId, fromRemovedPoints, treeData)
       }
-      setApplyErrors((prev) => ({ ...prev, [rank]: mapApplyError(result.error) }))
+      setApplyErrors((prev) => ({ ...prev, [rank]: mapApplyError(result.error ?? 'target node not found in tree') }))
       return
     }
 

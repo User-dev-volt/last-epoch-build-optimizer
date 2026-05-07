@@ -41,10 +41,9 @@ const TWO_NODE_TREE: TreeData = {
 
 const DEFAULT_PROPS = {
   treeData: TWO_NODE_TREE,
-  allocatedNodes: {},
+  nodeAllocations: {},
   highlightedNodes: { glowing: new Set<string>(), dimmed: new Set<string>(), previewRemoved: new Set<string>(), previewAdded: new Set<string>() },
   onNodeClick: vi.fn(),
-  onNodeRightClick: vi.fn(),
   onNodeHover: vi.fn(),
   onKeyboardNavigate: vi.fn(),
 }
@@ -95,12 +94,22 @@ describe('SkillTreeCanvas keyboard overlay', () => {
     expect(document.activeElement).toBe(second)
   })
 
-  it('Enter on focused button fires onNodeClick', async () => {
+  it('Enter on focused button fires onNodeClick with (nodeId, 0)', async () => {
     const onNodeClick = vi.fn()
     await renderCanvas({ ...DEFAULT_PROPS, onNodeClick })
     const buttons = screen.getAllByRole('button')
     fireEvent.keyDown(buttons[0], { key: 'Enter' })
     expect(onNodeClick).toHaveBeenCalledTimes(1)
+    expect(onNodeClick).toHaveBeenCalledWith(expect.any(String), 0)
+  })
+
+  it('onContextMenu on focused button fires onNodeClick with (nodeId, 2)', async () => {
+    const onNodeClick = vi.fn()
+    await renderCanvas({ ...DEFAULT_PROPS, onNodeClick })
+    const buttons = screen.getAllByRole('button')
+    fireEvent.contextMenu(buttons[0])
+    expect(onNodeClick).toHaveBeenCalledTimes(1)
+    expect(onNodeClick).toHaveBeenCalledWith(expect.any(String), 2)
   })
 
   it('Escape on focused button fires onKeyboardNavigate(null, 0, 0)', async () => {

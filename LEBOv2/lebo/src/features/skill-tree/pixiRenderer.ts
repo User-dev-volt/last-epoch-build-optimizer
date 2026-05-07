@@ -1,5 +1,5 @@
 import { Application, Circle, Container, Graphics, Text } from 'pixi.js'
-import type { TreeData, RendererCallbacks, RendererInstance } from './types'
+import type { TreeData, HighlightedNodes, RendererCallbacks, RendererInstance } from './types'
 
 // PixiJS v8's logPrettyShaderError calls .split() on getShaderSource/getShaderInfoLog results,
 // which throws if WebGL returns null (valid per spec). Patch before any Application init.
@@ -174,8 +174,8 @@ export async function initRenderer(
 
   function renderTree(
     data: TreeData,
-    allocatedNodes: Record<string, number>,
-    highlightedNodes: import('./types').HighlightedNodes
+    nodeAllocations: Record<string, number>,
+    highlightedNodes: HighlightedNodes
   ) {
     edgeGraphics.clear()
     lockedGraphics.clear()
@@ -204,7 +204,7 @@ export async function initRenderer(
 
     for (const node of data.nodes) {
       const r = NODE_RADIUS[node.size]
-      const isAllocated = allocatedNodes[node.id] !== undefined
+      const isAllocated = nodeAllocations[node.id] !== undefined
       const isGlowing = highlightedNodes.glowing.has(node.id)
       const isDimmed = highlightedNodes.dimmed.has(node.id) && !isGlowing
       const isPreviewRemoved = highlightedNodes.previewRemoved.has(node.id)
@@ -226,35 +226,37 @@ export async function initRenderer(
         drawAvailable(availableGraphics, node.x, node.y, r)
       }
 
-      // Point count label below the node
-      const currentPts = allocatedNodes[node.id] ?? 0
-      const labelText = `${currentPts}/${node.maxPoints}`
-      let labelColor: string
-      if (isPreviewRemoved) {
-        labelColor = '#ff5555'
-      } else if (isPreviewAdded) {
-        labelColor = '#44ff88'
-      } else if (isAllocated || node.state === 'allocated') {
-        labelColor = '#c9a84c'
-      } else if (node.state === 'locked') {
-        labelColor = '#3d3d50'
-      } else {
-        labelColor = '#4a6070'
-      }
+      // Point count label inside the node — only shown when points are allocated
+      const currentPts = nodeAllocations[node.id] ?? 0
+      if (currentPts > 0) {
+        let labelColor: string
+        if (isPreviewRemoved) {
+          labelColor = '#ff5555'
+        } else if (isPreviewAdded) {
+          labelColor = '#44ff88'
+        } else if (isAllocated || node.state === 'allocated') {
+          labelColor = '#c9a84c'
+        } else if (node.state === 'locked') {
+          labelColor = '#3d3d50'
+        } else {
+          labelColor = '#4a6070'
+        }
 
-      const label = new Text({
-        text: labelText,
-        style: {
-          fontSize: 10,
-          fill: labelColor,
-          fontFamily: 'monospace',
-          align: 'center',
-        },
-      })
-      label.anchor.set(0.5, 0)
-      label.x = node.x
-      label.y = node.y + r + 3
-      labelContainer.addChild(label)
+        const label = new Text({
+          text: `${currentPts}/${node.maxPoints}`,
+          style: {
+            fontSize: 10,
+            fontWeight: '700',
+            fill: labelColor,
+            fontFamily: 'monospace',
+            align: 'center',
+          },
+        })
+        label.anchor.set(0.5, 0.5)
+        label.x = node.x
+        label.y = node.y + r * 0.35
+        labelContainer.addChild(label)
+      }
 
       // Invisible hit area: Container + Circle hitArea — no GPU draw calls
       const hit = new Container()
@@ -265,11 +267,7 @@ export async function initRenderer(
       hit.on('pointerout', () => callbacksRef.current.onNodeHover(null))
       hit.on('pointerdown', (e) => {
         e.stopPropagation()
-        if (e.button === 2) {
-          callbacksRef.current.onNodeRightClick(node.id)
-        } else {
-          callbacksRef.current.onNodeClick(node.id)
-        }
+        callbacksRef.current.onNodeClick(node.id, e.button === 2 ? 2 : 0)
       })
       hitAreaContainer.addChild(hit)
     }

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useBuildStore } from './buildStore'
 import type { BuildState, BuildMeta } from '../types/build'
-import type { GameNode } from '../types/gameData'
+import type { TreeData } from '../types/treeData'
 
 const initialState = useBuildStore.getState()
 
@@ -161,31 +161,15 @@ describe('buildStore', () => {
   })
 })
 
-const rootNode: GameNode = {
-  id: 'root',
-  name: 'Root',
-  pointCost: 1,
-  maxPoints: 5,
-  prerequisiteNodeIds: [],
-  effectDescription: '+5 Str',
-  tags: [],
-  position: { x: 0, y: 0 },
-  size: 'large',
+// TreeData for applyNodeChange tests:
+// root (maxPoints: 5, no prerequisites) → child (maxPoints: 3, requires root)
+const mockTreeData: TreeData = {
+  nodes: [
+    { id: 'root', x: 0, y: 0, size: 'large', maxPoints: 5, connections: ['child'], state: 'available' },
+    { id: 'child', x: 100, y: 0, size: 'medium', maxPoints: 3, connections: ['root'], state: 'available' },
+  ],
+  edges: [{ fromId: 'root', toId: 'child' }],
 }
-
-const childNode: GameNode = {
-  id: 'child',
-  name: 'Child',
-  pointCost: 1,
-  maxPoints: 3,
-  prerequisiteNodeIds: ['root'],
-  effectDescription: '+3 Dex',
-  tags: [],
-  position: { x: 100, y: 0 },
-  size: 'medium',
-}
-
-const allNodes: Record<string, GameNode> = { root: rootNode, child: childNode }
 
 describe('buildStore — applyNodeChange', () => {
   beforeEach(() => {
@@ -195,7 +179,7 @@ describe('buildStore — applyNodeChange', () => {
   })
 
   it('creates activeBuild on first allocation when activeBuild is null', () => {
-    useBuildStore.getState().applyNodeChange('root', 1, rootNode, allNodes)
+    useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
     const s = useBuildStore.getState()
     expect(s.activeBuild).not.toBeNull()
     expect(s.activeBuild!.classId).toBe('sentinel')
@@ -203,50 +187,50 @@ describe('buildStore — applyNodeChange', () => {
   })
 
   it('allocates a root node (no prerequisites)', () => {
-    const result = useBuildStore.getState().applyNodeChange('root', 1, rootNode, allNodes)
+    const result = useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
     expect(result.success).toBe(true)
     expect(useBuildStore.getState().activeBuild!.nodeAllocations['root']).toBe(1)
   })
 
   it('fails to allocate child node when prerequisite not met', () => {
-    const result = useBuildStore.getState().applyNodeChange('child', 1, childNode, allNodes)
+    const result = useBuildStore.getState().applyNodeChange('child', 1, mockTreeData)
     expect(result.success).toBe(false)
     expect(result.error).toBe('Prerequisite not met')
     expect(useBuildStore.getState().activeBuild).toBeNull()
   })
 
   it('allocates child node when prerequisite is met', () => {
-    useBuildStore.getState().applyNodeChange('root', 1, rootNode, allNodes)
-    const result = useBuildStore.getState().applyNodeChange('child', 1, childNode, allNodes)
+    useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
+    const result = useBuildStore.getState().applyNodeChange('child', 1, mockTreeData)
     expect(result.success).toBe(true)
     expect(useBuildStore.getState().activeBuild!.nodeAllocations['child']).toBe(1)
   })
 
   it('deallocates a node with no dependents', () => {
-    useBuildStore.getState().applyNodeChange('root', 1, rootNode, allNodes)
-    const result = useBuildStore.getState().applyNodeChange('root', -1, rootNode, allNodes)
+    useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
+    const result = useBuildStore.getState().applyNodeChange('root', -1, mockTreeData)
     expect(result.success).toBe(true)
     expect(useBuildStore.getState().activeBuild!.nodeAllocations['root']).toBeUndefined()
   })
 
   it('blocks deallocation when a dependent node is allocated', () => {
-    useBuildStore.getState().applyNodeChange('root', 1, rootNode, allNodes)
-    useBuildStore.getState().applyNodeChange('child', 1, childNode, allNodes)
-    const result = useBuildStore.getState().applyNodeChange('root', -1, rootNode, allNodes)
+    useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
+    useBuildStore.getState().applyNodeChange('child', 1, mockTreeData)
+    const result = useBuildStore.getState().applyNodeChange('root', -1, mockTreeData)
     expect(result.success).toBe(false)
     expect(result.error).toMatch(/Cannot remove/)
     expect(useBuildStore.getState().activeBuild!.nodeAllocations['root']).toBe(1)
   })
 
   it('undoNodeChange restores previous allocations', () => {
-    useBuildStore.getState().applyNodeChange('root', 1, rootNode, allNodes)
-    useBuildStore.getState().applyNodeChange('root', 1, rootNode, allNodes)
+    useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
+    useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
     useBuildStore.getState().undoNodeChange()
     expect(useBuildStore.getState().activeBuild!.nodeAllocations['root']).toBe(1)
   })
 
   it('undoNodeChange is a no-op when undoStack is empty', () => {
-    useBuildStore.getState().applyNodeChange('root', 1, rootNode, allNodes)
+    useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
     useBuildStore.getState().undoNodeChange()
     useBuildStore.getState().undoNodeChange()
     expect(useBuildStore.getState().activeBuild).not.toBeNull()

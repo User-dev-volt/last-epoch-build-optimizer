@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { GameNode } from '../../shared/types/gameData'
+import type { TreeData } from '../../shared/types/treeData'
 import { useBuildStore } from '../../shared/stores/buildStore'
 
 const ERROR_DISPLAY_MS = 2000
@@ -10,14 +10,13 @@ export interface SkillTreeInteraction {
   nodeError: { nodeId: string; message: string } | null
   keyboardFocusedNodeId: string | null
   keyboardPosition: { x: number; y: number }
-  handleNodeClick: (nodeId: string) => void
-  handleNodeRightClick: (nodeId: string) => void
+  handleNodeClick: (nodeId: string, button: 0 | 2) => void
   handleNodeHover: (nodeId: string | null) => void
   handleMouseMove: (e: React.MouseEvent) => void
   handleKeyboardNavigate: (nodeId: string | null, screenX: number, screenY: number) => void
 }
 
-export function useSkillTree(allGameNodes: Record<string, GameNode>): SkillTreeInteraction {
+export function useSkillTree(treeData: TreeData | null): SkillTreeInteraction {
   const applyNodeChange = useBuildStore((s) => s.applyNodeChange)
 
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
@@ -33,27 +32,15 @@ export function useSkillTree(allGameNodes: Record<string, GameNode>): SkillTreeI
   }, [nodeError])
 
   const handleNodeClick = useCallback(
-    (nodeId: string) => {
-      const gameNode = allGameNodes[nodeId]
-      if (!gameNode) return
-      const result = applyNodeChange(nodeId, 1, gameNode, allGameNodes)
+    (nodeId: string, button: 0 | 2) => {
+      if (!treeData) return
+      const delta: 1 | -1 = button === 2 ? -1 : 1
+      const result = applyNodeChange(nodeId, delta, treeData)
       if (!result.success && result.error) {
         setNodeError({ nodeId, message: result.error })
       }
     },
-    [allGameNodes, applyNodeChange]
-  )
-
-  const handleNodeRightClick = useCallback(
-    (nodeId: string) => {
-      const gameNode = allGameNodes[nodeId]
-      if (!gameNode) return
-      const result = applyNodeChange(nodeId, -1, gameNode, allGameNodes)
-      if (!result.success && result.error) {
-        setNodeError({ nodeId, message: result.error })
-      }
-    },
-    [allGameNodes, applyNodeChange]
+    [treeData, applyNodeChange]
   )
 
   const handleNodeHover = useCallback((nodeId: string | null) => {
@@ -80,7 +67,6 @@ export function useSkillTree(allGameNodes: Record<string, GameNode>): SkillTreeI
     keyboardFocusedNodeId,
     keyboardPosition,
     handleNodeClick,
-    handleNodeRightClick,
     handleNodeHover,
     handleMouseMove,
     handleKeyboardNavigate,

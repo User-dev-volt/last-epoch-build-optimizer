@@ -121,19 +121,6 @@ export function SkillTreeView() {
     return { ...base, previewRemoved, previewAdded }
   }, [highlightedNodeIds, previewSuggestion])
 
-  const {
-    hoveredNodeId,
-    mousePosition,
-    nodeError,
-    keyboardFocusedNodeId,
-    keyboardPosition,
-    handleNodeClick,
-    handleNodeRightClick,
-    handleNodeHover,
-    handleMouseMove,
-    handleKeyboardNavigate,
-  } = useSkillTree(allGameNodes)
-
   const treeData = useMemo(
     () =>
       classData && selectedMasteryId
@@ -141,6 +128,18 @@ export function SkillTreeView() {
         : null,
     [classData, selectedMasteryId, allocatedNodes]
   )
+
+  const {
+    hoveredNodeId,
+    mousePosition,
+    nodeError,
+    keyboardFocusedNodeId,
+    keyboardPosition,
+    handleNodeClick,
+    handleNodeHover,
+    handleMouseMove,
+    handleKeyboardNavigate,
+  } = useSkillTree(treeData)
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -208,10 +207,9 @@ export function SkillTreeView() {
           <>
             <SkillTreeCanvas
               treeData={treeData}
-              allocatedNodes={allocatedNodes}
+              nodeAllocations={allocatedNodes}
               highlightedNodes={highlightedNodes}
               onNodeClick={handleNodeClick}
-              onNodeRightClick={handleNodeRightClick}
               onNodeHover={handleNodeHover}
               onKeyboardNavigate={handleKeyboardNavigate}
             />

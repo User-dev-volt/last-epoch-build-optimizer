@@ -7,18 +7,17 @@ type NodeButton = { id: string; screenX: number; screenY: number; r: number }
 
 export function SkillTreeCanvas({
   treeData,
-  allocatedNodes,
+  nodeAllocations,
   highlightedNodes,
   onNodeClick,
-  onNodeRightClick,
   onNodeHover,
   onKeyboardNavigate,
 }: SkillTreeCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rendererRef = useRef<RendererInstance | null>(null)
-  const callbacksRef = useRef<RendererCallbacks>({ onNodeClick, onNodeRightClick, onNodeHover })
-  const dataRef = useRef({ treeData, allocatedNodes, highlightedNodes })
+  const callbacksRef = useRef<RendererCallbacks>({ onNodeClick, onNodeHover })
+  const dataRef = useRef({ treeData, nodeAllocations, highlightedNodes })
   const treeDataRef = useRef(treeData)
   const bfsOrderRef = useRef<string[]>([])
   const focusedNodeIdRef = useRef<string | null>(null)
@@ -62,8 +61,8 @@ export function SkillTreeCanvas({
 
   // Keep refs current after every render
   useEffect(() => {
-    callbacksRef.current = { onNodeClick, onNodeRightClick, onNodeHover }
-    dataRef.current = { treeData, allocatedNodes, highlightedNodes }
+    callbacksRef.current = { onNodeClick, onNodeHover }
+    dataRef.current = { treeData, nodeAllocations, highlightedNodes }
     treeDataRef.current = treeData
     bfsOrderRef.current = bfsOrder
     reducedMotionRef.current = reducedMotion
@@ -147,8 +146,8 @@ export function SkillTreeCanvas({
         const { width, height } = container.getBoundingClientRect()
         r.resize(width, height)
         r.setReducedMotion(reducedMotionRef.current)
-        const { treeData: td, allocatedNodes: an, highlightedNodes: hn } = dataRef.current
-        r.renderTree(td, an, hn)
+        const { treeData: td, nodeAllocations: na, highlightedNodes: hn } = dataRef.current
+        r.renderTree(td, na, hn)
 
         syncButtonPositions()
         unsubTicker = r.addTickerListener(syncButtonPositions)
@@ -170,22 +169,22 @@ export function SkillTreeCanvas({
 
   // Re-render whenever tree data changes
   useEffect(() => {
-    rendererRef.current?.renderTree(treeData, allocatedNodes, highlightedNodes)
-  }, [treeData, allocatedNodes, highlightedNodes])
+    rendererRef.current?.renderTree(treeData, nodeAllocations, highlightedNodes)
+  }, [treeData, nodeAllocations, highlightedNodes])
 
   // Propagate reduced motion preference to renderer and re-render so the change takes effect immediately
   useEffect(() => {
     const r = rendererRef.current
     if (!r) return
     r.setReducedMotion(reducedMotion)
-    const { treeData: td, allocatedNodes: an, highlightedNodes: hn } = dataRef.current
-    r.renderTree(td, an, hn)
+    const { treeData: td, nodeAllocations: na, highlightedNodes: hn } = dataRef.current
+    r.renderTree(td, na, hn)
   }, [reducedMotion])
 
   function handleNodeKeyDown(e: React.KeyboardEvent<HTMLButtonElement>, id: string) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
-      onNodeClick(id)
+      onNodeClick(id, 0)
       return
     }
 
@@ -295,10 +294,10 @@ export function SkillTreeCanvas({
                 focusedNodeIdRef.current = null
                 onKeyboardNavigate(null, 0, 0)
               }}
-              onClick={() => onNodeClick(id)}
+              onClick={() => onNodeClick(id, 0)}
               onContextMenu={(e) => {
                 e.preventDefault()
-                onNodeRightClick(id)
+                onNodeClick(id, 2)
               }}
             />
           )
