@@ -1,3 +1,11 @@
+## Deferred from: code review of 1-2-prerequisite-validation-with-visual-flash-feedback (2026-05-07)
+
+- **`flashNodeIds` never reset on success** — `useSkillTree.ts` — `flashNodeIds` stays non-null after first failure. Functionally safe (new array reference re-triggers effect on each failure), but semantically stale. Consider resetting to null on successful allocation.
+- **Preview mode real-click gap** — `SkillTreeView.tsx` — User can commit real allocations while preview overlay is active. No guard prevents interaction during suggestion preview.
+- **`computePreviewAllocations` missing maxPoints upper bound** — `SkillTreeView.tsx` — Preview allocation can exceed node's `maxPoints` without clamping. Could show illegal states in preview UI.
+- **Flash only shows depth-1 dependents** — `pixiRenderer.ts` / `useSkillTree.ts` — When blocking a removal, only immediate children are flashed. Transitive dependency chain not visualized. Consider showing full chain in a future story.
+- **Test coverage gap: `flashNodeIds` post-failure success path** — `useSkillTree.test.ts` — The test `"is null on successful click"` only verifies fresh-state. Doesn't prove flash is cleared after a prior failure followed by a success.
+
 ## Deferred from: code review of 1-1-upgrade-nodeallocations (2026-05-06)
 
 - **Silent failure on missing nodeId** — `buildStore.ts:96` returns `{ success: false }` with no `error` field when the nodeId is not found in `treeData`. Defensive guard that shouldn't fire in normal usage but produces an invisible no-op if it does. Consider adding `error: 'Node not found in tree'` for debuggability.

@@ -313,9 +313,15 @@ export async function initRenderer(
     return () => app.ticker.remove(cb)
   }
 
+  let activeTick: (() => void) | null = null
+
   function triggerFlash(nodeIds: string[]) {
     if (reducedMotionEnabled || nodeIds.length === 0) return
 
+    if (activeTick) {
+      app.ticker.remove(activeTick)
+      activeTick = null
+    }
     flashContainer.removeChildren()
 
     const DURATION = 150
@@ -351,9 +357,11 @@ export async function initRenderer(
       if (progress >= 1) {
         flashContainer.removeChildren()
         app.ticker.remove(tick)
+        activeTick = null
       }
     }
 
+    activeTick = tick
     app.ticker.add(tick)
   }
 

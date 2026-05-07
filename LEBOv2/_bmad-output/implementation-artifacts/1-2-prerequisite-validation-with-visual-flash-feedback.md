@@ -1,6 +1,6 @@
 # Story 1.2: Prerequisite Validation with Visual Flash Feedback
 
-Status: review
+Status: done
 
 ## Story
 
@@ -79,6 +79,15 @@ So that I build only valid skill tree configurations without needing to memorize
   - [x] `src/features/skill-tree/SkillTreeCanvas.test.tsx`: Add test that `triggerFlash` is called with correct nodeIds when `flashNodeIds` prop changes
   - [x] Run `pnpm test` — verify all new tests pass; confirm pre-existing 6 Settings/ProviderSelector failures remain the only failures
   - [x] Run `pnpm tsc --noEmit` — zero errors required
+
+### Review Findings
+
+- [x] [Review][Patch] Ticker leak: old `tick` runs after new `triggerFlash` call and calls `flashContainer.removeChildren()` at completion, canceling the newer animation [lebo/src/features/skill-tree/pixiRenderer.ts:triggerFlash]
+- [x] [Review][Defer] `flashNodeIds` never reset to `null` on successful click — semantically stale prop after first failure, functionally safe because every failure always creates a new array reference [lebo/src/features/skill-tree/useSkillTree.ts] — deferred, no observable consequence
+- [x] [Review][Defer] Preview mode allows real allocation commits while preview overlay is active — user clicking in preview context commits real points [lebo/src/features/skill-tree/SkillTreeView.tsx] — deferred, pre-existing design
+- [x] [Review][Defer] `computePreviewAllocations` applies `pointsChange` without upper `maxPoints` clamp — preview can show illegal allocation counts [lebo/src/features/skill-tree/SkillTreeView.tsx] — deferred, pre-existing
+- [x] [Review][Defer] Flash only shows depth-1 dependents — transitive dependency chain not communicated to user when blocking removal — deferred, UX limitation for future story
+- [x] [Review][Defer] Test `"flashNodeIds is null on successful click"` only covers fresh-state — does not prove post-failure reset guarantee [lebo/src/features/skill-tree/useSkillTree.test.ts] — deferred, test coverage gap
 
 ## Dev Notes
 
