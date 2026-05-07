@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { act, render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { SkillInput } from './SkillInput'
 import { useBuildStore } from '../../shared/stores/buildStore'
 import type { BuildState } from '../../shared/types/build'
@@ -29,60 +28,45 @@ describe('SkillInput', () => {
 
   it('renders all 5 skill slots', () => {
     render(<SkillInput />)
-    const slotIds = ['skill1', 'skill2', 'skill3', 'skill4', 'skill5']
+    const slotIds = ['slot-0', 'slot-1', 'slot-2', 'slot-3', 'slot-4']
     for (const slotId of slotIds) {
       expect(screen.getByTestId(`skill-slot-${slotId}`)).toBeInTheDocument()
     }
   })
 
-  it('skill name input updates the store', async () => {
-    render(<SkillInput />)
-    const nameInput = screen.getByTestId('skill-name-skill1')
-    await userEvent.type(nameInput, 'Void Cleave')
-    const skills = useBuildStore.getState().activeBuild!.contextData.skills
-    const slot = skills.find((s) => s.slotId === 'skill1')
-    expect(slot?.skillName).toBe('Void Cleave')
-  })
-
-  it('slot data is preserved when store is pre-populated', () => {
+  it('shows assigned skill name from store', () => {
     useBuildStore.getState().setActiveBuild({
       ...mockBuild,
       contextData: {
         gear: [],
-        skills: [{ slotId: 'skill2', skillId: '', skillName: 'Smite' }],
+        skills: [{ slotId: 'slot-1', skillId: 'smite', skillName: 'Smite' }],
         idols: [],
       },
     })
     render(<SkillInput />)
-    const nameInput = screen.getByTestId('skill-name-skill2') as HTMLInputElement
-    expect(nameInput.value).toBe('Smite')
+    expect(screen.getByTestId('skill-name-slot-1')).toHaveTextContent('Smite')
   })
 
-  it('empty skill name stores an empty string', async () => {
-    useBuildStore.getState().setActiveBuild({
-      ...mockBuild,
-      contextData: {
-        gear: [],
-        skills: [{ slotId: 'skill1', skillId: '', skillName: 'Void Cleave' }],
-        idols: [],
-      },
+  it('shows placeholder for empty slots', () => {
+    render(<SkillInput />)
+    expect(screen.getByTestId('skill-name-slot-0')).toHaveTextContent('No skill selected')
+  })
+
+  it('updates display when store changes', () => {
+    render(<SkillInput />)
+    expect(screen.getByTestId('skill-name-slot-2')).toHaveTextContent('No skill selected')
+
+    act(() => {
+      useBuildStore.getState().setActiveBuild({
+        ...mockBuild,
+        contextData: {
+          gear: [],
+          skills: [{ slotId: 'slot-2', skillId: 'void-cleave', skillName: 'Void Cleave' }],
+          idols: [],
+        },
+      })
     })
-    render(<SkillInput />)
-    const nameInput = screen.getByTestId('skill-name-skill1')
-    await userEvent.clear(nameInput)
-    const skills = useBuildStore.getState().activeBuild!.contextData.skills
-    const slot = skills.find((s) => s.slotId === 'skill1')
-    expect(slot?.skillName).toBe('')
-  })
 
-  it('pending input clears when activeBuildId changes', async () => {
-    render(<SkillInput />)
-    const nameInput = screen.getByTestId('skill-name-skill1') as HTMLInputElement
-    await userEvent.type(nameInput, 'Void Cleave')
-
-    const newBuild: BuildState = { ...mockBuild, id: 'build-2', contextData: { gear: [], skills: [], idols: [] } }
-    act(() => { useBuildStore.getState().setActiveBuild(newBuild) })
-
-    expect((screen.getByTestId('skill-name-skill1') as HTMLInputElement).value).toBe('')
+    expect(screen.getByTestId('skill-name-slot-2')).toHaveTextContent('Void Cleave')
   })
 })

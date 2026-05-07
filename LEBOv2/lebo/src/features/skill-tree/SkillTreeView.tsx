@@ -75,10 +75,10 @@ export function SkillTreeView() {
   }, [activeBuildId])
 
   useEffect(() => {
-    if (activeTabIndex >= 1 + activeSkills.length) {
+    if (activeTabIndex > 5) {
       setActiveTabIndex(0)
     }
-  }, [activeSkills.length, activeTabIndex])
+  }, [activeTabIndex])
 
   const classData = selectedClassId && gameData ? gameData.classes[selectedClassId] : null
 
@@ -131,7 +131,7 @@ export function SkillTreeView() {
     [classData, selectedMasteryId, nodeAllocations]
   )
 
-  const safeTabIndex = activeTabIndex >= 1 + activeSkills.length ? 0 : activeTabIndex
+  const safeTabIndex = activeTabIndex > 5 ? 0 : activeTabIndex
   const isPassiveTab = safeTabIndex === 0
 
   const slotId = isPassiveTab ? null : `slot-${safeTabIndex - 1}`
@@ -167,6 +167,11 @@ export function SkillTreeView() {
     handleMouseMove,
     handleKeyboardNavigate,
   } = isPassiveTab ? passiveInteraction : skillInteraction
+
+  const handleTabChange = useCallback((index: number) => {
+    setActiveTabIndex(index)
+    setPickerState(null)
+  }, [])
 
   const handleSkillTabClick = useCallback(
     (slotIndex: number, el: HTMLButtonElement) => {
@@ -231,7 +236,7 @@ export function SkillTreeView() {
         <SkillTreeTabBar
           activeSkills={activeSkills}
           selectedIndex={safeTabIndex}
-          onChange={setActiveTabIndex}
+          onChange={handleTabChange}
           onSkillTabClick={handleSkillTabClick}
         />
         <div className="flex-1 min-h-0">
@@ -248,7 +253,7 @@ export function SkillTreeView() {
         <SkillTreeTabBar
           activeSkills={activeSkills}
           selectedIndex={safeTabIndex}
-          onChange={setActiveTabIndex}
+          onChange={handleTabChange}
           onSkillTabClick={handleSkillTabClick}
         />
         <div className="flex-1 min-h-0 flex items-center justify-center">

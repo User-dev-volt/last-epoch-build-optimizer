@@ -230,6 +230,7 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
     const newActiveBuild: BuildState = {
       ...activeBuild,
       skillNodeAllocations: { ...activeBuild.skillNodeAllocations, [slotId]: newSlotAllocations },
+      isPersisted: false,
       updatedAt: new Date().toISOString(),
     }
 

@@ -10,18 +10,23 @@ const twoSkills: ActiveSkill[] = [
 ]
 
 describe('SkillTreeTabBar', () => {
-  it('renders only Passive Tree tab when activeSkills is empty', () => {
+  it('always renders 6 tabs (passive + 5 skill slots)', () => {
     render(<SkillTreeTabBar activeSkills={[]} selectedIndex={0} onChange={() => {}} />)
+    const tabs = screen.getAllByRole('tab')
+    expect(tabs).toHaveLength(6)
     expect(screen.getByText('Passive Tree')).toBeInTheDocument()
-    expect(screen.queryByRole('tab', { name: /Judgement/ })).toBeNull()
+    expect(screen.getByText('Skill 1')).toBeInTheDocument()
+    expect(screen.getByText('Skill 5')).toBeInTheDocument()
   })
 
-  it('renders Passive Tree plus one tab per active skill', () => {
+  it('shows assigned skill names and fallback labels for empty slots', () => {
     render(<SkillTreeTabBar activeSkills={twoSkills} selectedIndex={0} onChange={() => {}} />)
     const tabs = screen.getAllByRole('tab')
-    expect(tabs).toHaveLength(3)
+    expect(tabs).toHaveLength(6)
+    expect(screen.getByText('Skill 1')).toBeInTheDocument()
     expect(screen.getByText('Judgement')).toBeInTheDocument()
     expect(screen.getByText('Volatile Reversal')).toBeInTheDocument()
+    expect(screen.getByText('Skill 4')).toBeInTheDocument()
   })
 
   it('marks the tab at selectedIndex as aria-selected', () => {
@@ -36,6 +41,20 @@ describe('SkillTreeTabBar', () => {
     const onChange = vi.fn()
     render(<SkillTreeTabBar activeSkills={twoSkills} selectedIndex={0} onChange={onChange} />)
     await userEvent.click(screen.getByText('Judgement'))
-    expect(onChange).toHaveBeenCalledWith(1)
+    expect(onChange).toHaveBeenCalledWith(2)
+  })
+
+  it('calls onSkillTabClick with correct slotIndex when a skill tab is clicked', async () => {
+    const onSkillTabClick = vi.fn()
+    render(
+      <SkillTreeTabBar
+        activeSkills={twoSkills}
+        selectedIndex={0}
+        onChange={() => {}}
+        onSkillTabClick={onSkillTabClick}
+      />
+    )
+    await userEvent.click(screen.getByText('Skill 1'))
+    expect(onSkillTabClick).toHaveBeenCalledWith(0, expect.any(HTMLButtonElement))
   })
 })

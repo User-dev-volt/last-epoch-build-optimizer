@@ -1,6 +1,8 @@
 import { TabGroup, TabList, Tab } from '@headlessui/react'
 import type { ActiveSkill } from '../../shared/types/build'
 
+const SKILL_SLOT_LABELS = ['Skill 1', 'Skill 2', 'Skill 3', 'Skill 4', 'Skill 5']
+
 interface SkillTreeTabBarProps {
   activeSkills: ActiveSkill[]
   selectedIndex: number
@@ -11,7 +13,11 @@ interface SkillTreeTabBarProps {
 export function SkillTreeTabBar({ activeSkills, selectedIndex, onChange, onSkillTabClick }: SkillTreeTabBarProps) {
   const tabs = [
     { id: '__passive__', label: 'Passive Tree' },
-    ...activeSkills.map((s) => ({ id: s.slotId, label: s.skillName })),
+    ...SKILL_SLOT_LABELS.map((fallback, i) => {
+      const slotId = `slot-${i}`
+      const assigned = activeSkills.find((s) => s.slotId === slotId)
+      return { id: slotId, label: assigned?.skillName ?? fallback }
+    }),
   ]
 
   return (
@@ -23,12 +29,17 @@ export function SkillTreeTabBar({ activeSkills, selectedIndex, onChange, onSkill
         {tabs.map((tab, i) => {
           const selected = selectedIndex === i
           const isSkillTab = i >= 1
+          const isEmpty = isSkillTab && !activeSkills.find((s) => s.slotId === `slot-${i - 1}`)
           return (
             <Tab
               key={tab.id}
               className="px-4 py-2 text-sm transition-colors data-[focus]:outline data-[focus]:outline-2 data-[focus]:outline-[var(--color-accent-gold)] data-[focus]:outline-offset-[-2px]"
               style={{
-                color: selected ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+                color: selected
+                  ? 'var(--color-text-primary)'
+                  : isEmpty
+                    ? 'var(--color-text-disabled, var(--color-text-muted))'
+                    : 'var(--color-text-muted)',
                 fontWeight: selected ? 600 : 400,
                 borderBottom: selected
                   ? '2px solid var(--color-accent-gold)'

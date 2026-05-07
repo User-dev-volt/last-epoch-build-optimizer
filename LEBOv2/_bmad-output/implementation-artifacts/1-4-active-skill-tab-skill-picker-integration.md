@@ -1,6 +1,6 @@
 # Story 1.4: Active Skill Tab → Skill Picker Integration
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -442,10 +442,10 @@ claude-sonnet-4-6
 
 ### Review Findings
 
-- [ ] [Review][Decision] Slot ID mismatch — `SkillInput` uses `"skill1"`/`"skill2"` while `SkillTreeView` generates `"slot-0"`/`"slot-1"`; both write to `contextData.skills` with incompatible keys, causing picker-assigned skills and text-field-edited skills to be invisible to each other. Decide: unify on `"slot-0"…"slot-4"` (spec-specified) by updating `SkillInput.SKILL_SLOTS`, or remove manual text-entry from `SkillInput` entirely since the picker is now the canonical assignment path.
-- [ ] [Review][Decision] AC3/AC5: Tab bar renders only assigned-skill tabs — there is no tab for empty slots. Spec requires 5 always-visible skill slot tabs and "other active skill slot indicators visible in the tab bar row." Decide: render all 5 fixed tabs (empty slots show a dimmed placeholder label) so the user can click into any slot from the tab bar, or accept that empty-slot entry is only via the context panel.
-- [ ] [Review][Patch] `applySkillNodeChange` missing `isPersisted: false` — spreading `...activeBuild` preserves the prior `isPersisted` value; skill-node allocation changes won't mark the build dirty and auto-save will skip them. [buildStore.ts — `applySkillNodeChange`]
-- [ ] [Review][Patch] Passive tab click doesn't close open picker popover — `SkillTreeTabBar.onChange` is wired to `setActiveTabIndex` only; switching to the passive tree leaves the popover rendered with a stale `slotIndex`, and `handleSkillSelect` would assign the skill to the wrong slot. [SkillTreeView.tsx — `onChange={setActiveTabIndex}`]
+- [x] [Review][Decision] Slot ID mismatch — resolved: removed editable text-entry from `SkillInput`; picker is now canonical. `skillData.ts` slot IDs updated to `"slot-0"…"slot-4"`. `SkillInput` converted to read-only display.
+- [x] [Review][Decision] AC3/AC5: Tab bar renders only assigned-skill tabs — resolved: `SkillTreeTabBar` now always renders 6 tabs (passive + 5 fixed skill slots); empty slots show dimmed fallback labels.
+- [x] [Review][Patch] `applySkillNodeChange` missing `isPersisted: false` — fixed: added `isPersisted: false` to `newActiveBuild`. [buildStore.ts]
+- [x] [Review][Patch] Passive tab click doesn't close open picker popover — fixed: `handleTabChange` wrapper calls `setPickerState(null)` on every tab switch; all `SkillTreeTabBar` instances use `onChange={handleTabChange}`. [SkillTreeView.tsx]
 - [x] [Review][Defer] `applySkillNodeChange` not atomic (uses `get()`/`set()` TOCTOU) [buildStore.ts] — deferred, pre-existing pattern in `applyNodeChange`
 - [x] [Review][Defer] Dependent-blocking guard only fires at `newPoints === 0`, misses partial removal [buildStore.ts] — deferred, same as pre-existing `applyNodeChange` behaviour
 - [x] [Review][Defer] `buildPersistence.ts` bare-cast `skillNodeAllocations` without deep structural validation [buildPersistence.ts] — deferred, runtime safe (all reads guarded with `?? 0`), consistent with existing migration style
