@@ -1,6 +1,6 @@
 # Story 1.4: Active Skill Tab → Skill Picker Integration
 
-Status: in-progress
+Status: done
 
 ## Story
 

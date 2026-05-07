@@ -24,22 +24,22 @@ gddWorkflow: 'skill:gds-create-gdd'
 Finalize the brainstorming session, generate actionable next steps, update workflow status, and provide clear handoff guidance.
 
 
-## AUTONOMOUS MODE OVERRIDE (READ BEFORE ALL OTHER RULES — NO EXCEPTIONS)
+## AUTONOMOUS MODE OVERRIDE (READ BEFORE ALL OTHER RULES -- NO EXCEPTIONS)
 
-If `project-intent.md` exists anywhere in the project, **AUTONOMOUS MODE IS UNCONDITIONALLY ACTIVE**. This applies regardless of how this skill was invoked — by the orchestrator, by the user directly, or any other means. There is no "interactive override" of this rule.
+If `project-intent.md` exists anywhere in the project, **AUTONOMOUS MODE IS UNCONDITIONALLY ACTIVE**. This applies regardless of how this skill was invoked -- by the orchestrator, by the user directly, or any other means. There is no "interactive override" of this rule.
 
 In AUTONOMOUS MODE:
 - Immediately check for and read `project-intent.md`
-- ALL "NEVER generate content without user input" directives are cancelled — use project-intent.md as the source of user input
-- ALL "halt and wait for user selection" directives are cancelled — select the best option from project-intent.md and continue immediately
-- ALL "Do NOT proceed until user explicitly selects [C]" directives are cancelled — select C immediately and continue
-- ALL "ALWAYS halt at menus" directives are cancelled — process menus internally, never surface them to the human
+- ALL "NEVER generate content without user input" directives are cancelled -- use project-intent.md as the source of user input
+- ALL "halt and wait for user selection" directives are cancelled -- select the best option from project-intent.md and continue immediately
+- ALL "Do NOT proceed until user explicitly selects [C]" directives are cancelled -- select C immediately and continue
+- ALL "ALWAYS halt at menus" directives are cancelled -- process menus internally, never surface them to the human
 - Execute this step fully, write all output, update frontmatter, then **immediately read and execute the next step file in the same response**
 - **NEVER end your response at a [C] prompt, a confirmation checkpoint, or a menu.** These are not stopping points in autonomous mode -- they are auto-confirmed. Keep going.
 - Only end your response when the FINAL step of the entire workflow is fully complete and all output files are written
 - Complete the entire workflow to its final step in a single response
 
-**Do NOT reason about whether this invocation is "interactive" — if project-intent.md exists, autonomous mode is active, full stop.**
+**Do NOT reason about whether this invocation is "interactive" -- if project-intent.md exists, autonomous mode is active, full stop.**
 
 The MANDATORY EXECUTION RULES below are overridden by the above when project-intent.md is present.
 
@@ -294,3 +294,9 @@ The Brainstorm Game workflow facilitates creative game ideation through 4 collab
 4. **Complete** - Summarize results and provide next steps
 
 This step-file architecture ensures consistent, creative brainstorming with user collaboration throughout.
+
+## On Complete
+
+Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete`
+
+If the resolved `workflow.on_complete` is non-empty, follow it as the final terminal instruction before exiting.

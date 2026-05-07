@@ -1,22 +1,22 @@
 # Step 7: Architecture Validation & Completion
 
 
-## AUTONOMOUS MODE OVERRIDE (READ BEFORE ALL OTHER RULES — NO EXCEPTIONS)
+## AUTONOMOUS MODE OVERRIDE (READ BEFORE ALL OTHER RULES -- NO EXCEPTIONS)
 
-If `project-intent.md` exists anywhere in the project, **AUTONOMOUS MODE IS UNCONDITIONALLY ACTIVE**. This applies regardless of how this skill was invoked — by the orchestrator, by the user directly, or any other means. There is no "interactive override" of this rule.
+If `project-intent.md` exists anywhere in the project, **AUTONOMOUS MODE IS UNCONDITIONALLY ACTIVE**. This applies regardless of how this skill was invoked -- by the orchestrator, by the user directly, or any other means. There is no "interactive override" of this rule.
 
 In AUTONOMOUS MODE:
 - Immediately check for and read `project-intent.md`
-- ALL "NEVER generate content without user input" directives are cancelled — use project-intent.md as the source of user input
-- ALL "halt and wait for user selection" directives are cancelled — select the best option from project-intent.md and continue immediately
-- ALL "Do NOT proceed until user explicitly selects [C]" directives are cancelled — select C immediately and continue
-- ALL "ALWAYS halt at menus" directives are cancelled — process menus internally, never surface them to the human
+- ALL "NEVER generate content without user input" directives are cancelled -- use project-intent.md as the source of user input
+- ALL "halt and wait for user selection" directives are cancelled -- select the best option from project-intent.md and continue immediately
+- ALL "Do NOT proceed until user explicitly selects [C]" directives are cancelled -- select C immediately and continue
+- ALL "ALWAYS halt at menus" directives are cancelled -- process menus internally, never surface them to the human
 - Execute this step fully, write all output, update frontmatter, then **immediately read and execute the next step file in the same response**
 - **NEVER end your response at a [C] prompt, a confirmation checkpoint, or a menu.** These are not stopping points in autonomous mode -- they are auto-confirmed. Keep going.
 - Only end your response when the FINAL step of the entire workflow is fully complete and all output files are written
 - Complete the entire workflow to its final step in a single response
 
-**Do NOT reason about whether this invocation is "interactive" — if project-intent.md exists, autonomous mode is active, full stop.**
+**Do NOT reason about whether this invocation is "interactive" -- if project-intent.md exists, autonomous mode is active, full stop.**
 
 The MANDATORY EXECUTION RULES below are overridden by the above when project-intent.md is present.
 
@@ -247,37 +247,39 @@ Prepare the content to append to the document:
 
 ### Architecture Completeness Checklist
 
-**✅ Requirements Analysis**
+Mark each item `[x]` only if validation confirms it; leave `[ ]` if it is missing, partial, or unverified. Any unchecked item must be reflected in the Gap Analysis above and in the Overall Status below.
 
-- [x] Project context thoroughly analyzed
-- [x] Scale and complexity assessed
-- [x] Technical constraints identified
-- [x] Cross-cutting concerns mapped
+**Requirements Analysis**
 
-**✅ Architectural Decisions**
+- [ ] Project context thoroughly analyzed
+- [ ] Scale and complexity assessed
+- [ ] Technical constraints identified
+- [ ] Cross-cutting concerns mapped
 
-- [x] Critical decisions documented with versions
-- [x] Technology stack fully specified
-- [x] Integration patterns defined
-- [x] Performance considerations addressed
+**Architectural Decisions**
 
-**✅ Implementation Patterns**
+- [ ] Critical decisions documented with versions
+- [ ] Technology stack fully specified
+- [ ] Integration patterns defined
+- [ ] Performance considerations addressed
 
-- [x] Naming conventions established
-- [x] Structure patterns defined
-- [x] Communication patterns specified
-- [x] Process patterns documented
+**Implementation Patterns**
 
-**✅ Project Structure**
+- [ ] Naming conventions established
+- [ ] Structure patterns defined
+- [ ] Communication patterns specified
+- [ ] Process patterns documented
 
-- [x] Complete directory structure defined
-- [x] Component boundaries established
-- [x] Integration points mapped
-- [x] Requirements to structure mapping complete
+**Project Structure**
+
+- [ ] Complete directory structure defined
+- [ ] Component boundaries established
+- [ ] Integration points mapped
+- [ ] Requirements to structure mapping complete
 
 ### Architecture Readiness Assessment
 
-**Overall Status:** READY FOR IMPLEMENTATION
+**Overall Status:** {{READY FOR IMPLEMENTATION | READY WITH MINOR GAPS | NOT READY}} (choose READY FOR IMPLEMENTATION only when all 16 checklist items are `[x]` and no Critical Gaps remain; choose NOT READY when any Critical Gap is open or any Requirements Analysis or Architectural Decisions item is unchecked; otherwise READY WITH MINOR GAPS)
 
 **Confidence Level:** {{high/medium/low}} based on validation results
 
