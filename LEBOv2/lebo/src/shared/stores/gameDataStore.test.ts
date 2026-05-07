@@ -36,6 +36,8 @@ const mockGameData: GameData = {
           },
         },
       },
+      skills: [],
+      skillTrees: {},
     },
   },
 }

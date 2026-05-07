@@ -6,7 +6,7 @@ export function SkillInput() {
   const skills = useBuildStore((s) => s.activeBuild?.contextData.skills ?? [])
 
   function getSlot(slotId: string): ActiveSkill {
-    return skills.find((s) => s.slotId === slotId) ?? { slotId, skillName: '' }
+    return skills.find((s) => s.slotId === slotId) ?? { slotId, skillId: '', skillName: '' }
   }
 
   function handleNameChange(slotId: string, skillName: string) {

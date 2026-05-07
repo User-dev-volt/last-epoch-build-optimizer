@@ -22,6 +22,54 @@
       { "fromId": "rogue-base-ambush", "toId": "rogue-base-death-mark" }
     ]
   },
+  "skills": [
+    {
+      "id": "rogue-puncture",
+      "name": "Puncture",
+      "masteryId": null,
+      "masteryGatePoints": null,
+      "skillTree": {
+        "nodes": [
+          { "id": "rogue-puncture-core", "name": "Puncture", "x": 0, "y": 0, "size": "large", "maxPoints": 1, "effects": [{ "description": "Strike a target rapidly, applying a stacking bleed.", "tags": ["PHYSICAL", "BLEED", "MELEE"] }] },
+          { "id": "rogue-puncture-bleed", "name": "Deep Wound", "x": 280, "y": 0, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+2 maximum Bleed stacks from Puncture per point.", "tags": ["BLEED", "DAMAGE"] }] },
+          { "id": "rogue-puncture-speed", "name": "Swift Strikes", "x": 0, "y": 280, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+8% Attack Speed per point.", "tags": ["ATTACK_SPEED"] }] },
+          { "id": "rogue-puncture-poison", "name": "Venomous", "x": 280, "y": 280, "size": "small", "maxPoints": 4, "effects": [{ "description": "+10% chance to Poison per point.", "tags": ["POISON", "AILMENT"] }] },
+          { "id": "rogue-puncture-crit", "name": "Vital Strike", "x": 560, "y": 0, "size": "medium", "maxPoints": 4, "effects": [{ "description": "+6% Crit Chance per point.", "tags": ["PHYSICAL", "CRIT"] }] },
+          { "id": "rogue-puncture-evade", "name": "Evasive Strikes", "x": -280, "y": 0, "size": "small", "maxPoints": 4, "effects": [{ "description": "+5% Dodge Chance while attacking per point.", "tags": ["DODGE", "BUFF"] }] }
+        ],
+        "edges": [
+          { "fromId": "rogue-puncture-core", "toId": "rogue-puncture-bleed" },
+          { "fromId": "rogue-puncture-core", "toId": "rogue-puncture-speed" },
+          { "fromId": "rogue-puncture-core", "toId": "rogue-puncture-evade" },
+          { "fromId": "rogue-puncture-bleed", "toId": "rogue-puncture-poison" },
+          { "fromId": "rogue-puncture-bleed", "toId": "rogue-puncture-crit" }
+        ]
+      }
+    },
+    {
+      "id": "rogue-dancing-strikes",
+      "name": "Dancing Strikes",
+      "masteryId": "bladedancer",
+      "masteryGatePoints": 20,
+      "skillTree": {
+        "nodes": [
+          { "id": "rogue-dancing-strikes-core", "name": "Dancing Strikes", "x": 0, "y": 0, "size": "large", "maxPoints": 1, "effects": [{ "description": "Perform a rapid flurry of strikes that teleport you between nearby enemies.", "tags": ["PHYSICAL", "MOVEMENT", "MELEE"] }] },
+          { "id": "rogue-dancing-strikes-hits", "name": "Flourish", "x": 280, "y": 0, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+1 hit per rotation per point.", "tags": ["PHYSICAL", "MELEE"] }] },
+          { "id": "rogue-dancing-strikes-range", "name": "Shadow Range", "x": 0, "y": 280, "size": "medium", "maxPoints": 4, "effects": [{ "description": "+15% blink range per point.", "tags": ["PHYSICAL", "MOVEMENT"] }] },
+          { "id": "rogue-dancing-strikes-crit", "name": "Lethal Rhythm", "x": 280, "y": 280, "size": "small", "maxPoints": 4, "effects": [{ "description": "+5% Crit Multiplier per strike per point.", "tags": ["PHYSICAL", "CRIT"] }] },
+          { "id": "rogue-dancing-strikes-ailment", "name": "Bleeding Dance", "x": 560, "y": 0, "size": "medium", "maxPoints": 4, "effects": [{ "description": "+15% Bleed chance per hit per point.", "tags": ["BLEED", "AILMENT"] }] },
+          { "id": "rogue-dancing-strikes-dodge", "name": "Elusive", "x": -280, "y": 0, "size": "small", "maxPoints": 4, "effects": [{ "description": "+6% Dodge during Dancing Strikes per point.", "tags": ["DODGE", "BUFF"] }] }
+        ],
+        "edges": [
+          { "fromId": "rogue-dancing-strikes-core", "toId": "rogue-dancing-strikes-hits" },
+          { "fromId": "rogue-dancing-strikes-core", "toId": "rogue-dancing-strikes-range" },
+          { "fromId": "rogue-dancing-strikes-core", "toId": "rogue-dancing-strikes-dodge" },
+          { "fromId": "rogue-dancing-strikes-hits", "toId": "rogue-dancing-strikes-crit" },
+          { "fromId": "rogue-dancing-strikes-hits", "toId": "rogue-dancing-strikes-ailment" }
+        ]
+      }
+    }
+  ],
   "masteries": [
     {
       "id": "bladedancer",

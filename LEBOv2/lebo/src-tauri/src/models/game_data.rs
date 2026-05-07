@@ -41,11 +41,22 @@ pub struct RawMastery {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct RawSkillEntry {
+    pub id: String,
+    pub name: String,
+    pub mastery_id: Option<String>,
+    pub mastery_gate_points: Option<u32>,
+    pub skill_tree: RawTreeData,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct RawClassData {
     pub id: String,
     pub name: String,
     pub base_tree: RawTreeData,
     pub masteries: Vec<RawMastery>,
+    pub skills: Vec<RawSkillEntry>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

@@ -17,8 +17,9 @@ export interface SkillTreeInteraction {
   handleKeyboardNavigate: (nodeId: string | null, screenX: number, screenY: number) => void
 }
 
-export function useSkillTree(treeData: TreeData | null): SkillTreeInteraction {
+export function useSkillTree(treeData: TreeData | null, slotId?: string): SkillTreeInteraction {
   const applyNodeChange = useBuildStore((s) => s.applyNodeChange)
+  const applySkillNodeChange = useBuildStore((s) => s.applySkillNodeChange)
 
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -37,7 +38,10 @@ export function useSkillTree(treeData: TreeData | null): SkillTreeInteraction {
     (nodeId: string, button: 0 | 2) => {
       if (!treeData) return
       const delta: 1 | -1 = button === 2 ? -1 : 1
-      const result = applyNodeChange(nodeId, delta, treeData)
+      const result =
+        slotId !== undefined
+          ? applySkillNodeChange(slotId, nodeId, delta, treeData)
+          : applyNodeChange(nodeId, delta, treeData)
       if (!result.success && result.error) {
         setNodeError({ nodeId, message: result.error })
         if (button === 2 && result.blockedByDependents && result.blockedByDependents.length > 0) {
@@ -47,7 +51,7 @@ export function useSkillTree(treeData: TreeData | null): SkillTreeInteraction {
         }
       }
     },
-    [treeData, applyNodeChange]
+    [treeData, slotId, applyNodeChange, applySkillNodeChange]
   )
 
   const handleNodeHover = useCallback((nodeId: string | null) => {

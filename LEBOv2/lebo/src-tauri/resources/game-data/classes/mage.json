@@ -22,6 +22,54 @@
       { "fromId": "mage-base-critical-arcana", "toId": "mage-base-crit-multiplier" }
     ]
   },
+  "skills": [
+    {
+      "id": "mage-fireball",
+      "name": "Fireball",
+      "masteryId": null,
+      "masteryGatePoints": null,
+      "skillTree": {
+        "nodes": [
+          { "id": "mage-fireball-core", "name": "Fireball", "x": 0, "y": 0, "size": "large", "maxPoints": 1, "effects": [{ "description": "Hurl a ball of fire at a target area.", "tags": ["FIRE", "SPELL", "AREA"] }] },
+          { "id": "mage-fireball-blast", "name": "Igniting Blast", "x": 280, "y": 0, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+10% Ignite chance on Fireball hit per point.", "tags": ["FIRE", "IGNITE"] }] },
+          { "id": "mage-fireball-size", "name": "Expanded Explosion", "x": 0, "y": 280, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+10% explosion radius per point.", "tags": ["FIRE", "AREA"] }] },
+          { "id": "mage-fireball-chain", "name": "Volatile Fireball", "x": 280, "y": 280, "size": "small", "maxPoints": 4, "effects": [{ "description": "+20% chance to split into 2 smaller fireballs per point.", "tags": ["FIRE", "CHAIN"] }] },
+          { "id": "mage-fireball-damage", "name": "Inferno Core", "x": 560, "y": 0, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+8% Fire Spell Damage per point.", "tags": ["FIRE", "SPELL", "DAMAGE"] }] },
+          { "id": "mage-fireball-mana", "name": "Efficient Casting", "x": -280, "y": 0, "size": "small", "maxPoints": 4, "effects": [{ "description": "-1 Mana cost per point.", "tags": ["MANA", "SPELL"] }] }
+        ],
+        "edges": [
+          { "fromId": "mage-fireball-core", "toId": "mage-fireball-blast" },
+          { "fromId": "mage-fireball-core", "toId": "mage-fireball-size" },
+          { "fromId": "mage-fireball-core", "toId": "mage-fireball-mana" },
+          { "fromId": "mage-fireball-blast", "toId": "mage-fireball-chain" },
+          { "fromId": "mage-fireball-blast", "toId": "mage-fireball-damage" }
+        ]
+      }
+    },
+    {
+      "id": "mage-lightning-blast",
+      "name": "Lightning Blast",
+      "masteryId": "sorcerer",
+      "masteryGatePoints": 20,
+      "skillTree": {
+        "nodes": [
+          { "id": "mage-lightning-blast-core", "name": "Lightning Blast", "x": 0, "y": 0, "size": "large", "maxPoints": 1, "effects": [{ "description": "Unleash a bolt of lightning dealing damage in a line.", "tags": ["LIGHTNING", "SPELL"] }] },
+          { "id": "mage-lightning-blast-chain", "name": "Arc", "x": 280, "y": 0, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+1 chain target per point.", "tags": ["LIGHTNING", "CHAIN"] }] },
+          { "id": "mage-lightning-blast-shock", "name": "Shock", "x": 0, "y": 280, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+10% Shock chance per point.", "tags": ["LIGHTNING", "AILMENT"] }] },
+          { "id": "mage-lightning-blast-crit", "name": "Static Charge", "x": 280, "y": 280, "size": "small", "maxPoints": 4, "effects": [{ "description": "+5% Crit Chance per point.", "tags": ["LIGHTNING", "CRIT"] }] },
+          { "id": "mage-lightning-blast-damage", "name": "Surge", "x": 560, "y": 0, "size": "medium", "maxPoints": 4, "effects": [{ "description": "+10% Lightning Spell Damage per point.", "tags": ["LIGHTNING", "SPELL", "DAMAGE"] }] },
+          { "id": "mage-lightning-blast-penetration", "name": "Penetration", "x": -280, "y": 0, "size": "small", "maxPoints": 4, "effects": [{ "description": "+5% Lightning Penetration per point.", "tags": ["LIGHTNING", "PENETRATION"] }] }
+        ],
+        "edges": [
+          { "fromId": "mage-lightning-blast-core", "toId": "mage-lightning-blast-chain" },
+          { "fromId": "mage-lightning-blast-core", "toId": "mage-lightning-blast-shock" },
+          { "fromId": "mage-lightning-blast-core", "toId": "mage-lightning-blast-penetration" },
+          { "fromId": "mage-lightning-blast-chain", "toId": "mage-lightning-blast-crit" },
+          { "fromId": "mage-lightning-blast-chain", "toId": "mage-lightning-blast-damage" }
+        ]
+      }
+    }
+  ],
   "masteries": [
     {
       "id": "sorcerer",

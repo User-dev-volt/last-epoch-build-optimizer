@@ -7,6 +7,7 @@ export interface GearItem {
 export interface ActiveSkill {
   slotId: string
   skillName: string
+  skillId: string
 }
 
 export interface IdolItem {
@@ -22,6 +23,7 @@ export interface BuildState {
   classId: string
   masteryId: string
   nodeAllocations: Record<string, number>
+  skillNodeAllocations: Record<string, Record<string, number>>
   contextData: {
     gear: GearItem[]
     skills: ActiveSkill[]

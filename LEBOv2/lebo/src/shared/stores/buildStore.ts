@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { BuildState, BuildMeta, ApplyNodeResult, GearItem, ActiveSkill, IdolItem } from '../types/build'
+import type { SkillEntry } from '../types/gameData'
 import type { TreeData } from '../types/treeData'
 
 const MAX_UNDO_STACK = 10
@@ -24,6 +25,13 @@ interface BuildStore {
     delta: number,
     treeData: TreeData
   ) => ApplyNodeResult
+  applySkillNodeChange: (
+    slotId: string,
+    nodeId: string,
+    delta: number,
+    treeData: TreeData
+  ) => ApplyNodeResult
+  assignSkillToSlot: (slotId: string, skill: Pick<SkillEntry, 'skillId' | 'skillName'>) => void
   undoNodeChange: () => void
   updateContextGear: (gear: GearItem[]) => void
   updateContextSkills: (skills: ActiveSkill[]) => void
@@ -59,6 +67,7 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
         classId: selectedClassId,
         masteryId: selectedMasteryId,
         nodeAllocations: {},
+        skillNodeAllocations: {},
         contextData: { gear: [], skills: [], idols: [] },
         isPersisted: false,
         createdAt: now,
@@ -84,6 +93,7 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
         classId: state.selectedClassId,
         masteryId: state.selectedMasteryId,
         nodeAllocations: {},
+        skillNodeAllocations: {},
         contextData: { gear: [], skills: [], idols: [] },
         isPersisted: false,
         createdAt: now,
@@ -149,6 +159,83 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
     if (undoStack.length === 0) return
     const previous = undoStack[undoStack.length - 1]
     set({ activeBuild: previous, undoStack: undoStack.slice(0, -1) })
+  },
+
+  assignSkillToSlot: (slotId, skill) => {
+    set((s) => {
+      if (!s.activeBuild) return {}
+      const existingSkill = s.activeBuild.contextData.skills.find((sk) => sk.slotId === slotId)
+      const skillChanged = existingSkill?.skillId !== skill.skillId
+      const updatedSkills = [
+        ...s.activeBuild.contextData.skills.filter((sk) => sk.slotId !== slotId),
+        { slotId, skillId: skill.skillId, skillName: skill.skillName },
+      ]
+      const updatedSkillNodeAllocations = skillChanged
+        ? { ...s.activeBuild.skillNodeAllocations, [slotId]: {} }
+        : s.activeBuild.skillNodeAllocations
+      return {
+        activeBuild: {
+          ...s.activeBuild,
+          contextData: { ...s.activeBuild.contextData, skills: updatedSkills },
+          skillNodeAllocations: updatedSkillNodeAllocations,
+          isPersisted: false,
+          updatedAt: new Date().toISOString(),
+        },
+      }
+    })
+  },
+
+  applySkillNodeChange: (slotId, nodeId, delta, treeData) => {
+    const state = get()
+    const activeBuild = state.activeBuild
+    if (!activeBuild) return { success: false, error: 'No active build' }
+
+    const nodeMap = new Map(treeData.nodes.map((n) => [n.id, n]))
+    const node = nodeMap.get(nodeId)
+    if (!node) return { success: false }
+
+    const slotAllocations = activeBuild.skillNodeAllocations[slotId] ?? {}
+    const current = slotAllocations[nodeId] ?? 0
+    const newPoints = Math.max(0, Math.min(current + delta, node.maxPoints))
+
+    if (newPoints === current) return { success: false }
+
+    if (delta > 0) {
+      const prerequisites = treeData.edges.filter((e) => e.toId === nodeId).map((e) => e.fromId)
+      const prereqsMet = prerequisites.every((prereqId) => (slotAllocations[prereqId] ?? 0) > 0)
+      if (!prereqsMet) return { success: false, error: 'Prerequisite not met' }
+    }
+
+    if (delta < 0 && newPoints === 0) {
+      const dependents = treeData.edges
+        .filter((e) => e.fromId === nodeId)
+        .map((e) => e.toId)
+        .filter((depId) => (slotAllocations[depId] ?? 0) > 0)
+      if (dependents.length > 0) {
+        return {
+          success: false,
+          error: `Cannot remove — ${dependents.length} node(s) depend on this`,
+          blockedByDependents: dependents,
+        }
+      }
+    }
+
+    const newSlotAllocations = { ...slotAllocations }
+    if (newPoints === 0) {
+      delete newSlotAllocations[nodeId]
+    } else {
+      newSlotAllocations[nodeId] = newPoints
+    }
+
+    const newActiveBuild: BuildState = {
+      ...activeBuild,
+      skillNodeAllocations: { ...activeBuild.skillNodeAllocations, [slotId]: newSlotAllocations },
+      updatedAt: new Date().toISOString(),
+    }
+
+    const newUndoStack = [...state.undoStack, activeBuild].slice(-MAX_UNDO_STACK)
+    set({ activeBuild: newActiveBuild, undoStack: newUndoStack })
+    return { success: true }
   },
 
   updateContextGear: (gear) =>

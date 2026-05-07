@@ -12,6 +12,7 @@ const mockBuild: BuildState = {
   classId: 'acolyte',
   masteryId: 'lich',
   nodeAllocations: { 'node-a': 1, 'node-b': 2 },
+  skillNodeAllocations: {},
   contextData: { gear: [], skills: [], idols: [] },
   isPersisted: false,
   createdAt: '2026-01-01T00:00:00Z',
@@ -274,6 +275,7 @@ describe('buildStore — updateContextGear', () => {
       classId: 'sentinel',
       masteryId: 'void_knight',
       nodeAllocations: {},
+      skillNodeAllocations: {},
       contextData: { gear: [], skills: [], idols: [] },
       isPersisted: false,
       createdAt: '2026-01-01T00:00:00Z',
@@ -299,6 +301,7 @@ describe('buildStore — updateContextSkills', () => {
     classId: 'sentinel',
     masteryId: 'void_knight',
     nodeAllocations: {},
+    skillNodeAllocations: {},
     contextData: { gear: [], skills: [], idols: [] },
     isPersisted: false,
     createdAt: '2026-01-01T00:00:00Z',
@@ -311,7 +314,7 @@ describe('buildStore — updateContextSkills', () => {
 
   it('updates contextData.skills on activeBuild', () => {
     useBuildStore.getState().setActiveBuild(activeBuildBase)
-    const skills = [{ slotId: 'skill1', skillName: 'Void Cleave' }]
+    const skills = [{ slotId: 'skill1', skillId: '', skillName: 'Void Cleave' }]
     useBuildStore.getState().updateContextSkills(skills)
     expect(useBuildStore.getState().activeBuild!.contextData.skills).toEqual(skills)
   })
@@ -319,7 +322,7 @@ describe('buildStore — updateContextSkills', () => {
   it('sets isPersisted: false and updates updatedAt', () => {
     useBuildStore.getState().setActiveBuild({ ...activeBuildBase, isPersisted: true })
     const before = useBuildStore.getState().activeBuild!.updatedAt
-    const skills = [{ slotId: 'skill1', skillName: 'Smite' }]
+    const skills = [{ slotId: 'skill1', skillId: '', skillName: 'Smite' }]
     useBuildStore.getState().updateContextSkills(skills)
     const state = useBuildStore.getState().activeBuild!
     expect(state.isPersisted).toBe(false)
@@ -327,7 +330,7 @@ describe('buildStore — updateContextSkills', () => {
   })
 
   it('is a no-op when activeBuild is null', () => {
-    const skills = [{ slotId: 'skill1', skillName: 'Void Cleave' }]
+    const skills = [{ slotId: 'skill1', skillId: '', skillName: 'Void Cleave' }]
     useBuildStore.getState().updateContextSkills(skills)
     expect(useBuildStore.getState().activeBuild).toBeNull()
   })
@@ -341,6 +344,7 @@ describe('buildStore — updateContextIdols', () => {
     classId: 'sentinel',
     masteryId: 'void_knight',
     nodeAllocations: {},
+    skillNodeAllocations: {},
     contextData: { gear: [], skills: [], idols: [] },
     isPersisted: false,
     createdAt: '2026-01-01T00:00:00Z',
@@ -372,5 +376,113 @@ describe('buildStore — updateContextIdols', () => {
     const idols = [{ slotId: 'idol1', idolType: 'Grand Idol', modifiers: [] }]
     useBuildStore.getState().updateContextIdols(idols)
     expect(useBuildStore.getState().activeBuild).toBeNull()
+  })
+})
+
+const buildWithSkill: BuildState = {
+  schemaVersion: 1,
+  id: 'build-2',
+  name: 'Test Void Knight',
+  classId: 'sentinel',
+  masteryId: 'void_knight',
+  nodeAllocations: {},
+  skillNodeAllocations: {},
+  contextData: { gear: [], skills: [], idols: [] },
+  isPersisted: false,
+  createdAt: '2026-01-01T00:00:00Z',
+  updatedAt: '2026-01-01T00:00:00Z',
+}
+
+describe('buildStore — assignSkillToSlot', () => {
+  beforeEach(() => {
+    useBuildStore.setState(initialState, true)
+    useBuildStore.getState().setActiveBuild(buildWithSkill)
+  })
+
+  it('adds entry to contextData.skills for the given slot', () => {
+    useBuildStore.getState().assignSkillToSlot('slot-0', { skillId: 'smite', skillName: 'Smite' })
+    const skills = useBuildStore.getState().activeBuild!.contextData.skills
+    expect(skills).toHaveLength(1)
+    expect(skills[0]).toEqual({ slotId: 'slot-0', skillId: 'smite', skillName: 'Smite' })
+  })
+
+  it('replaces an existing skill in the same slot', () => {
+    useBuildStore.getState().assignSkillToSlot('slot-0', { skillId: 'smite', skillName: 'Smite' })
+    useBuildStore.getState().assignSkillToSlot('slot-0', { skillId: 'judgement', skillName: 'Judgement' })
+    const skills = useBuildStore.getState().activeBuild!.contextData.skills
+    expect(skills).toHaveLength(1)
+    expect(skills[0].skillId).toBe('judgement')
+  })
+
+  it('clears skillNodeAllocations for the slot when a different skill is assigned', () => {
+    useBuildStore.getState().assignSkillToSlot('slot-0', { skillId: 'smite', skillName: 'Smite' })
+    useBuildStore.setState((s) => ({
+      activeBuild: s.activeBuild
+        ? { ...s.activeBuild, skillNodeAllocations: { 'slot-0': { 'smite-core': 1 } } }
+        : null,
+    }))
+    useBuildStore.getState().assignSkillToSlot('slot-0', { skillId: 'judgement', skillName: 'Judgement' })
+    const alloc = useBuildStore.getState().activeBuild!.skillNodeAllocations['slot-0']
+    expect(alloc).toEqual({})
+  })
+
+  it('preserves skillNodeAllocations when the same skill is re-assigned', () => {
+    useBuildStore.getState().assignSkillToSlot('slot-0', { skillId: 'smite', skillName: 'Smite' })
+    useBuildStore.setState((s) => ({
+      activeBuild: s.activeBuild
+        ? { ...s.activeBuild, skillNodeAllocations: { 'slot-0': { 'smite-core': 1 } } }
+        : null,
+    }))
+    useBuildStore.getState().assignSkillToSlot('slot-0', { skillId: 'smite', skillName: 'Smite' })
+    const alloc = useBuildStore.getState().activeBuild!.skillNodeAllocations['slot-0']
+    expect(alloc).toEqual({ 'smite-core': 1 })
+  })
+})
+
+const mockSkillTreeData: TreeData = {
+  nodes: [
+    { id: 'skill-root', x: 0, y: 0, size: 'large', maxPoints: 1, connections: ['skill-child'], state: 'available' },
+    { id: 'skill-child', x: 100, y: 0, size: 'medium', maxPoints: 3, connections: ['skill-root'], state: 'locked' },
+  ],
+  edges: [{ fromId: 'skill-root', toId: 'skill-child' }],
+}
+
+describe('buildStore — applySkillNodeChange', () => {
+  beforeEach(() => {
+    useBuildStore.setState(initialState, true)
+    useBuildStore.getState().setActiveBuild(buildWithSkill)
+  })
+
+  it('increments allocation in skillNodeAllocations for the given slot', () => {
+    const result = useBuildStore.getState().applySkillNodeChange('slot-0', 'skill-root', 1, mockSkillTreeData)
+    expect(result.success).toBe(true)
+    expect(useBuildStore.getState().activeBuild!.skillNodeAllocations['slot-0']['skill-root']).toBe(1)
+  })
+
+  it('blocks allocation when prerequisite not met', () => {
+    const result = useBuildStore.getState().applySkillNodeChange('slot-0', 'skill-child', 1, mockSkillTreeData)
+    expect(result.success).toBe(false)
+    expect(result.error).toBe('Prerequisite not met')
+  })
+
+  it('allocates child node when prerequisite is met', () => {
+    useBuildStore.getState().applySkillNodeChange('slot-0', 'skill-root', 1, mockSkillTreeData)
+    const result = useBuildStore.getState().applySkillNodeChange('slot-0', 'skill-child', 1, mockSkillTreeData)
+    expect(result.success).toBe(true)
+    expect(useBuildStore.getState().activeBuild!.skillNodeAllocations['slot-0']['skill-child']).toBe(1)
+  })
+
+  it('does not affect nodeAllocations (passive tree)', () => {
+    useBuildStore.getState().applySkillNodeChange('slot-0', 'skill-root', 1, mockSkillTreeData)
+    expect(useBuildStore.getState().activeBuild!.nodeAllocations).toEqual({})
+  })
+
+  it('undoNodeChange restores previous skillNodeAllocations', () => {
+    useBuildStore.getState().applySkillNodeChange('slot-0', 'skill-root', 1, mockSkillTreeData)
+    useBuildStore.getState().applySkillNodeChange('slot-0', 'skill-child', 1, mockSkillTreeData)
+    useBuildStore.getState().undoNodeChange()
+    const alloc = useBuildStore.getState().activeBuild!.skillNodeAllocations['slot-0']
+    expect(alloc['skill-root']).toBe(1)
+    expect(alloc['skill-child']).toBeUndefined()
   })
 })

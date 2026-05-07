@@ -4,6 +4,16 @@ import type { TreeData, TreeNode, TreeEdge } from './types'
 // Vertical offset applied to mastery tree nodes so they appear below the base class tree
 const MASTERY_Y_OFFSET = 1600
 
+export function buildSkillTreeData(
+  skillNodes: Record<string, GameNode>,
+  allocations: Record<string, number>
+): TreeData {
+  const nodes: TreeNode[] = []
+  const edges: TreeEdge[] = []
+  appendTreeNodes(nodes, edges, skillNodes, allocations, 0)
+  return { nodes, edges }
+}
+
 export function buildTreeData(
   classData: ClassData,
   masteryId: string | null,

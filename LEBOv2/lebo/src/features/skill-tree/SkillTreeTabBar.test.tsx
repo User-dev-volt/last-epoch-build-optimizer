@@ -5,8 +5,8 @@ import { SkillTreeTabBar } from './SkillTreeTabBar'
 import type { ActiveSkill } from '../../shared/types/build'
 
 const twoSkills: ActiveSkill[] = [
-  { slotId: 'slot-1', skillName: 'Judgement' },
-  { slotId: 'slot-2', skillName: 'Volatile Reversal' },
+  { slotId: 'slot-1', skillId: 'judgement', skillName: 'Judgement' },
+  { slotId: 'slot-2', skillId: 'volatile-reversal', skillName: 'Volatile Reversal' },
 ]
 
 describe('SkillTreeTabBar', () => {

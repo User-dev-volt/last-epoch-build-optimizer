@@ -12,6 +12,7 @@ const mockBuild: BuildState = {
   classId: 'acolyte',
   masteryId: 'lich',
   nodeAllocations: {},
+  skillNodeAllocations: {},
   contextData: { gear: [], skills: [], idols: [] },
   isPersisted: false,
   createdAt: '2026-01-01T00:00:00Z',
@@ -48,7 +49,7 @@ describe('SkillInput', () => {
       ...mockBuild,
       contextData: {
         gear: [],
-        skills: [{ slotId: 'skill2', skillName: 'Smite' }],
+        skills: [{ slotId: 'skill2', skillId: '', skillName: 'Smite' }],
         idols: [],
       },
     })
@@ -62,7 +63,7 @@ describe('SkillInput', () => {
       ...mockBuild,
       contextData: {
         gear: [],
-        skills: [{ slotId: 'skill1', skillName: 'Void Cleave' }],
+        skills: [{ slotId: 'skill1', skillId: '', skillName: 'Void Cleave' }],
         idols: [],
       },
     })

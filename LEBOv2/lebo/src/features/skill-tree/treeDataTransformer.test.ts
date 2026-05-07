@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { buildTreeData } from './treeDataTransformer'
-import type { ClassData } from '../../shared/types/gameData'
+import { buildTreeData, buildSkillTreeData } from './treeDataTransformer'
+import type { ClassData, GameNode } from '../../shared/types/gameData'
 
 const mockClassData: ClassData = {
   classId: 'sentinel',
@@ -59,6 +59,8 @@ const mockClassData: ClassData = {
       },
     },
   },
+  skills: [],
+  skillTrees: {},
 }
 
 describe('buildTreeData', () => {
@@ -140,5 +142,81 @@ describe('buildTreeData', () => {
     const child = result.nodes.find((n) => n.id === 'base-child')
     expect(root!.connections).toContain('base-child')
     expect(child!.connections).toContain('base-root')
+  })
+})
+
+const mockSkillNodes: Record<string, GameNode> = {
+  'skill-root': {
+    id: 'skill-root',
+    name: 'Smite',
+    pointCost: 1,
+    maxPoints: 1,
+    prerequisiteNodeIds: [],
+    effectDescription: 'Base skill node',
+    tags: ['LIGHTNING'],
+    position: { x: 0, y: 0 },
+    size: 'large',
+  },
+  'skill-node-a': {
+    id: 'skill-node-a',
+    name: 'Holy Aura',
+    pointCost: 1,
+    maxPoints: 5,
+    prerequisiteNodeIds: ['skill-root'],
+    effectDescription: '+8% Lightning Damage per point',
+    tags: ['LIGHTNING', 'DAMAGE'],
+    position: { x: 280, y: 0 },
+    size: 'medium',
+  },
+  'skill-node-b': {
+    id: 'skill-node-b',
+    name: 'Divine Bolt',
+    pointCost: 1,
+    maxPoints: 4,
+    prerequisiteNodeIds: ['skill-node-a'],
+    effectDescription: '+6% chain chance per point',
+    tags: ['LIGHTNING', 'CHAIN'],
+    position: { x: 560, y: 0 },
+    size: 'small',
+  },
+}
+
+describe('buildSkillTreeData', () => {
+  it('returns correct TreeNode[] and TreeEdge[] for 3 nodes and 2 edges', () => {
+    const result = buildSkillTreeData(mockSkillNodes, {})
+    expect(result.nodes).toHaveLength(3)
+    expect(result.edges).toHaveLength(2)
+    expect(result.edges).toContainEqual({ fromId: 'skill-root', toId: 'skill-node-a' })
+    expect(result.edges).toContainEqual({ fromId: 'skill-node-a', toId: 'skill-node-b' })
+  })
+
+  it('returns empty nodes and edges for empty input', () => {
+    const result = buildSkillTreeData({}, {})
+    expect(result.nodes).toHaveLength(0)
+    expect(result.edges).toHaveLength(0)
+  })
+
+  it('reflects allocated nodes in TreeNode state', () => {
+    const result = buildSkillTreeData(mockSkillNodes, { 'skill-root': 1, 'skill-node-a': 2 })
+    const root = result.nodes.find((n) => n.id === 'skill-root')
+    const nodeA = result.nodes.find((n) => n.id === 'skill-node-a')
+    const nodeB = result.nodes.find((n) => n.id === 'skill-node-b')
+    expect(root!.state).toBe('allocated')
+    expect(nodeA!.state).toBe('allocated')
+    expect(nodeB!.state).toBe('available')
+  })
+
+  it('marks root node available when not allocated (no prerequisites)', () => {
+    const result = buildSkillTreeData(mockSkillNodes, {})
+    const root = result.nodes.find((n) => n.id === 'skill-root')
+    expect(root!.state).toBe('available')
+  })
+
+  it('does not apply mastery y-offset (skill trees are single-section)', () => {
+    const result = buildSkillTreeData(mockSkillNodes, {})
+    const root = result.nodes.find((n) => n.id === 'skill-root')
+    expect(root!.y).toBe(0)
+    const nodeA = result.nodes.find((n) => n.id === 'skill-node-a')
+    expect(nodeA!.y).toBe(0)
   })
 })

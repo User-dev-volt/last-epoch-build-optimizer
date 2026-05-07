@@ -1,8 +1,8 @@
 import { invokeCommand } from '../../shared/utils/invokeCommand'
 import { normalizeAppError } from '../../shared/utils/errorNormalizer'
 import { useGameDataStore } from '../../shared/stores/gameDataStore'
-import type { GameNode, GameData, ClassData, MasteryData, GameDataManifest, DataVersionCheckResult } from '../../shared/types/gameData'
-import type { RawClassData, RawGameNode, RawEdge, RawMastery } from './types'
+import type { GameNode, GameData, ClassData, MasteryData, GameDataManifest, DataVersionCheckResult, SkillEntry } from '../../shared/types/gameData'
+import type { RawClassData, RawGameNode, RawEdge, RawMastery, RawSkillEntry } from './types'
 
 export async function initGameData(): Promise<void> {
   const { setIsLoading } = useGameDataStore.getState()
@@ -102,15 +102,32 @@ function transformMastery(raw: RawMastery): MasteryData {
   }
 }
 
+function transformSkillEntry(raw: RawSkillEntry, masteries: Record<string, MasteryData>): SkillEntry {
+  return {
+    skillId: raw.id,
+    skillName: raw.name,
+    masteryId: raw.masteryId,
+    masteryName: raw.masteryId != null ? (masteries[raw.masteryId]?.masteryName ?? null) : null,
+    masteryGatePoints: raw.masteryGatePoints ?? null,
+  }
+}
+
 function transformClass(raw: RawClassData): ClassData {
   const masteries: Record<string, MasteryData> = {}
   for (const rawMastery of raw.masteries) {
     masteries[rawMastery.id] = transformMastery(rawMastery)
+  }
+  const skills: SkillEntry[] = raw.skills.map((s) => transformSkillEntry(s, masteries))
+  const skillTrees: Record<string, Record<string, GameNode>> = {}
+  for (const rawSkill of raw.skills) {
+    skillTrees[rawSkill.id] = transformTree(rawSkill.skillTree)
   }
   return {
     classId: raw.id,
     className: raw.name,
     baseTree: transformTree(raw.baseTree),
     masteries,
+    skills,
+    skillTrees,
   }
 }

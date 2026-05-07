@@ -67,6 +67,7 @@ const mockRawClasses: RawClassData[] = [
         },
       },
     ],
+    skills: [],
   },
 ]
 

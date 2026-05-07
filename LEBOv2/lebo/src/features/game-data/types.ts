@@ -29,9 +29,18 @@ export interface RawMastery {
   passiveTree: RawTreeData
 }
 
+export interface RawSkillEntry {
+  id: string
+  name: string
+  masteryId: string | null
+  masteryGatePoints: number | null
+  skillTree: RawTreeData
+}
+
 export interface RawClassData {
   id: string
   name: string
   baseTree: RawTreeData
   masteries: RawMastery[]
+  skills: RawSkillEntry[]
 }

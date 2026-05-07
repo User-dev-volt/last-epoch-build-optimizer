@@ -36,6 +36,100 @@
       { "fromId": "sentinel-base-vitality", "toId": "sentinel-base-fortify" }
     ]
   },
+  "skills": [
+    {
+      "id": "sentinel-smite",
+      "name": "Smite",
+      "masteryId": null,
+      "masteryGatePoints": null,
+      "skillTree": {
+        "nodes": [
+          { "id": "sentinel-smite-core", "name": "Smite", "x": 0, "y": 0, "size": "large", "maxPoints": 1, "effects": [{ "description": "Your base Smite skill — call a bolt of lightning to smite enemies.", "tags": ["LIGHTNING", "HOLY"] }] },
+          { "id": "sentinel-smite-holy-aura", "name": "Holy Aura", "x": 280, "y": 0, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+8% Lightning Damage per point.", "tags": ["LIGHTNING", "DAMAGE"] }] },
+          { "id": "sentinel-smite-divine-bolt", "name": "Divine Bolt", "x": 560, "y": 0, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+6% chance to chain to additional targets per point.", "tags": ["LIGHTNING", "CHAIN"] }] },
+          { "id": "sentinel-smite-sacred-ground", "name": "Sacred Ground", "x": 0, "y": 280, "size": "medium", "maxPoints": 4, "effects": [{ "description": "Smite creates consecrated ground at target location for 2s per point.", "tags": ["HOLY", "AREA"] }] },
+          { "id": "sentinel-smite-heavens-wrath", "name": "Heaven's Wrath", "x": 280, "y": 280, "size": "small", "maxPoints": 4, "effects": [{ "description": "+10% Smite Damage per point.", "tags": ["LIGHTNING", "HOLY", "DAMAGE"] }] },
+          { "id": "sentinel-smite-overcharge", "name": "Overcharge", "x": 560, "y": 280, "size": "small", "maxPoints": 3, "effects": [{ "description": "+5% Critical Strike Chance with Smite per point.", "tags": ["LIGHTNING", "CRIT"] }] }
+        ],
+        "edges": [
+          { "fromId": "sentinel-smite-core", "toId": "sentinel-smite-holy-aura" },
+          { "fromId": "sentinel-smite-core", "toId": "sentinel-smite-sacred-ground" },
+          { "fromId": "sentinel-smite-holy-aura", "toId": "sentinel-smite-divine-bolt" },
+          { "fromId": "sentinel-smite-holy-aura", "toId": "sentinel-smite-heavens-wrath" },
+          { "fromId": "sentinel-smite-divine-bolt", "toId": "sentinel-smite-overcharge" }
+        ]
+      }
+    },
+    {
+      "id": "sentinel-anomaly",
+      "name": "Anomaly",
+      "masteryId": "void_knight",
+      "masteryGatePoints": 20,
+      "skillTree": {
+        "nodes": [
+          { "id": "sentinel-anomaly-core", "name": "Anomaly", "x": 0, "y": 0, "size": "large", "maxPoints": 1, "effects": [{ "description": "Create a void anomaly that pulls enemies toward it and detonates.", "tags": ["VOID", "TIME"] }] },
+          { "id": "sentinel-anomaly-temporal-pull", "name": "Temporal Pull", "x": 280, "y": 0, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+10% increased pull force per point.", "tags": ["VOID", "TIME", "AREA"] }] },
+          { "id": "sentinel-anomaly-void-burst", "name": "Void Burst", "x": 0, "y": 280, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+8% Void Damage on detonation per point.", "tags": ["VOID", "DAMAGE"] }] },
+          { "id": "sentinel-anomaly-echo", "name": "Echo", "x": 280, "y": 280, "size": "small", "maxPoints": 4, "effects": [{ "description": "25% chance to create a second anomaly on cast per point.", "tags": ["VOID", "TIME"] }] },
+          { "id": "sentinel-anomaly-duration", "name": "Extended Duration", "x": -280, "y": 0, "size": "small", "maxPoints": 4, "effects": [{ "description": "+0.5 seconds anomaly duration per point.", "tags": ["VOID", "DURATION"] }] },
+          { "id": "sentinel-anomaly-shockwave", "name": "Shockwave", "x": 560, "y": 0, "size": "medium", "maxPoints": 4, "effects": [{ "description": "Detonation emits a shockwave dealing +12% damage per point.", "tags": ["VOID", "AREA", "DAMAGE"] }] }
+        ],
+        "edges": [
+          { "fromId": "sentinel-anomaly-core", "toId": "sentinel-anomaly-temporal-pull" },
+          { "fromId": "sentinel-anomaly-core", "toId": "sentinel-anomaly-void-burst" },
+          { "fromId": "sentinel-anomaly-core", "toId": "sentinel-anomaly-duration" },
+          { "fromId": "sentinel-anomaly-temporal-pull", "toId": "sentinel-anomaly-echo" },
+          { "fromId": "sentinel-anomaly-temporal-pull", "toId": "sentinel-anomaly-shockwave" }
+        ]
+      }
+    },
+    {
+      "id": "sentinel-forge-strike",
+      "name": "Forge Strike",
+      "masteryId": "forge_guard",
+      "masteryGatePoints": 20,
+      "skillTree": {
+        "nodes": [
+          { "id": "sentinel-forge-strike-core", "name": "Forge Strike", "x": 0, "y": 0, "size": "large", "maxPoints": 1, "effects": [{ "description": "Strike enemies with forged fire, dealing physical and fire damage.", "tags": ["FIRE", "MELEE", "PHYSICAL"] }] },
+          { "id": "sentinel-forge-strike-ignite", "name": "Ignition", "x": 280, "y": 0, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+10% chance to Ignite per point.", "tags": ["FIRE", "IGNITE"] }] },
+          { "id": "sentinel-forge-strike-armour-shred", "name": "Armour Shred", "x": 0, "y": 280, "size": "medium", "maxPoints": 4, "effects": [{ "description": "Hits apply -4% armour per point.", "tags": ["PHYSICAL", "ARMOUR_SHRED"] }] },
+          { "id": "sentinel-forge-strike-molten-strike", "name": "Molten Strike", "x": 280, "y": 280, "size": "small", "maxPoints": 4, "effects": [{ "description": "+8% Fire Melee Damage per point.", "tags": ["FIRE", "MELEE", "DAMAGE"] }] },
+          { "id": "sentinel-forge-strike-forge-nova", "name": "Forge Nova", "x": 560, "y": 0, "size": "medium", "maxPoints": 4, "effects": [{ "description": "Forge Strike emits a fire nova on hit dealing +15% damage per point.", "tags": ["FIRE", "AREA", "DAMAGE"] }] },
+          { "id": "sentinel-forge-strike-temper", "name": "Temper", "x": -280, "y": 0, "size": "small", "maxPoints": 4, "effects": [{ "description": "+3% increased Physical Damage per point.", "tags": ["PHYSICAL", "DAMAGE"] }] }
+        ],
+        "edges": [
+          { "fromId": "sentinel-forge-strike-core", "toId": "sentinel-forge-strike-ignite" },
+          { "fromId": "sentinel-forge-strike-core", "toId": "sentinel-forge-strike-armour-shred" },
+          { "fromId": "sentinel-forge-strike-core", "toId": "sentinel-forge-strike-temper" },
+          { "fromId": "sentinel-forge-strike-ignite", "toId": "sentinel-forge-strike-molten-strike" },
+          { "fromId": "sentinel-forge-strike-ignite", "toId": "sentinel-forge-strike-forge-nova" }
+        ]
+      }
+    },
+    {
+      "id": "sentinel-judgement",
+      "name": "Judgement",
+      "masteryId": "paladin",
+      "masteryGatePoints": 20,
+      "skillTree": {
+        "nodes": [
+          { "id": "sentinel-judgement-core", "name": "Judgement", "x": 0, "y": 0, "size": "large", "maxPoints": 1, "effects": [{ "description": "Call down divine judgement on a target area, dealing holy damage.", "tags": ["HOLY", "AREA"] }] },
+          { "id": "sentinel-judgement-radius", "name": "Expanded Judgement", "x": 280, "y": 0, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+10% increased area of effect per point.", "tags": ["HOLY", "AREA"] }] },
+          { "id": "sentinel-judgement-consecrate", "name": "Consecrate", "x": 0, "y": 280, "size": "medium", "maxPoints": 4, "effects": [{ "description": "Judgement consecrates the area for 4 seconds, dealing +5% damage per second per point.", "tags": ["HOLY", "DOT", "AREA"] }] },
+          { "id": "sentinel-judgement-holy-nova", "name": "Holy Nova", "x": 280, "y": 280, "size": "small", "maxPoints": 4, "effects": [{ "description": "+8% Holy Damage on impact per point.", "tags": ["HOLY", "DAMAGE"] }] },
+          { "id": "sentinel-judgement-divine-wrath", "name": "Divine Wrath", "x": 560, "y": 0, "size": "medium", "maxPoints": 4, "effects": [{ "description": "+15% damage against Elites and Bosses per point.", "tags": ["HOLY", "DAMAGE", "BOSS"] }] },
+          { "id": "sentinel-judgement-purity", "name": "Purity", "x": -280, "y": 0, "size": "small", "maxPoints": 4, "effects": [{ "description": "Judgement removes a debuff from you on cast per point.", "tags": ["HOLY", "CLEANSE"] }] }
+        ],
+        "edges": [
+          { "fromId": "sentinel-judgement-core", "toId": "sentinel-judgement-radius" },
+          { "fromId": "sentinel-judgement-core", "toId": "sentinel-judgement-consecrate" },
+          { "fromId": "sentinel-judgement-core", "toId": "sentinel-judgement-purity" },
+          { "fromId": "sentinel-judgement-radius", "toId": "sentinel-judgement-holy-nova" },
+          { "fromId": "sentinel-judgement-radius", "toId": "sentinel-judgement-divine-wrath" }
+        ]
+      }
+    }
+  ],
   "masteries": [
     {
       "id": "void_knight",

@@ -1,6 +1,6 @@
 # Story 1.4: Active Skill Tab → Skill Picker Integration
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -32,8 +32,8 @@ So that I can plan all 5 active skill slots with their complete trees visible.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Extend game data schema for skill trees (AC: #1, #3, #4)
-  - [ ] **`src-tauri/src/models/game_data.rs`**: Add `RawSkillEntry` struct with `serde(rename_all = "camelCase")`:
+- [x] Task 1: Extend game data schema for skill trees (AC: #1, #3, #4)
+  - [x] **`src-tauri/src/models/game_data.rs`**: Add `RawSkillEntry` struct with `serde(rename_all = "camelCase")`:
     ```rust
     pub struct RawSkillEntry {
         pub id: String,
@@ -44,14 +44,14 @@ So that I can plan all 5 active skill slots with their complete trees visible.
     }
     ```
     Add `pub skills: Vec<RawSkillEntry>` to `RawClassData`.
-  - [ ] **`src/features/game-data/types.ts`**: Add `RawSkillEntry` interface (mirrors Rust struct with camelCase fields). Add `skills: RawSkillEntry[]` to `RawClassData`.
-  - [ ] **`src/shared/types/gameData.ts`**: Add two fields to `ClassData`:
+  - [x] **`src/features/game-data/types.ts`**: Add `RawSkillEntry` interface (mirrors Rust struct with camelCase fields). Add `skills: RawSkillEntry[]` to `RawClassData`.
+  - [x] **`src/shared/types/gameData.ts`**: Add two fields to `ClassData`:
     ```typescript
     skills: SkillEntry[]                                // for SkillPickerGrid
     skillTrees: Record<string, Record<string, GameNode>>  // skillId → nodes
     ```
     `SkillEntry` is already defined in this file (added in Story 1.3).
-  - [ ] **`src/features/game-data/gameDataLoader.ts`**: Update `transformClass` to transform skills:
+  - [x] **`src/features/game-data/gameDataLoader.ts`**: Update `transformClass` to transform skills:
     ```typescript
     const skills: SkillEntry[] = raw.skills.map(s => ({
       skillId: s.id,
@@ -66,7 +66,7 @@ So that I can plan all 5 active skill slots with their complete trees visible.
     }
     ```
     Return both in the `ClassData` object alongside existing fields. The existing `transformTree` function handles `{ nodes: RawGameNode[]; edges: RawEdge[] }` — reuse it.
-  - [ ] **`src-tauri/resources/game-data/classes/sentinel.json`**: Add `"skills"` array. Minimum: 1 base class skill (no mastery gate) + 2 Void Knight mastery skills. Each skill needs `id`, `name`, `masteryId`, `masteryGatePoints`, and a `skillTree` with `nodes` (5–10 entries) and `edges`. Use the same `RawGameNode` format as passive trees (`id`, `name`, `x`, `y`, `size`, `maxPoints`, `effects[{description, tags}]`). Example structure:
+  - [x] **`src-tauri/resources/game-data/classes/sentinel.json`**: Add `"skills"` array. Minimum: 1 base class skill (no mastery gate) + 2 Void Knight mastery skills. Each skill needs `id`, `name`, `masteryId`, `masteryGatePoints`, and a `skillTree` with `nodes` (5–10 entries) and `edges`. Use the same `RawGameNode` format as passive trees (`id`, `name`, `x`, `y`, `size`, `maxPoints`, `effects[{description, tags}]`). Example structure:
     ```json
     {
       "id": "smite",
@@ -86,20 +86,20 @@ So that I can plan all 5 active skill slots with their complete trees visible.
       }
     }
     ```
-  - [ ] Add similar stub skill data to `acolyte.json`, `mage.json`, `primalist.json`, `rogue.json` — at minimum 1 base class skill + 1 mastery skill each, with 5+ nodes per skill tree, referencing the correct mastery IDs: acolyte (`lich`, `necromancer`, `warlock`), mage (`sorcerer`, `spellblade`, `runemaster`), primalist (`shaman`, `druid`, `beastmaster`), rogue (`bladedancer`, `marksman`, `falconer`). Skill IDs must be globally unique (prefix with class: `"acolyte-rip-blood"`, etc.).
+  - [x] Add similar stub skill data to `acolyte.json`, `mage.json`, `primalist.json`, `rogue.json` — at minimum 1 base class skill + 1 mastery skill each, with 5+ nodes per skill tree, referencing the correct mastery IDs: acolyte (`lich`, `necromancer`, `warlock`), mage (`sorcerer`, `spellblade`, `runemaster`), primalist (`shaman`, `druid`, `beastmaster`), rogue (`bladedancer`, `marksman`, `falconer`). Skill IDs must be globally unique (prefix with class: `"acolyte-rip-blood"`, etc.).
 
-- [ ] Task 2: Extend BuildState for per-slot skill allocations (AC: #3, #4)
-  - [ ] **`src/shared/types/build.ts`**:
+- [x] Task 2: Extend BuildState for per-slot skill allocations (AC: #3, #4)
+  - [x] **`src/shared/types/build.ts`**:
     - Add `skillId: string` to `ActiveSkill` (the slot now carries the selected skill's ID)
     - Add `skillNodeAllocations: Record<string, Record<string, number>>` to `BuildState` — outer key is `slotId` (`"slot-0"` through `"slot-4"`), inner key is `nodeId`
-  - [ ] **`src/shared/stores/buildStore.ts`**:
+  - [x] **`src/shared/stores/buildStore.ts`**:
     - Add `skillNodeAllocations: {}` to the initial state in `createBuild` and `clearActiveBuild` (both branches)
     - Add `assignSkillToSlot: (slotId: string, skill: Pick<SkillEntry, 'skillId' | 'skillName'>) => void` action: replaces or inserts into `contextData.skills` (filter out existing slotId entry, add new one), clears `skillNodeAllocations[slotId]` when the skill changes (assigning a different skill resets that slot's allocations)
     - Add `applySkillNodeChange: (slotId: string, nodeId: string, delta: number, treeData: TreeData) => ApplyNodeResult` action: identical prerequisite and dependent validation logic as `applyNodeChange` but reads/writes `activeBuild.skillNodeAllocations[slotId]` instead of `activeBuild.nodeAllocations`; pushes to same `undoStack` (stores full `BuildState` snapshot so Ctrl+Z restores both passive and skill allocations)
-  - [ ] **`src/shared/stores/buildStore.ts`** — also add `skillNodeAllocations` to the `BuildStore` interface type, and to `setActiveBuild` (pass-through), and confirm `undoNodeChange` already restores skill allocations (it restores the full `BuildState` snapshot — no extra work needed)
+  - [x] **`src/shared/stores/buildStore.ts`** — also add `skillNodeAllocations` to the `BuildStore` interface type, and to `setActiveBuild` (pass-through), and confirm `undoNodeChange` already restores skill allocations (it restores the full `BuildState` snapshot — no extra work needed)
 
-- [ ] Task 3: Add `buildSkillTreeData` to treeDataTransformer.ts (AC: #1, #3, #4)
-  - [ ] **`src/features/skill-tree/treeDataTransformer.ts`**: Export a new function:
+- [x] Task 3: Add `buildSkillTreeData` to treeDataTransformer.ts (AC: #1, #3, #4)
+  - [x] **`src/features/skill-tree/treeDataTransformer.ts`**: Export a new function:
     ```typescript
     export function buildSkillTreeData(
       skillNodes: Record<string, GameNode>,
@@ -113,8 +113,8 @@ So that I can plan all 5 active skill slots with their complete trees visible.
     ```
     This reuses the private `appendTreeNodes` function — no new logic, just a named export for single-section skill trees (no mastery Y-offset).
 
-- [ ] Task 4: Extend `useSkillTree` to support skill tabs (AC: #4)
-  - [ ] **`src/features/skill-tree/useSkillTree.ts`**: Add optional second parameter `slotId?: string`:
+- [x] Task 4: Extend `useSkillTree` to support skill tabs (AC: #4)
+  - [x] **`src/features/skill-tree/useSkillTree.ts`**: Add optional second parameter `slotId?: string`:
     ```typescript
     export function useSkillTree(
       treeData: TreeData | null,
@@ -129,8 +129,8 @@ So that I can plan all 5 active skill slots with their complete trees visible.
     ```
     Flash/error behavior is identical for both paths — no change needed there.
 
-- [ ] Task 5: Update `SkillTreeTabBar.tsx` for tab click callbacks (AC: #2)
-  - [ ] **`src/features/skill-tree/SkillTreeTabBar.tsx`**: Add optional prop:
+- [x] Task 5: Update `SkillTreeTabBar.tsx` for tab click callbacks (AC: #2)
+  - [x] **`src/features/skill-tree/SkillTreeTabBar.tsx`**: Add optional prop:
     ```typescript
     onSkillTabClick?: (slotIndex: number, element: HTMLButtonElement) => void
     ```
@@ -140,8 +140,8 @@ So that I can plan all 5 active skill slots with their complete trees visible.
     ```
     This fires even when the tab is already selected (Headless UI fires `onClick` on every click regardless of whether the tab changes). The passive tab (index 0) does NOT get this handler — only skill tabs.
 
-- [ ] Task 6: Update `SkillTreeView.tsx` — wire picker and skill tree rendering (AC: #1–#6)
-  - [ ] **State additions** (local, not store):
+- [x] Task 6: Update `SkillTreeView.tsx` — wire picker and skill tree rendering (AC: #1–#6)
+  - [x] **State additions** (local, not store):
     ```typescript
     type PickerState = {
       slotIndex: number        // 0-based slot index
@@ -150,7 +150,7 @@ So that I can plan all 5 active skill slots with their complete trees visible.
     }
     const [pickerState, setPickerState] = useState<PickerState | null>(null)
     ```
-  - [ ] **Store subscriptions to add**:
+  - [x] **Store subscriptions to add**:
     ```typescript
     const assignSkillToSlot = useBuildStore((s) => s.assignSkillToSlot)
     const applySkillNodeChange = useBuildStore((s) => s.applySkillNodeChange)
@@ -159,7 +159,7 @@ So that I can plan all 5 active skill slots with their complete trees visible.
     )
     ```
     Add `const EMPTY_SKILL_ALLOC: Record<string, Record<string, number>> = {}` alongside the other empty constants at the top of the file.
-  - [ ] **`handleSkillTabClick` callback**:
+  - [x] **`handleSkillTabClick` callback**:
     ```typescript
     const handleSkillTabClick = useCallback(
       (slotIndex: number, el: HTMLButtonElement) => {
@@ -171,7 +171,7 @@ So that I can plan all 5 active skill slots with their complete trees visible.
       [activeSkills]
     )
     ```
-  - [ ] **`handleSkillSelect` callback**:
+  - [x] **`handleSkillSelect` callback**:
     ```typescript
     const handleSkillSelect = useCallback(
       (skillId: string) => {
@@ -185,7 +185,7 @@ So that I can plan all 5 active skill slots with their complete trees visible.
       [pickerState, classData, assignSkillToSlot]
     )
     ```
-  - [ ] **Filtered skills for picker** (memo):
+  - [x] **Filtered skills for picker** (memo):
     ```typescript
     const filteredSkills = useMemo(
       () => classData?.skills.filter(
@@ -194,7 +194,7 @@ So that I can plan all 5 active skill slots with their complete trees visible.
       [classData, selectedMasteryId]
     )
     ```
-  - [ ] **Skill tree data computation** (memo) — add below the existing `treeData` memo:
+  - [x] **Skill tree data computation** (memo) — add below the existing `treeData` memo:
     ```typescript
     const slotId = isPassiveTab ? null : `slot-${safeTabIndex - 1}`
     const activeSkill = slotId
@@ -207,13 +207,13 @@ So that I can plan all 5 active skill slots with their complete trees visible.
       [skillNodes, slotAllocations]
     )
     ```
-  - [ ] **Hook call for skill tab** — add after the existing `useSkillTree` call:
+  - [x] **Hook call for skill tab** — add after the existing `useSkillTree` call:
     ```typescript
     const skillTreeInteraction = useSkillTree(skillTreeData, slotId ?? undefined)
     ```
     The existing `useSkillTree(treeData)` call remains for the passive tab. The `skillTreeInteraction` is a separate instance that routes to `applySkillNodeChange`.
-  - [ ] **Update `SkillTreeTabBar` usage** — add `onSkillTabClick={handleSkillTabClick}` prop.
-  - [ ] **Skill header strip** (FR10) — render above the skill canvas when `activeSkill !== null`:
+  - [x] **Update `SkillTreeTabBar` usage** — add `onSkillTabClick={handleSkillTabClick}` prop.
+  - [x] **Skill header strip** (FR10) — render above the skill canvas when `activeSkill !== null`:
     ```tsx
     {!isPassiveTab && activeSkill && (
       <div className="px-4 py-1.5 flex items-center gap-3 text-sm"
@@ -233,7 +233,7 @@ So that I can plan all 5 active skill slots with their complete trees visible.
     )}
     ```
     "Level —" is a placeholder — Story 3.2 replaces it with actual skill level input.
-  - [ ] **Center panel rendering for skill tabs** — replace the single `SkillTreeStubPanel` block with:
+  - [x] **Center panel rendering for skill tabs** — replace the single `SkillTreeStubPanel` block with:
     ```
     if !isPassiveTab:
       if pickerState && !pickerState.isPopover && pickerState.slotIndex === safeTabIndex - 1:
@@ -244,7 +244,7 @@ So that I can plan all 5 active skill slots with their complete trees visible.
         render empty state: "Select a skill" prompt (a simple centered div)
     ```
     The `SkillTreeCanvas` for skill tabs uses `skillTreeInteraction.handleNodeClick` (not the passive tree's `handleNodeClick`), and `slotAllocations` as `nodeAllocations`, and `skillTreeData` as `treeData`. Tooltip logic mirrors the passive tab pattern using `skillTreeInteraction.hoveredNodeId`, etc., and `classData.skillTrees[activeSkill.skillId]` to look up game node names for the tooltip.
-  - [ ] **Popover picker** — rendered unconditionally (not inside the center panel swap) when `pickerState?.isPopover === true`:
+  - [x] **Popover picker** — rendered unconditionally (not inside the center panel swap) when `pickerState?.isPopover === true`:
     ```tsx
     {pickerState?.isPopover && (
       <>
@@ -275,15 +275,15 @@ So that I can plan all 5 active skill slots with their complete trees visible.
       </>
     )}
     ```
-  - [ ] **Remove `SkillTreeStubPanel`** — the function and its usages are eliminated. It was a Phase 1 placeholder only.
-  - [ ] **Close picker when build changes** — add to the existing `useEffect` that resets `activeTabIndex` on `activeBuildId` change: also call `setPickerState(null)`.
+  - [x] **Remove `SkillTreeStubPanel`** — the function and its usages are eliminated. It was a Phase 1 placeholder only.
+  - [x] **Close picker when build changes** — add to the existing `useEffect` that resets `activeTabIndex` on `activeBuildId` change: also call `setPickerState(null)`.
 
-- [ ] Task 7: Unit tests (AC: #3, #4)
-  - [ ] **`src/features/skill-tree/treeDataTransformer.test.ts`** (already exists — add to it):
+- [x] Task 7: Unit tests (AC: #3, #4)
+  - [x] **`src/features/skill-tree/treeDataTransformer.test.ts`** (already exists — add to it):
     - Test: `buildSkillTreeData` with 3 nodes and 2 edges returns correct `TreeNode[]` and `TreeEdge[]`
     - Test: `buildSkillTreeData` with empty nodes returns `{ nodes: [], edges: [] }`
     - Test: allocated nodes are reflected in `TreeNode.state` (allocated vs available)
-  - [ ] **`src/shared/stores/buildStore.test.ts`** (already exists — add to it):
+  - [x] **`src/shared/stores/buildStore.test.ts`** (already exists — add to it):
     - Test: `assignSkillToSlot('slot-0', { skillId: 'smite', skillName: 'Smite' })` adds entry to `contextData.skills`
     - Test: re-assigning a different skill to the same slot clears `skillNodeAllocations[slotId]`
     - Test: `applySkillNodeChange` increments allocation in `skillNodeAllocations['slot-0']`
@@ -433,4 +433,47 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- All 7 tasks implemented. `pnpm build` (TypeScript) passes clean. Test suite: 6 pre-existing ProviderSelector/Settings failures unrelated to this story; all Story 1.4 tests pass.
+- `buildPersistence.ts` required `skillNodeAllocations` migration in `migrateBuildState` — added alongside existing `nodeAllocations` migration pattern.
+- `SkillInput.tsx` fallback object needed `skillId: ''` after `ActiveSkill` gained the required `skillId` field.
+- ~15 test files needed mock fixture updates: added `skillNodeAllocations: {}` to `BuildState` mocks, `skillId` to `ActiveSkill` mocks, and `skills: [] / skillTrees: {}` to `ClassData` mocks.
+- `SkillTreeStubPanel` removed from `SkillTreeView.tsx` (it was a Phase 1 placeholder).
+- Two `useSkillTree` instances in `SkillTreeView.tsx` run independently: `passiveInteraction` and `skillInteraction` (with `slotId`).
+
 ### File List
+
+**Production files changed:**
+- `lebo/src-tauri/src/models/game_data.rs`
+- `lebo/src-tauri/resources/game-data/classes/sentinel.json`
+- `lebo/src-tauri/resources/game-data/classes/acolyte.json`
+- `lebo/src-tauri/resources/game-data/classes/mage.json`
+- `lebo/src-tauri/resources/game-data/classes/primalist.json`
+- `lebo/src-tauri/resources/game-data/classes/rogue.json`
+- `lebo/src/features/game-data/types.ts`
+- `lebo/src/features/game-data/gameDataLoader.ts`
+- `lebo/src/shared/types/gameData.ts`
+- `lebo/src/shared/types/build.ts`
+- `lebo/src/shared/stores/buildStore.ts`
+- `lebo/src/features/skill-tree/treeDataTransformer.ts`
+- `lebo/src/features/skill-tree/useSkillTree.ts`
+- `lebo/src/features/skill-tree/SkillTreeTabBar.tsx`
+- `lebo/src/features/skill-tree/SkillTreeView.tsx`
+- `lebo/src/features/context-panel/SkillInput.tsx`
+- `lebo/src/features/build-manager/buildPersistence.ts`
+
+**Test files changed:**
+- `lebo/src/features/skill-tree/treeDataTransformer.test.ts`
+- `lebo/src/shared/stores/buildStore.test.ts`
+- `lebo/src/features/game-data/gameDataLoader.test.ts`
+- `lebo/src/features/context-panel/SkillInput.test.tsx`
+- `lebo/src/features/context-panel/ContextPanel.test.tsx`
+- `lebo/src/features/context-panel/GearInput.test.tsx`
+- `lebo/src/features/context-panel/IdolInput.test.tsx`
+- `lebo/src/features/build-manager/buildPersistence.test.ts`
+- `lebo/src/features/build-manager/SavedBuildsList.test.tsx`
+- `lebo/src/features/layout/RightPanel.test.tsx`
+- `lebo/src/features/optimization/scoringEngine.test.ts`
+- `lebo/src/features/optimization/SuggestionsList.test.tsx`
+- `lebo/src/features/skill-tree/ClassMasterySelector.test.tsx`
+- `lebo/src/features/skill-tree/SkillTreeTabBar.test.tsx`
+- `lebo/src/shared/stores/gameDataStore.test.ts`

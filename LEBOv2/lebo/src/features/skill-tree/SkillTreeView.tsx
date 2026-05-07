@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from 'react'
+import { useMemo, useEffect, useState, useCallback, useRef } from 'react'
 import type { GameNode } from '../../shared/types/gameData'
 import type { ActiveSkill } from '../../shared/types/build'
 import type { NodeChange } from '../../shared/types/optimization'
@@ -6,14 +6,16 @@ import type { HighlightedNodes } from './types'
 import { useGameDataStore } from '../../shared/stores/gameDataStore'
 import { useBuildStore } from '../../shared/stores/buildStore'
 import { useOptimizationStore } from '../../shared/stores/optimizationStore'
-import { buildTreeData } from './treeDataTransformer'
+import { buildTreeData, buildSkillTreeData } from './treeDataTransformer'
 import { SkillTreeCanvas } from './SkillTreeCanvas'
 import { EmptyTreeState } from './EmptyTreeState'
 import { NodeTooltip } from './NodeTooltip'
 import { SkillTreeTabBar } from './SkillTreeTabBar'
 import { useSkillTree } from './useSkillTree'
+import { SkillPickerGrid } from '../skill-picker/SkillPickerGrid'
 
 const EMPTY_ALLOCATED: Record<string, number> = {}
+const EMPTY_SKILL_ALLOC: Record<string, Record<string, number>> = {}
 const EMPTY_SET = new Set<string>()
 const EMPTY_HIGHLIGHTED: HighlightedNodes = {
   glowing: EMPTY_SET,
@@ -22,6 +24,12 @@ const EMPTY_HIGHLIGHTED: HighlightedNodes = {
   previewAdded: EMPTY_SET,
 }
 const EMPTY_SKILLS: ActiveSkill[] = []
+
+type PickerState = {
+  slotIndex: number
+  anchorRect: DOMRect
+  isPopover: boolean
+}
 
 function computePreviewAllocations(
   base: Record<string, number>,
@@ -38,16 +46,6 @@ function computePreviewAllocations(
   return result
 }
 
-function SkillTreeStubPanel({ skillName }: { skillName: string }) {
-  return (
-    <div className="flex items-center justify-center h-full">
-      <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-        {skillName} skill tree — available in Epic 4
-      </p>
-    </div>
-  )
-}
-
 export function SkillTreeView() {
   const gameData = useGameDataStore((s) => s.gameData)
   const isLoading = useGameDataStore((s) => s.isLoading)
@@ -55,8 +53,12 @@ export function SkillTreeView() {
   const selectedMasteryId = useBuildStore((s) => s.selectedMasteryId)
   const activeBuild = useBuildStore((s) => s.activeBuild)
   const undoNodeChange = useBuildStore((s) => s.undoNodeChange)
+  const assignSkillToSlot = useBuildStore((s) => s.assignSkillToSlot)
   const activeSkills = useBuildStore(
     (s) => s.activeBuild?.contextData.skills ?? EMPTY_SKILLS
+  )
+  const skillNodeAllocations = useBuildStore(
+    (s) => s.activeBuild?.skillNodeAllocations ?? EMPTY_SKILL_ALLOC
   )
   const activeBuildId = useBuildStore((s) => s.activeBuild?.id ?? null)
   const highlightedNodeIds = useOptimizationStore((s) => s.highlightedNodeIds)
@@ -64,13 +66,14 @@ export function SkillTreeView() {
   const suggestions = useOptimizationStore((s) => s.suggestions)
 
   const [activeTabIndex, setActiveTabIndex] = useState(0)
+  const [pickerState, setPickerState] = useState<PickerState | null>(null)
+  const emptySlotButtonRef = useRef<HTMLButtonElement>(null)
 
-  // Reset to passive tab when switching to a different build
   useEffect(() => {
     setActiveTabIndex(0)
+    setPickerState(null)
   }, [activeBuildId])
 
-  // Reset to passive tab if a skill was removed and the active tab is now out of bounds
   useEffect(() => {
     if (activeTabIndex >= 1 + activeSkills.length) {
       setActiveTabIndex(0)
@@ -106,7 +109,6 @@ export function SkillTreeView() {
 
   const nodeAllocations = previewAllocatedNodes ?? baseAllocatedNodes
 
-  // Build preview color sets: red = node losing points, green = node gaining points
   const highlightedNodes = useMemo<HighlightedNodes>(() => {
     const base = highlightedNodeIds ?? EMPTY_HIGHLIGHTED
     if (!previewSuggestion) {
@@ -129,6 +131,30 @@ export function SkillTreeView() {
     [classData, selectedMasteryId, nodeAllocations]
   )
 
+  const safeTabIndex = activeTabIndex >= 1 + activeSkills.length ? 0 : activeTabIndex
+  const isPassiveTab = safeTabIndex === 0
+
+  const slotId = isPassiveTab ? null : `slot-${safeTabIndex - 1}`
+  const activeSkill = slotId ? activeSkills.find((s) => s.slotId === slotId) ?? null : null
+  const skillNodes = activeSkill ? classData?.skillTrees[activeSkill.skillId] : undefined
+  const slotAllocations = slotId ? (skillNodeAllocations[slotId] ?? EMPTY_ALLOCATED) : EMPTY_ALLOCATED
+
+  const skillTreeData = useMemo(
+    () => (skillNodes ? buildSkillTreeData(skillNodes, slotAllocations) : null),
+    [skillNodes, slotAllocations]
+  )
+
+  const filteredSkills = useMemo(
+    () =>
+      classData?.skills.filter(
+        (s) => s.masteryId === null || s.masteryId === selectedMasteryId
+      ) ?? [],
+    [classData, selectedMasteryId]
+  )
+
+  const passiveInteraction = useSkillTree(treeData)
+  const skillInteraction = useSkillTree(skillTreeData, slotId ?? undefined)
+
   const {
     hoveredNodeId,
     mousePosition,
@@ -140,7 +166,41 @@ export function SkillTreeView() {
     handleNodeHover,
     handleMouseMove,
     handleKeyboardNavigate,
-  } = useSkillTree(treeData)
+  } = isPassiveTab ? passiveInteraction : skillInteraction
+
+  const handleSkillTabClick = useCallback(
+    (slotIndex: number, el: HTMLButtonElement) => {
+      const sid = `slot-${slotIndex}`
+      const hasSkill = activeSkills.some((s) => s.slotId === sid)
+      setPickerState({ slotIndex, anchorRect: el.getBoundingClientRect(), isPopover: hasSkill })
+      setActiveTabIndex(slotIndex + 1)
+    },
+    [activeSkills]
+  )
+
+  const handleSkillSelect = useCallback(
+    (skillId: string) => {
+      if (!pickerState || !classData) return
+      const skillEntry = classData.skills.find((s) => s.skillId === skillId)
+      if (!skillEntry) return
+      const sid = `slot-${pickerState.slotIndex}`
+      assignSkillToSlot(sid, skillEntry)
+      setPickerState(null)
+    },
+    [pickerState, classData, assignSkillToSlot]
+  )
+
+  const openPickerForCurrentSlot = useCallback(() => {
+    if (emptySlotButtonRef.current) {
+      const sid = `slot-${safeTabIndex - 1}`
+      const hasSkill = activeSkills.some((s) => s.slotId === sid)
+      setPickerState({
+        slotIndex: safeTabIndex - 1,
+        anchorRect: emptySlotButtonRef.current.getBoundingClientRect(),
+        isPopover: hasSkill,
+      })
+    }
+  }, [safeTabIndex, activeSkills])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -164,41 +224,60 @@ export function SkillTreeView() {
     )
   }
 
-  const safeTabIndex = activeTabIndex >= 1 + activeSkills.length ? 0 : activeTabIndex
-  const isPassiveTab = safeTabIndex === 0
-
-  if (!selectedClassId || !selectedMasteryId || !gameData || !classData || !treeData) {
+  // Passive tab: needs full tree to be ready
+  if (isPassiveTab && (!selectedClassId || !selectedMasteryId || !gameData || !classData || !treeData)) {
     return (
       <div id="skill-tree-canvas" className="flex flex-col h-full">
         <SkillTreeTabBar
           activeSkills={activeSkills}
           selectedIndex={safeTabIndex}
           onChange={setActiveTabIndex}
+          onSkillTabClick={handleSkillTabClick}
         />
         <div className="flex-1 min-h-0">
-          {isPassiveTab ? (
-            <EmptyTreeState />
-          ) : (
-            <SkillTreeStubPanel
-              skillName={activeSkills[safeTabIndex - 1]?.skillName ?? ''}
-            />
-          )}
+          <EmptyTreeState />
         </div>
       </div>
     )
   }
 
-  const hoveredGameNode = hoveredNodeId ? allGameNodes[hoveredNodeId] : null
-  const errorGameNode = nodeError ? allGameNodes[nodeError.nodeId] : null
+  // Skill tab: can show even without full passive tree
+  if (!isPassiveTab && (!selectedClassId || !selectedMasteryId || !gameData || !classData)) {
+    return (
+      <div id="skill-tree-canvas" className="flex flex-col h-full">
+        <SkillTreeTabBar
+          activeSkills={activeSkills}
+          selectedIndex={safeTabIndex}
+          onChange={setActiveTabIndex}
+          onSkillTabClick={handleSkillTabClick}
+        />
+        <div className="flex-1 min-h-0 flex items-center justify-center">
+          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Select a class to continue</p>
+        </div>
+      </div>
+    )
+  }
+
+  const activeGameNodes = isPassiveTab ? allGameNodes : (activeSkill ? (classData?.skillTrees[activeSkill.skillId] ?? {}) : {})
+  const activeAllocations = isPassiveTab ? nodeAllocations : slotAllocations
+
+  const hoveredGameNode = hoveredNodeId ? activeGameNodes[hoveredNodeId] : null
+  const errorGameNode = nodeError ? activeGameNodes[nodeError.nodeId] : null
   const keyboardGameNode =
     !hoveredNodeId && !nodeError && keyboardFocusedNodeId
-      ? allGameNodes[keyboardFocusedNodeId]
+      ? activeGameNodes[keyboardFocusedNodeId]
       : null
 
   function getPrerequisiteNames(gameNode: typeof hoveredGameNode): string[] {
     if (!gameNode || gameNode.prerequisiteNodeIds.length === 0) return []
-    return gameNode.prerequisiteNodeIds.map((id) => allGameNodes[id]?.name ?? id)
+    return gameNode.prerequisiteNodeIds.map((id) => activeGameNodes[id]?.name ?? id)
   }
+
+  const isPickerFullPanel =
+    !isPassiveTab &&
+    pickerState !== null &&
+    !pickerState.isPopover &&
+    pickerState.slotIndex === safeTabIndex - 1
 
   return (
     <div id="skill-tree-canvas" className="flex flex-col h-full">
@@ -206,13 +285,33 @@ export function SkillTreeView() {
         activeSkills={activeSkills}
         selectedIndex={safeTabIndex}
         onChange={setActiveTabIndex}
+        onSkillTabClick={handleSkillTabClick}
       />
+
+      {!isPassiveTab && activeSkill && (
+        <div
+          className="px-4 py-1.5 flex items-center gap-3 text-sm"
+          style={{ borderBottom: '1px solid var(--color-bg-elevated)' }}
+        >
+          <span style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>
+            {activeSkill.skillName}
+          </span>
+          <span style={{ color: 'var(--color-text-muted)' }}>Level —</span>
+          <span style={{ color: 'var(--color-text-secondary)' }}>
+            {classData?.skills.find((s) => s.skillId === activeSkill.skillId)?.masteryGatePoints != null
+              ? `Requires ${classData.skills.find((s) => s.skillId === activeSkill.skillId)!.masteryGatePoints} mastery points`
+              : classData?.className
+                ? `Available for ${classData.className}`
+                : ''}
+          </span>
+        </div>
+      )}
 
       <div className="flex-1 min-h-0 relative" onMouseMove={handleMouseMove} onMouseLeave={() => handleNodeHover(null)}>
         {isPassiveTab ? (
           <>
             <SkillTreeCanvas
-              treeData={treeData}
+              treeData={treeData!}
               nodeAllocations={nodeAllocations}
               highlightedNodes={highlightedNodes}
               onNodeClick={handleNodeClick}
@@ -249,12 +348,98 @@ export function SkillTreeView() {
               />
             )}
           </>
-        ) : (
-          <SkillTreeStubPanel
-            skillName={activeSkills[safeTabIndex - 1]?.skillName ?? ''}
+        ) : isPickerFullPanel ? (
+          <SkillPickerGrid
+            baseClassName={classData?.className ?? ''}
+            skills={filteredSkills}
+            selectedSkillId={activeSkills.find((s) => s.slotId === `slot-${pickerState!.slotIndex}`)?.skillId ?? null}
+            onSelect={handleSkillSelect}
+            onClose={() => setPickerState(null)}
           />
+        ) : activeSkill && skillTreeData ? (
+          <>
+            <SkillTreeCanvas
+              treeData={skillTreeData}
+              nodeAllocations={slotAllocations}
+              highlightedNodes={EMPTY_HIGHLIGHTED}
+              onNodeClick={handleNodeClick}
+              onNodeHover={handleNodeHover}
+              onKeyboardNavigate={handleKeyboardNavigate}
+              flashNodeIds={flashNodeIds ?? undefined}
+            />
+
+            {hoveredGameNode && !nodeError && (
+              <NodeTooltip
+                gameNode={hoveredGameNode}
+                allocatedPoints={activeAllocations[hoveredNodeId!] ?? 0}
+                position={mousePosition}
+                prerequisiteNames={getPrerequisiteNames(hoveredGameNode)}
+              />
+            )}
+
+            {nodeError && errorGameNode && (
+              <NodeTooltip
+                gameNode={errorGameNode}
+                allocatedPoints={activeAllocations[nodeError.nodeId] ?? 0}
+                position={mousePosition}
+                errorMessage={nodeError.message}
+                prerequisiteNames={getPrerequisiteNames(errorGameNode)}
+              />
+            )}
+
+            {keyboardGameNode && (
+              <NodeTooltip
+                gameNode={keyboardGameNode}
+                allocatedPoints={activeAllocations[keyboardFocusedNodeId!] ?? 0}
+                position={keyboardPosition}
+                prerequisiteNames={getPrerequisiteNames(keyboardGameNode)}
+              />
+            )}
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full gap-3">
+            <p style={{ color: 'var(--color-text-muted)' }}>No skill selected</p>
+            <button
+              ref={emptySlotButtonRef}
+              style={{ color: 'var(--color-accent-gold)', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}
+              onClick={openPickerForCurrentSlot}
+            >
+              Select a skill
+            </button>
+          </div>
         )}
       </div>
+
+      {pickerState?.isPopover && (
+        <>
+          <div
+            aria-hidden="true"
+            style={{ position: 'fixed', inset: 0, zIndex: 49 }}
+            onClick={() => setPickerState(null)}
+          />
+          <div
+            style={{
+              position: 'fixed',
+              top: pickerState.anchorRect.bottom + 4,
+              left: pickerState.anchorRect.left,
+              zIndex: 50,
+              backgroundColor: 'var(--color-bg-surface)',
+              border: '1px solid var(--color-bg-elevated)',
+              borderRadius: 4,
+              maxHeight: '60vh',
+              overflowY: 'auto',
+            }}
+          >
+            <SkillPickerGrid
+              baseClassName={classData?.className ?? ''}
+              skills={filteredSkills}
+              selectedSkillId={activeSkills.find((s) => s.slotId === `slot-${pickerState.slotIndex}`)?.skillId ?? null}
+              onSelect={handleSkillSelect}
+              onClose={() => setPickerState(null)}
+            />
+          </div>
+        </>
+      )}
     </div>
   )
 }

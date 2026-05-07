@@ -5,9 +5,10 @@ interface SkillTreeTabBarProps {
   activeSkills: ActiveSkill[]
   selectedIndex: number
   onChange: (index: number) => void
+  onSkillTabClick?: (slotIndex: number, element: HTMLButtonElement) => void
 }
 
-export function SkillTreeTabBar({ activeSkills, selectedIndex, onChange }: SkillTreeTabBarProps) {
+export function SkillTreeTabBar({ activeSkills, selectedIndex, onChange, onSkillTabClick }: SkillTreeTabBarProps) {
   const tabs = [
     { id: '__passive__', label: 'Passive Tree' },
     ...activeSkills.map((s) => ({ id: s.slotId, label: s.skillName })),
@@ -21,6 +22,7 @@ export function SkillTreeTabBar({ activeSkills, selectedIndex, onChange }: Skill
       >
         {tabs.map((tab, i) => {
           const selected = selectedIndex === i
+          const isSkillTab = i >= 1
           return (
             <Tab
               key={tab.id}
@@ -33,6 +35,7 @@ export function SkillTreeTabBar({ activeSkills, selectedIndex, onChange }: Skill
                   : '2px solid transparent',
                 marginBottom: '-1px',
               }}
+              onClick={isSkillTab ? (e) => onSkillTabClick?.(i - 1, e.currentTarget as HTMLButtonElement) : undefined}
             >
               {tab.label}
             </Tab>

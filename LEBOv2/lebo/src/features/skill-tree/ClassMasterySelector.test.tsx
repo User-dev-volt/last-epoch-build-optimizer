@@ -36,6 +36,8 @@ const mockGameData: GameData = {
           nodes: {},
         },
       },
+      skills: [],
+      skillTrees: {},
     },
     mage: {
       classId: 'mage',
@@ -48,6 +50,8 @@ const mockGameData: GameData = {
           nodes: {},
         },
       },
+      skills: [],
+      skillTrees: {},
     },
   },
 }

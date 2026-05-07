@@ -22,6 +22,54 @@
       { "fromId": "primalist-base-ferocity", "toId": "primalist-base-apex-predator" }
     ]
   },
+  "skills": [
+    {
+      "id": "primalist-fury-leap",
+      "name": "Fury Leap",
+      "masteryId": null,
+      "masteryGatePoints": null,
+      "skillTree": {
+        "nodes": [
+          { "id": "primalist-fury-leap-core", "name": "Fury Leap", "x": 0, "y": 0, "size": "large", "maxPoints": 1, "effects": [{ "description": "Leap to a target location dealing physical damage on landing.", "tags": ["PHYSICAL", "MOVEMENT", "MELEE"] }] },
+          { "id": "primalist-fury-leap-impact", "name": "Crushing Impact", "x": 280, "y": 0, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+10% Physical Damage on landing per point.", "tags": ["PHYSICAL", "AREA", "DAMAGE"] }] },
+          { "id": "primalist-fury-leap-range", "name": "Extended Leap", "x": 0, "y": 280, "size": "medium", "maxPoints": 4, "effects": [{ "description": "+15% Leap range per point.", "tags": ["PHYSICAL", "MOVEMENT"] }] },
+          { "id": "primalist-fury-leap-shockwave", "name": "Tremor", "x": 280, "y": 280, "size": "small", "maxPoints": 4, "effects": [{ "description": "Landing creates a shockwave dealing +8% Nature Damage per point.", "tags": ["PHYSICAL", "NATURE", "AREA"] }] },
+          { "id": "primalist-fury-leap-frenzy", "name": "Frenzy", "x": 560, "y": 0, "size": "medium", "maxPoints": 4, "effects": [{ "description": "+5% Attack Speed after Fury Leap for 3 seconds per point.", "tags": ["ATTACK_SPEED", "BUFF"] }] },
+          { "id": "primalist-fury-leap-cooldown", "name": "Quick Recovery", "x": -280, "y": 0, "size": "small", "maxPoints": 4, "effects": [{ "description": "-0.3 seconds cooldown per point.", "tags": ["COOLDOWN", "MOVEMENT"] }] }
+        ],
+        "edges": [
+          { "fromId": "primalist-fury-leap-core", "toId": "primalist-fury-leap-impact" },
+          { "fromId": "primalist-fury-leap-core", "toId": "primalist-fury-leap-range" },
+          { "fromId": "primalist-fury-leap-core", "toId": "primalist-fury-leap-cooldown" },
+          { "fromId": "primalist-fury-leap-impact", "toId": "primalist-fury-leap-shockwave" },
+          { "fromId": "primalist-fury-leap-impact", "toId": "primalist-fury-leap-frenzy" }
+        ]
+      }
+    },
+    {
+      "id": "primalist-storm-totem",
+      "name": "Storm Totem",
+      "masteryId": "shaman",
+      "masteryGatePoints": 20,
+      "skillTree": {
+        "nodes": [
+          { "id": "primalist-storm-totem-core", "name": "Storm Totem", "x": 0, "y": 0, "size": "large", "maxPoints": 1, "effects": [{ "description": "Place a totem that casts lightning bolts at nearby enemies.", "tags": ["LIGHTNING", "TOTEM", "SPELL"] }] },
+          { "id": "primalist-storm-totem-bolt", "name": "Forked Lightning", "x": 280, "y": 0, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+1 fork target per point.", "tags": ["LIGHTNING", "CHAIN"] }] },
+          { "id": "primalist-storm-totem-duration", "name": "Enduring Storm", "x": 0, "y": 280, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+1 second totem duration per point.", "tags": ["LIGHTNING", "DURATION"] }] },
+          { "id": "primalist-storm-totem-damage", "name": "Tempest", "x": 280, "y": 280, "size": "small", "maxPoints": 4, "effects": [{ "description": "+10% Lightning Damage per point.", "tags": ["LIGHTNING", "DAMAGE"] }] },
+          { "id": "primalist-storm-totem-count", "name": "Twin Totems", "x": 560, "y": 0, "size": "medium", "maxPoints": 2, "effects": [{ "description": "+1 maximum totem count per point.", "tags": ["LIGHTNING", "TOTEM"] }] },
+          { "id": "primalist-storm-totem-shock", "name": "Static Field", "x": -280, "y": 0, "size": "small", "maxPoints": 4, "effects": [{ "description": "+8% Shock chance per point.", "tags": ["LIGHTNING", "AILMENT"] }] }
+        ],
+        "edges": [
+          { "fromId": "primalist-storm-totem-core", "toId": "primalist-storm-totem-bolt" },
+          { "fromId": "primalist-storm-totem-core", "toId": "primalist-storm-totem-duration" },
+          { "fromId": "primalist-storm-totem-core", "toId": "primalist-storm-totem-shock" },
+          { "fromId": "primalist-storm-totem-bolt", "toId": "primalist-storm-totem-damage" },
+          { "fromId": "primalist-storm-totem-bolt", "toId": "primalist-storm-totem-count" }
+        ]
+      }
+    }
+  ],
   "masteries": [
     {
       "id": "shaman",

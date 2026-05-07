@@ -21,6 +21,8 @@ export interface ClassData {
   className: string
   baseTree: Record<string, GameNode>
   masteries: Record<string, MasteryData>
+  skills: SkillEntry[]
+  skillTrees: Record<string, Record<string, GameNode>>
 }
 
 export interface GameDataManifest {

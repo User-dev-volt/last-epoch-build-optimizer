@@ -22,6 +22,54 @@
       { "fromId": "acolyte-base-minion-mastery", "toId": "acolyte-base-forbidden-knowledge" }
     ]
   },
+  "skills": [
+    {
+      "id": "acolyte-rip-blood",
+      "name": "Rip Blood",
+      "masteryId": null,
+      "masteryGatePoints": null,
+      "skillTree": {
+        "nodes": [
+          { "id": "acolyte-rip-blood-core", "name": "Rip Blood", "x": 0, "y": 0, "size": "large", "maxPoints": 1, "effects": [{ "description": "Rip blood from an enemy, dealing necrotic damage and life leeching.", "tags": ["NECROTIC", "LEECH"] }] },
+          { "id": "acolyte-rip-blood-rupture", "name": "Rupture", "x": 280, "y": 0, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+10% Bleed chance on Rip Blood per point.", "tags": ["NECROTIC", "BLEED"] }] },
+          { "id": "acolyte-rip-blood-leech", "name": "Blood Feast", "x": 0, "y": 280, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+4% Life Leech from Rip Blood per point.", "tags": ["NECROTIC", "LEECH", "SUSTAIN"] }] },
+          { "id": "acolyte-rip-blood-piercing", "name": "Piercing", "x": 280, "y": 280, "size": "small", "maxPoints": 4, "effects": [{ "description": "+8% Necrotic Damage per point.", "tags": ["NECROTIC", "DAMAGE"] }] },
+          { "id": "acolyte-rip-blood-empowered", "name": "Empowered Strike", "x": 560, "y": 0, "size": "medium", "maxPoints": 4, "effects": [{ "description": "+12% Damage increase on consecutive hits per point.", "tags": ["NECROTIC", "DAMAGE", "BUFF"] }] },
+          { "id": "acolyte-rip-blood-explosive", "name": "Explosive Blood", "x": -280, "y": 0, "size": "small", "maxPoints": 4, "effects": [{ "description": "Blood projectiles explode on impact dealing +10% area damage per point.", "tags": ["NECROTIC", "AREA"] }] }
+        ],
+        "edges": [
+          { "fromId": "acolyte-rip-blood-core", "toId": "acolyte-rip-blood-rupture" },
+          { "fromId": "acolyte-rip-blood-core", "toId": "acolyte-rip-blood-leech" },
+          { "fromId": "acolyte-rip-blood-core", "toId": "acolyte-rip-blood-explosive" },
+          { "fromId": "acolyte-rip-blood-rupture", "toId": "acolyte-rip-blood-piercing" },
+          { "fromId": "acolyte-rip-blood-rupture", "toId": "acolyte-rip-blood-empowered" }
+        ]
+      }
+    },
+    {
+      "id": "acolyte-harvest",
+      "name": "Harvest",
+      "masteryId": "lich",
+      "masteryGatePoints": 20,
+      "skillTree": {
+        "nodes": [
+          { "id": "acolyte-harvest-core", "name": "Harvest", "x": 0, "y": 0, "size": "large", "maxPoints": 1, "effects": [{ "description": "Harvest necrotic energy from a target, dealing damage and restoring health.", "tags": ["NECROTIC", "LEECH"] }] },
+          { "id": "acolyte-harvest-radius", "name": "Reap", "x": 280, "y": 0, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+10% Harvest area of effect per point.", "tags": ["NECROTIC", "AREA"] }] },
+          { "id": "acolyte-harvest-leech", "name": "Soul Siphon", "x": 0, "y": 280, "size": "medium", "maxPoints": 5, "effects": [{ "description": "+5% Life Leech from Harvest per point.", "tags": ["NECROTIC", "LEECH"] }] },
+          { "id": "acolyte-harvest-minions", "name": "Reanimation", "x": 280, "y": 280, "size": "small", "maxPoints": 4, "effects": [{ "description": "+15% chance to reanimate killed enemies as temporary minions per point.", "tags": ["NECROTIC", "MINION"] }] },
+          { "id": "acolyte-harvest-speed", "name": "Rapid Harvest", "x": 560, "y": 0, "size": "small", "maxPoints": 4, "effects": [{ "description": "-0.1 seconds Harvest cooldown per point.", "tags": ["NECROTIC", "COOLDOWN"] }] },
+          { "id": "acolyte-harvest-ward", "name": "Ward Harvest", "x": -280, "y": 0, "size": "medium", "maxPoints": 4, "effects": [{ "description": "Harvest generates 10 Ward in addition to health per point.", "tags": ["NECROTIC", "WARD"] }] }
+        ],
+        "edges": [
+          { "fromId": "acolyte-harvest-core", "toId": "acolyte-harvest-radius" },
+          { "fromId": "acolyte-harvest-core", "toId": "acolyte-harvest-leech" },
+          { "fromId": "acolyte-harvest-core", "toId": "acolyte-harvest-ward" },
+          { "fromId": "acolyte-harvest-radius", "toId": "acolyte-harvest-minions" },
+          { "fromId": "acolyte-harvest-radius", "toId": "acolyte-harvest-speed" }
+        ]
+      }
+    }
+  ],
   "masteries": [
     {
       "id": "lich",

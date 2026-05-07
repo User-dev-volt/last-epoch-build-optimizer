@@ -29,6 +29,7 @@ function makeBuild(
     classId,
     masteryId,
     nodeAllocations,
+    skillNodeAllocations: {},
     contextData: { gear: [], skills: [], idols: [] },
     isPersisted: false,
     createdAt: '2026-01-01T00:00:00Z',
@@ -69,6 +70,8 @@ const TEST_GAME_DATA: GameData = {
           },
         },
       },
+      skills: [],
+      skillTrees: {},
     },
   },
 }
