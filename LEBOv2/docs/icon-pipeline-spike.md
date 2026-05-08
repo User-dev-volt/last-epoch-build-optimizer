@@ -121,29 +121,37 @@ The bundle path can be hardcoded in Rust code, bypassing the need to parse the c
 
 The URL pattern assumed in the epics (`https://assets.lastepochtools.com/skills/{skill_id}.png`) is **incorrect**. The subdomain `assets.lastepochtools.com` does not resolve.
 
-### `www.lastepochtools.com` — Confirmed accessible (manual browser inspection 2026-05-08)
+### `www.lastepochtools.com` — Confirmed accessible, but uses sprite sheets (manual browser inspection 2026-05-08)
 
-The domain is protected by Cloudflare WAF against automated access but loads normally in a real browser. The confirmed icon URL pattern from manual browser DevTools inspection is:
+The domain is protected by Cloudflare WAF against automated access but loads normally in a real browser. Manual DevTools inspection reveals that **skill icons are not served as individual image files** — the site uses CSS sprite sheets.
 
+**How it works:**
+- A single large WebP image is downloaded containing many icons packed together
+- CSS `background-position` offsets select the specific 64×64 region for each skill
+- No per-skill URL exists that returns a single icon image
+
+**Confirmed example — Abyssal Echoes (Acolyte/Lich):**
 ```
-https://www.lastepochtools.com/data/{version}/planner/res/{hash}
+Sprite sheet URL:  https://www.lastepochtools.com/data/version145/planner/res/01a7d73f4d0c94422564bdc8e9a068e6.webp
+Background offset: background-position: -130px -453px
+Rendered size:     64px × 64px
 ```
 
-**Confirmed example:** Abyssal Echoes (Acolyte/Lich):
-```
-https://www.lastepochtools.com/data/version145/planner/res/01a7d73f4d0c94422564bdc8e9a068
-```
+**Mapping required:** `skillId → (sprite_sheet_url, x_offset, y_offset)`
 
-**Key observations:**
-1. **`{version}` is game-version-scoped** — `version145` corresponds to game version 1.4.5. This path segment will change when Last Epoch patches, requiring the app to track the current version string.
-2. **`{hash}` is an opaque identifier** — 30-character hex string that does NOT correspond to our `skillId` values (e.g., `acolyte-abyssal-echoes`). The derivation of this hash is unknown — it may be a truncated Unity asset GUID, an MD5 of an internal identifier, or a lastepochtools.com internal database key.
-3. **No `.png` extension** — the URL has no file extension. The server presumably returns the correct `image/png` content-type header.
+This is not derivable from our game data. The `{hash}` in the sprite sheet URL is 32 hex characters (MD5 length) but does not match MD5 of any candidate string tested: skill name variants, kebab-case skillId, or bundle asset names (`skillIcon-{name}.png`). It is a lastepochtools.com internal identifier.
 
-**Unresolved: skillId → hash mapping.** The hash is 32 hex characters (MD5 length) but does not match MD5 of any obvious candidate string: skill name, kebab-case skillId, bundle asset name (`skillIcon-{name}.png`), or underscore variant. It is likely a lastepochtools.com internal database ID or a Unity asset GUID stored in their data pipeline.
+**What Story 2.2 would need for this CDN path:**
+1. An API or data source from lastepochtools.com that maps each skill to its `(sprite_sheet_url, x, y)` tuple
+2. Rust code to: fetch the sprite sheet WebP → decode WebP → crop the 64×64 region → encode as PNG → write to icon cache
+3. A WebP decoding dependency in `Cargo.toml` (e.g., `image` crate with WebP feature)
+4. Version tracking: `version145` changes with each game patch
 
-To resolve: check the DevTools **Fetch/XHR** tab on a skill page for an API call (e.g., `/api/skills` or `/data/version145/...`) that returns JSON with skill data including the icon path/hash. That response would let us build a complete skillId → hash mapping table, or identify whether the hash is derivable from game data we already have.
+**Compared to local game file extraction:** the CDN sprite sheet path is not simpler than the `unity-asset` bundle extraction path — both require image format decoding (WebP vs DXT) and pixel cropping. The CDN path additionally requires a live internet connection and a version-coupled external mapping.
 
-**The CDN URL includes a game version** (`version145` = game v1.4.5) — this path segment changes with each game patch, meaning the URL template has a moving part that requires maintenance or dynamic resolution.
+### `tunklab.com` — Currently down (likely temporary)
+
+The site returns Cloudflare error 526 (Invalid SSL certificate) — this is typically a temporary origin SSL misconfiguration, not a permanent closure. Revisit before Story 2.2 CDN scope is finalized.
 
 ### `tunklab.com` — Currently down (likely temporary)
 
@@ -172,11 +180,16 @@ Additional blockers even if extraction works:
 - No algorithmic skillId → bundle asset name mapping exists; a hand-curated lookup table (~50 rows for main skills) is required
 - The Addressables binary catalog format is not parseable from Rust; the bundle path must be hardcoded per platform
 
-### CDN path: **BLOCKED (unconfirmed)**
+### CDN path: **NOT RECOMMENDED — sprite sheet complexity equals local extraction complexity**
 
-> Neither CDN source is accessible. The URL in the epics (`assets.lastepochtools.com/skills/...`) does not exist. Manual browser inspection or community contact is required before Story 2.2 can implement CDN fetching.
+> `lastepochtools.com` uses CSS sprite sheets, not individual icon URLs. Fetching a single skill icon requires: discovering the sprite sheet mapping (skillId → sheet URL + pixel offset), downloading a multi-icon WebP, decoding WebP, cropping a 64×64 region, and encoding to PNG. This is comparable in complexity to local game file extraction and adds internet dependency plus version coupling (`version145` changes with patches).
 
-**Story 2.2 is blocked** until the CDN URL pattern is manually confirmed. See Section 4 for the 2-minute manual investigation steps.
+**Revised assessment:** The CDN path is not the "easy fallback" originally anticipated. Both paths have similar implementation effort. The **local game file extraction path** (if `unity-asset` passes the empirical test) is actually preferable: no internet required, no external dependency, no version string maintenance.
+
+**Recommended priority order for Story 2.2:**
+1. Run the `unity-asset` v0.3.0 empirical test (30 min) — if GO, implement local extraction as the primary path
+2. If NO-GO, reassess: either implement the sprite sheet CDN path (high complexity) or defer icon rendering until a better source is available
+3. Contact lastepochtools.com maintainer (Dammitt, Last Epoch Discord) to ask if they offer a simpler per-skill icon API endpoint — that would change this calculus
 
 ---
 
