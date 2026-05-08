@@ -158,8 +158,8 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
   resetActiveTree: (treeType, slotId) => {
     const { activeBuild, undoStack } = get()
     if (!activeBuild) return
-    const newUndoStack = [...undoStack, activeBuild].slice(-MAX_UNDO_STACK)
     if (treeType === 'passive') {
+      if (Object.keys(activeBuild.nodeAllocations).length === 0) return
       set({
         activeBuild: {
           ...activeBuild,
@@ -167,9 +167,10 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
           isPersisted: false,
           updatedAt: new Date().toISOString(),
         },
-        undoStack: newUndoStack,
+        undoStack: [...undoStack, activeBuild].slice(-MAX_UNDO_STACK),
       })
     } else if (treeType === 'skill' && slotId) {
+      if (Object.keys(activeBuild.skillNodeAllocations[slotId] ?? {}).length === 0) return
       set({
         activeBuild: {
           ...activeBuild,
@@ -177,7 +178,7 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
           isPersisted: false,
           updatedAt: new Date().toISOString(),
         },
-        undoStack: newUndoStack,
+        undoStack: [...undoStack, activeBuild].slice(-MAX_UNDO_STACK),
       })
     }
   },

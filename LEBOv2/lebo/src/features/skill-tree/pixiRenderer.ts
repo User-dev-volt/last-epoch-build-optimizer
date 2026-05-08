@@ -250,7 +250,7 @@ export async function initRenderer(
 
       const isSearchHighlighted = highlightedNodes.searchHighlighted.has(node.id)
       const isSearchDimmed = highlightedNodes.searchDimmed.has(node.id)
-      if (isSearchDimmed) drawSearchDimOverlay(searchDimOverlayGraphics, node.x, node.y, r)
+      if (isSearchDimmed && !isGlowing) drawSearchDimOverlay(searchDimOverlayGraphics, node.x, node.y, r)
       if (isSearchHighlighted) drawSearchHighlight(searchHighlightGraphics, node.x, node.y, r)
 
       // Point count label inside the node — only shown when points are allocated

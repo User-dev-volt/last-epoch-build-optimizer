@@ -224,10 +224,11 @@ export function SkillTreeView() {
   const handleReset = useCallback(() => {
     if (isPassiveTab) {
       resetActiveTree('passive')
+      setSearchQuery('')
     } else if (slotId) {
       resetActiveTree('skill', slotId)
+      setSearchQuery('')
     }
-    setSearchQuery('')
   }, [isPassiveTab, slotId, resetActiveTree])
 
   const handleSkillTabClick = useCallback(
@@ -349,7 +350,7 @@ export function SkillTreeView() {
       <SkillTreeTabBar
         activeSkills={activeSkills}
         selectedIndex={safeTabIndex}
-        onChange={setActiveTabIndex}
+        onChange={handleTabChange}
         onSkillTabClick={handleSkillTabClick}
       />
 
