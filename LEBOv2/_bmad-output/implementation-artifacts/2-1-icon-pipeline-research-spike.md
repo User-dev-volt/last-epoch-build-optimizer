@@ -1,6 +1,6 @@
 # Story 2.1: Icon Pipeline Research Spike
 
-Status: review
+Status: done
 
 ## Story
 
@@ -69,7 +69,7 @@ so that the icon pipeline implementation in Stories 2.2–2.4 is built on confir
 ### Review Findings
 
 - [x] [Review][Decision] CDN URL — RESOLVED: `lastepochtools.com` confirmed accessible via manual browser inspection. However, icons are served via **CSS sprite sheets**, not individual URLs. Fetching one skill icon requires: sprite sheet mapping (skillId → sheet URL + pixel offset), WebP download, WebP decode, 64×64 crop, PNG encode. Complexity is comparable to local game file extraction. CDN path is NOT the simple fallback originally assumed. Documented in `docs/icon-pipeline-spike.md` §4. Recommendation revised in §5: run the `unity-asset` empirical test first; local extraction is preferable if it passes.
-- [ ] [Review][Decision] Rust crate empirical test not run — AC 1.3 is partially unmet: `unity-asset` v0.3.0 viability against the v8 bundle is not confirmed or ruled out. Options: (a) run the 30-min empirical test now and update Sections 3 and 5 with a definitive GO/NO-GO, (b) accept CONDITIONAL NO-GO and scope Story 2.2 as CDN-only unless/until the test is run separately.
+- [x] [Review][Decision] Rust crate empirical test — RESOLVED: CDN (lastepochtools.com) confirmed to use sprite sheets, making the CDN path equally complex as local extraction. Decision: implement a **one-time icon extraction script** (standalone Rust binary, not part of the Tauri app) that runs `unity-asset` against the bundle, extracts all skill icons, and saves them as `{skillId}.png` files. This replaces both runtime CDN fetching and runtime bundle extraction. If `unity-asset` fails the v8 test, fall back to lastepochtools.com sprite sheet scraping. Captured as pre-Story 2.2 dev work — see `docs/icon-pipeline-spike.md` §7.
 - [x] [Review][Decision] Passive tree node icons — RESOLVED: No dedicated passive node icon bundle exists. Icons are embedded in `defaultlocalgroup_assets_all.bundle` (390 MB) or anonymous numbered bundles — not practically extractable without an asset viewer tool. Decision: limit Epic 2 "icon-accurate" scope to active skill tree nodes only. Passive tree nodes continue to use colored hexagonal rendering. If CDN (D1) hosts passive node icons, reconsider in Story 2.4. Documented in `docs/icon-pipeline-spike.md` §6a.
 - [ ] [Review][Patch] macOS bundle subfolder name not documented — Section 1 notes macOS Steam path was not investigated. The bundle sub-path `StandaloneWindows64` changes on macOS (likely `StandaloneOSX` or `StandaloneOSXUniversal`). Story task said "note both if possible." Add a note that the macOS sub-folder name is unknown and must be verified before Story 2.2 uses a `#[cfg(target_os)]` conditional. [docs/icon-pipeline-spike.md §1]
 - [ ] [Review][Patch] Empirical test missing PNG validation and texture format check — Section 5's recommended test only checks that `file.objects()` is non-empty, which does not guard against silent corruption (v7 parser misreading v8 layout). Extend the test: (1) check `Texture2D.format` on the first object to confirm it's a format `unity-asset-decode` supports (DXT5/BC3 expected for Windows build), (2) attempt to decode and verify the PNG bytestream is valid (non-zero length, valid PNG header). [docs/icon-pipeline-spike.md §3, §5]

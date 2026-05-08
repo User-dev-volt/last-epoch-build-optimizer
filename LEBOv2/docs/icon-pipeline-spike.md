@@ -212,6 +212,60 @@ Until D1 is resolved and this scope decision is made, Story 2.4 should be writte
 
 ---
 
+## 7. Pre-Story 2.2 Action: One-Time Icon Extraction Script
+
+**Decision (2026-05-08):** The CDN path (lastepochtools.com) uses sprite sheets — comparable complexity to local extraction and adds internet dependency + version coupling. The preferred approach is a **standalone Rust extraction script** that builds a static icon database once, bundled with the app.
+
+### What to build
+
+A throwaway Rust binary (NOT part of the Tauri app) at e.g. `tools/extract-icons/src/main.rs`:
+
+```rust
+// Cargo.toml deps needed:
+// unity-asset-binary = "0.2.0"
+// unity-asset-decode = "0.2.0"
+// image = { version = "0.25", features = ["png"] }
+
+use unity_asset_binary::bundle::Bundle;
+
+fn main() {
+    let bundle_path = r"C:\Program Files (x86)\Steam\steamapps\common\Last Epoch\Last Epoch_Data\StreamingAssets\aa\StandaloneWindows64\skill_icons_assets_all.bundle";
+    let bundle = Bundle::from_path(bundle_path).expect("failed to open bundle");
+
+    for file in bundle.files() {
+        for obj in file.objects() {
+            // Check if obj is Texture2D, decode to PNG, save as {name}.png
+            println!("{:?}", obj);
+        }
+    }
+}
+```
+
+**Step 1 — Empirical test (15 min):** Get the object list printing. If Texture2D objects appear → GO. If panic or empty → NO-GO, fall back to lastepochtools.com sprite sheet approach (see §4).
+
+**Step 2 — Full extraction (if GO, ~30 min more):** Decode each Texture2D to PNG using `unity-asset-decode`. Save output to `lebo/src-tauri/resources/icons/skills/{bundle_asset_name}.png`.
+
+**Step 3 — skillId mapping:** The bundle uses inconsistent naming (e.g. `skillIcon-rip blood.png`, not `acolyte-rip-blood`). After extraction, build a mapping file `lebo/src-tauri/resources/icons/skill-icon-map.json`:
+```json
+{ "acolyte-rip-blood": "skillIcon-rip blood.png", ... }
+```
+Start with the ~7 examples documented in §2 and extend from the extracted file list.
+
+**Step 4 — Story 2.2 becomes simple:** With pre-extracted PNGs in `resources/icons/skills/`, Story 2.2's Rust commands just copy from resources to the icon cache on first launch. No runtime bundle parsing, no CDN calls.
+
+### Fallback (if unity-asset fails v8 test)
+
+Use the lastepochtools.com sprite sheet approach instead:
+1. Find the XHR/Fetch data endpoint in browser DevTools on `lastepochtools.com/planner` — it will return a JSON file with skill data including sprite sheet URLs and offsets
+2. Write a Node.js or Python script to download sprite sheets and crop 64×64 regions
+3. Same output: `resources/icons/skills/{skillId}.png`
+
+### Run this before starting Story 2.2
+
+Story 2.2 (`2-2-rust-icon-pipeline-commands`) should NOT be started until this script has produced the icon files. When running `bmad-create-story` for Story 2.2, reference this section for context.
+
+---
+
 ## 6. Impact on Story 2.2
 
 Given the findings above, Story 2.2's implementation scope depends on which blockers are resolved:
