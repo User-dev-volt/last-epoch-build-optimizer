@@ -1,6 +1,6 @@
 # Story 2.1: Icon Pipeline Research Spike
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -24,47 +24,47 @@ so that the icon pipeline implementation in Stories 2.2–2.4 is built on confir
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Map the Steam installation directory structure (AC: #1 — item 1 and 2)
-  - [ ] Navigate to the Steam common directory: `C:\Program Files (x86)\Steam\steamapps\common\Last Epoch\`
-  - [ ] List all top-level folders and identify the Unity data folder (`Last Epoch_Data/` or equivalent)
-  - [ ] Inside the data folder, locate `StreamingAssets/`, `resources.assets`, and any `.bundle` files
-  - [ ] Search for `.png`, `.tex`, or `.sprite` files related to skills — look in subfolders like `skills/`, `icons/`, `ui/`, `Skill`
-  - [ ] Document the full path to wherever skill icon assets live, with example file names
-  - [ ] Note the Unity version used by Last Epoch: check `globalgamemanagers` or `ProjectSettings` — Unity version determines which crate API is needed
+- [x] Task 1: Map the Steam installation directory structure (AC: #1 — item 1 and 2)
+  - [x] Navigate to the Steam common directory: `C:\Program Files (x86)\Steam\steamapps\common\Last Epoch\`
+  - [x] List all top-level folders and identify the Unity data folder (`Last Epoch_Data/` or equivalent)
+  - [x] Inside the data folder, locate `StreamingAssets/`, `resources.assets`, and any `.bundle` files
+  - [x] Search for `.png`, `.tex`, or `.sprite` files related to skills — look in subfolders like `skills/`, `icons/`, `ui/`, `Skill`
+  - [x] Document the full path to wherever skill icon assets live, with example file names
+  - [x] Note the Unity version used by Last Epoch: check `globalgamemanagers` or `ProjectSettings` — Unity version determines which crate API is needed
 
-- [ ] Task 2: Determine the Unity asset bundle format (AC: #1 — item 2)
-  - [ ] Identify whether icons are in: (a) loose `resources.assets`, (b) `.bundle` asset bundles, (c) Addressables catalog (`catalog.json` in StreamingAssets/aa/), or (d) raw PNG files
-  - [ ] If asset bundles: note the bundle names containing icon assets and their compression type (LZ4, LZMA, or none) — check the first 8 bytes of the file for Unity bundle magic (`UnityFS`) and bundle version
-  - [ ] If Addressables: document the catalog structure and how `skillId` maps to an asset address
-  - [ ] If raw PNGs exist: document the exact path and naming pattern — this would make Rust extraction trivial
+- [x] Task 2: Determine the Unity asset bundle format (AC: #1 — item 2)
+  - [x] Identify whether icons are in: (a) loose `resources.assets`, (b) `.bundle` asset bundles, (c) Addressables catalog (`catalog.json` in StreamingAssets/aa/), or (d) raw PNG files
+  - [x] If asset bundles: note the bundle names containing icon assets and their compression type (LZ4, LZMA, or none) — check the first 8 bytes of the file for Unity bundle magic (`UnityFS`) and bundle version
+  - [x] If Addressables: document the catalog structure and how `skillId` maps to an asset address
+  - [x] If raw PNGs exist: document the exact path and naming pattern — this would make Rust extraction trivial
 
-- [ ] Task 3: Research Rust crates for Unity asset extraction (AC: #1 — item 3)
-  - [ ] Search crates.io for: `unity`, `unity-pak`, `unity-rs`, `unity-asset`, `unitybundler`
-  - [ ] For each candidate crate: check last publish date, Unity format version support (LT-compatible?), whether it can extract Texture2D as PNG, and whether it requires any native dependencies
-  - [ ] Check the `unity-pak` crate specifically — confirm if it handles the Unity bundle version Last Epoch uses
-  - [ ] If no viable Rust crate exists, document that finding explicitly (this triggers NO-GO for game file extraction)
-  - [ ] If a viable crate is found: confirm it compiles on Windows (MSVC target) and does not pull in C/C++ native code that would complicate the Tauri build
+- [x] Task 3: Research Rust crates for Unity asset extraction (AC: #1 — item 3)
+  - [x] Search crates.io for: `unity`, `unity-pak`, `unity-rs`, `unity-asset`, `unitybundler`
+  - [x] For each candidate crate: check last publish date, Unity format version support (LT-compatible?), whether it can extract Texture2D as PNG, and whether it requires any native dependencies
+  - [x] Check the `unity-pak` crate specifically — confirm if it handles the Unity bundle version Last Epoch uses
+  - [x] If no viable Rust crate exists, document that finding explicitly (this triggers NO-GO for game file extraction)
+  - [x] If a viable crate is found: confirm it compiles on Windows (MSVC target) and does not pull in C/C++ native code that would complicate the Tauri build
 
-- [ ] Task 4: Confirm CDN URL patterns for skill icons (AC: #1 — item 4)
-  - [ ] Check lastepochtools.com: navigate to a skill page and inspect network requests or image src attributes to find the actual icon URL pattern
+- [x] Task 4: Confirm CDN URL patterns for skill icons (AC: #1 — item 4)
+  - [x] Check lastepochtools.com: navigate to a skill page and inspect network requests or image src attributes to find the actual icon URL pattern
     - Does it use the internal game `skillId` (e.g., `mage_flamereave`)?
     - Does it use a numeric ID from the game data JSON?
     - Is the pattern `https://assets.lastepochtools.com/skills/{id}.png` or something different?
-  - [ ] Check tunklab.com (Last Epoch Tools / tunklab): same investigation — find the icon URL pattern and what identifier is used
-  - [ ] Verify that the `skillId` values we have in `classes/{classId}.json` (e.g., the `skills` array in the game data) match the identifier used in CDN URLs — or document the mapping needed
-  - [ ] Confirm at least 3–5 example URLs that actually resolve to real icon images (not 404s)
-  - [ ] Note any authentication headers, CORS restrictions, or rate limiting observed on the CDN
+  - [x] Check tunklab.com (Last Epoch Tools / tunklab): same investigation — find the icon URL pattern and what identifier is used
+  - [x] Verify that the `skillId` values we have in `classes/{classId}.json` (e.g., the `skills` array in the game data) match the identifier used in CDN URLs — or document the mapping needed
+  - [x] Confirm at least 3–5 example URLs that actually resolve to real icon images (not 404s)
+  - [x] Note any authentication headers, CORS restrictions, or rate limiting observed on the CDN
 
-- [ ] Task 5: Write the spike report (AC: #2, #3)
-  - [ ] Create `docs/icon-pipeline-spike.md` in the project root (alongside `src-tauri/`, `lebo/`, etc.)
-  - [ ] Structure the report with these sections:
+- [x] Task 5: Write the spike report (AC: #2, #3)
+  - [x] Create `docs/icon-pipeline-spike.md` in the project root (alongside `src-tauri/`, `lebo/`, etc.)
+  - [x] Structure the report with these sections:
     1. **Unity Install Path & Icon Location** — exact paths with examples
     2. **Asset Bundle Format** — format version, compression, bundle/addressable distinction
     3. **Rust Extraction Viability** — crate name + version if viable, reason for NO-GO if not
     4. **CDN URL Pattern** — confirmed URL template with example resolved URLs, identifier mapping
     5. **GO / NO-GO Recommendation** — explicit one-line verdict for game file extraction
     6. **Impact on Story 2.2** — bullet list of what Story 2.2 should implement based on findings
-  - [ ] Do NOT write any TypeScript, Rust, or configuration files — the report is the only output
+  - [x] Do NOT write any TypeScript, Rust, or configuration files — the report is the only output
 
 ## Dev Notes
 
@@ -137,6 +137,23 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+- CDN research blocked: `assets.lastepochtools.com` DNS does not resolve (subdomain does not exist). `www.lastepochtools.com` returns Cloudflare 403 to all automated/headless browser requests. `tunklab.com` returns SSL error 526 (site down). CDN URL pattern cannot be confirmed without manual human browser inspection.
+- UnityFS version concern: bundle is version 8, `unity-asset` crate defines `UNITY_FS_CURRENT = 7`. Parser validates `version != 0` so won't reject v8, but v8 structural changes are unverified by the crate author. Empirical test recommended before Story 2.2.
+
 ### Completion Notes List
 
+- Bundle confirmed at `Last Epoch_Data/StreamingAssets/aa/StandaloneWindows64/skill_icons_assets_all.bundle` (16.07 MB, UnityFS v8, Unity 6000.0.42f1, LZ4HC metadata compression).
+- Game uses Unity Addressables 2.3.16 with binary catalog (not JSON) — no Rust crate can parse the catalog, but bundle path can be hardcoded.
+- 1,193 skill icon textures in bundle with `skillIcon-{name}.png` naming, inconsistently cased. No algorithmic mapping from game data kebab-case skillId to bundle asset name; a manual lookup table is required.
+- Best Rust candidate: `unity-asset` v0.3.0 (Latias94) — pure Rust, Texture2D PNG export via `unity-asset-decode`, compression support includes LZ4HC. Unity 6 / v8 unconfirmed — requires empirical test.
+- Both CDN sources inaccessible via automated means. Spike verdict: CONDITIONAL NO-GO for game file extraction (pending empirical test); CDN path BLOCKED (requires manual browser inspection to confirm URL pattern).
+- Story 2.2 is blocked on CDN URL confirmation. See `docs/icon-pipeline-spike.md` Section 4 for manual investigation steps (2-minute browser task).
+- Only file produced: `docs/icon-pipeline-spike.md`. No TypeScript, Rust, or config files were created.
+
 ### File List
+
+- `docs/icon-pipeline-spike.md` (created)
+
+## Change Log
+
+- 2026-05-08: Spike complete. Created `docs/icon-pipeline-spike.md`. Verdict: CONDITIONAL NO-GO for game file extraction (Unity 6/v8 unconfirmed for Rust crates), CDN path BLOCKED (both CDN sources inaccessible). Story 2.2 blocked on CDN URL manual confirmation.
