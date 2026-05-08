@@ -6,6 +6,8 @@ export interface HighlightedNodes {
   dimmed: Set<string>
   previewRemoved: Set<string>
   previewAdded: Set<string>
+  searchHighlighted: Set<string>
+  searchDimmed: Set<string>
 }
 
 export interface TreeNode {

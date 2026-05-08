@@ -13,6 +13,7 @@ import { NodeTooltip } from './NodeTooltip'
 import { SkillTreeTabBar } from './SkillTreeTabBar'
 import { useSkillTree } from './useSkillTree'
 import { SkillPickerGrid } from '../skill-picker/SkillPickerGrid'
+import { TreeControls } from './TreeControls'
 
 const EMPTY_ALLOCATED: Record<string, number> = {}
 const EMPTY_SKILL_ALLOC: Record<string, Record<string, number>> = {}
@@ -22,6 +23,8 @@ const EMPTY_HIGHLIGHTED: HighlightedNodes = {
   dimmed: EMPTY_SET,
   previewRemoved: EMPTY_SET,
   previewAdded: EMPTY_SET,
+  searchHighlighted: EMPTY_SET,
+  searchDimmed: EMPTY_SET,
 }
 const EMPTY_SKILLS: ActiveSkill[] = []
 
@@ -54,6 +57,7 @@ export function SkillTreeView() {
   const activeBuild = useBuildStore((s) => s.activeBuild)
   const undoNodeChange = useBuildStore((s) => s.undoNodeChange)
   const assignSkillToSlot = useBuildStore((s) => s.assignSkillToSlot)
+  const resetActiveTree = useBuildStore((s) => s.resetActiveTree)
   const activeSkills = useBuildStore(
     (s) => s.activeBuild?.contextData.skills ?? EMPTY_SKILLS
   )
@@ -67,6 +71,7 @@ export function SkillTreeView() {
 
   const [activeTabIndex, setActiveTabIndex] = useState(0)
   const [pickerState, setPickerState] = useState<PickerState | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const emptySlotButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -110,7 +115,8 @@ export function SkillTreeView() {
   const nodeAllocations = previewAllocatedNodes ?? baseAllocatedNodes
 
   const highlightedNodes = useMemo<HighlightedNodes>(() => {
-    const base = highlightedNodeIds ?? EMPTY_HIGHLIGHTED
+    // HighlightedNodeIds only has glowing/dimmed; spread EMPTY_HIGHLIGHTED first to fill all required fields
+    const base: HighlightedNodes = { ...EMPTY_HIGHLIGHTED, ...(highlightedNodeIds ?? {}) }
     if (!previewSuggestion) {
       return { ...base, previewRemoved: EMPTY_SET, previewAdded: EMPTY_SET }
     }
@@ -139,6 +145,15 @@ export function SkillTreeView() {
   const skillNodes = activeSkill ? classData?.skillTrees[activeSkill.skillId] : undefined
   const slotAllocations = slotId ? (skillNodeAllocations[slotId] ?? EMPTY_ALLOCATED) : EMPTY_ALLOCATED
 
+  // Moved before early returns so search memos (hooks) can reference it unconditionally
+  const activeGameNodes = useMemo<Record<string, GameNode>>(
+    () =>
+      isPassiveTab
+        ? allGameNodes
+        : (activeSkill ? (classData?.skillTrees[activeSkill.skillId] ?? {}) : {}),
+    [isPassiveTab, allGameNodes, activeSkill, classData]
+  )
+
   const skillTreeData = useMemo(
     () => (skillNodes ? buildSkillTreeData(skillNodes, slotAllocations) : null),
     [skillNodes, slotAllocations]
@@ -150,6 +165,38 @@ export function SkillTreeView() {
         (s) => s.masteryId === null || s.masteryId === selectedMasteryId
       ) ?? [],
     [classData, selectedMasteryId]
+  )
+
+  const activeTreeData = isPassiveTab ? treeData : skillTreeData
+
+  const searchHighlighted = useMemo<Set<string>>(() => {
+    if (!searchQuery || !activeTreeData) return EMPTY_SET
+    const q = searchQuery.toLowerCase()
+    return new Set(
+      activeTreeData.nodes
+        .filter((n) => (activeGameNodes[n.id]?.name ?? '').toLowerCase().includes(q))
+        .map((n) => n.id)
+    )
+  }, [searchQuery, activeTreeData, activeGameNodes])
+
+  const searchDimmed = useMemo<Set<string>>(() => {
+    if (!searchQuery || !activeTreeData) return EMPTY_SET
+    const q = searchQuery.toLowerCase()
+    return new Set(
+      activeTreeData.nodes
+        .filter((n) => !(activeGameNodes[n.id]?.name ?? '').toLowerCase().includes(q))
+        .map((n) => n.id)
+    )
+  }, [searchQuery, activeTreeData, activeGameNodes])
+
+  const passiveHighlightedNodes = useMemo<HighlightedNodes>(
+    () => ({ ...highlightedNodes, searchHighlighted, searchDimmed }),
+    [highlightedNodes, searchHighlighted, searchDimmed]
+  )
+
+  const skillHighlightedNodes = useMemo<HighlightedNodes>(
+    () => ({ ...EMPTY_HIGHLIGHTED, searchHighlighted, searchDimmed }),
+    [searchHighlighted, searchDimmed]
   )
 
   const passiveInteraction = useSkillTree(treeData)
@@ -171,7 +218,17 @@ export function SkillTreeView() {
   const handleTabChange = useCallback((index: number) => {
     setActiveTabIndex(index)
     setPickerState(null)
+    setSearchQuery('')
   }, [])
+
+  const handleReset = useCallback(() => {
+    if (isPassiveTab) {
+      resetActiveTree('passive')
+    } else if (slotId) {
+      resetActiveTree('skill', slotId)
+    }
+    setSearchQuery('')
+  }, [isPassiveTab, slotId, resetActiveTree])
 
   const handleSkillTabClick = useCallback(
     (slotIndex: number, el: HTMLButtonElement) => {
@@ -263,7 +320,6 @@ export function SkillTreeView() {
     )
   }
 
-  const activeGameNodes = isPassiveTab ? allGameNodes : (activeSkill ? (classData?.skillTrees[activeSkill.skillId] ?? {}) : {})
   const activeAllocations = isPassiveTab ? nodeAllocations : slotAllocations
 
   const hoveredGameNode = hoveredNodeId ? activeGameNodes[hoveredNodeId] : null
@@ -283,6 +339,10 @@ export function SkillTreeView() {
     pickerState !== null &&
     !pickerState.isPopover &&
     pickerState.slotIndex === safeTabIndex - 1
+
+  const showControls = isPassiveTab
+    ? treeData !== null
+    : activeSkill !== null && skillTreeData !== null && !isPickerFullPanel
 
   return (
     <div id="skill-tree-canvas" className="flex flex-col h-full">
@@ -312,13 +372,21 @@ export function SkillTreeView() {
         </div>
       )}
 
+      {showControls && (
+        <TreeControls
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onReset={handleReset}
+        />
+      )}
+
       <div className="flex-1 min-h-0 relative" onMouseMove={handleMouseMove} onMouseLeave={() => handleNodeHover(null)}>
         {isPassiveTab ? (
           <>
             <SkillTreeCanvas
               treeData={treeData!}
               nodeAllocations={nodeAllocations}
-              highlightedNodes={highlightedNodes}
+              highlightedNodes={passiveHighlightedNodes}
               onNodeClick={handleNodeClick}
               onNodeHover={handleNodeHover}
               onKeyboardNavigate={handleKeyboardNavigate}
@@ -366,7 +434,7 @@ export function SkillTreeView() {
             <SkillTreeCanvas
               treeData={skillTreeData}
               nodeAllocations={slotAllocations}
-              highlightedNodes={EMPTY_HIGHLIGHTED}
+              highlightedNodes={skillHighlightedNodes}
               onNodeClick={handleNodeClick}
               onNodeHover={handleNodeHover}
               onKeyboardNavigate={handleKeyboardNavigate}

@@ -439,6 +439,54 @@ describe('buildStore — assignSkillToSlot', () => {
   })
 })
 
+describe('buildStore — resetActiveTree', () => {
+  beforeEach(() => {
+    useBuildStore.setState(initialState, true)
+    useBuildStore.getState().setSelectedClass('sentinel')
+    useBuildStore.getState().setSelectedMastery('void_knight')
+  })
+
+  it('resetActiveTree("passive") clears passive allocations and pushes undo snapshot', () => {
+    useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
+    expect(useBuildStore.getState().activeBuild!.nodeAllocations['root']).toBe(1)
+    useBuildStore.getState().resetActiveTree('passive')
+    expect(useBuildStore.getState().activeBuild!.nodeAllocations).toEqual({})
+    expect(useBuildStore.getState().undoStack.length).toBeGreaterThan(0)
+  })
+
+  it('undoNodeChange after passive reset restores allocations', () => {
+    useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
+    useBuildStore.getState().resetActiveTree('passive')
+    useBuildStore.getState().undoNodeChange()
+    expect(useBuildStore.getState().activeBuild!.nodeAllocations['root']).toBe(1)
+  })
+
+  it('resetActiveTree("skill", slotId) clears only the targeted slot allocations', () => {
+    useBuildStore.getState().setActiveBuild({
+      schemaVersion: 1,
+      id: 'build-x',
+      name: 'Test',
+      classId: 'sentinel',
+      masteryId: 'void_knight',
+      nodeAllocations: {},
+      skillNodeAllocations: { 'slot-0': { 'skill-root': 2 }, 'slot-1': { 'other-node': 1 } },
+      contextData: { gear: [], skills: [], idols: [] },
+      isPersisted: false,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+    })
+    useBuildStore.getState().resetActiveTree('skill', 'slot-0')
+    const s = useBuildStore.getState()
+    expect(s.activeBuild!.skillNodeAllocations['slot-0']).toEqual({})
+    expect(s.activeBuild!.skillNodeAllocations['slot-1']).toEqual({ 'other-node': 1 })
+  })
+
+  it('resetActiveTree does nothing when activeBuild is null', () => {
+    expect(() => useBuildStore.getState().resetActiveTree('passive')).not.toThrow()
+    expect(useBuildStore.getState().activeBuild).toBeNull()
+  })
+})
+
 const mockSkillTreeData: TreeData = {
   nodes: [
     { id: 'skill-root', x: 0, y: 0, size: 'large', maxPoints: 1, connections: ['skill-child'], state: 'available' },

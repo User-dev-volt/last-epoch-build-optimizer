@@ -32,6 +32,7 @@ interface BuildStore {
     treeData: TreeData
   ) => ApplyNodeResult
   assignSkillToSlot: (slotId: string, skill: Pick<SkillEntry, 'skillId' | 'skillName'>) => void
+  resetActiveTree: (treeType: 'passive' | 'skill', slotId?: string) => void
   undoNodeChange: () => void
   updateContextGear: (gear: GearItem[]) => void
   updateContextSkills: (skills: ActiveSkill[]) => void
@@ -152,6 +153,33 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
     const newUndoStack = [...state.undoStack, activeBuild].slice(-MAX_UNDO_STACK)
     set({ activeBuild: newActiveBuild, undoStack: newUndoStack })
     return { success: true }
+  },
+
+  resetActiveTree: (treeType, slotId) => {
+    const { activeBuild, undoStack } = get()
+    if (!activeBuild) return
+    const newUndoStack = [...undoStack, activeBuild].slice(-MAX_UNDO_STACK)
+    if (treeType === 'passive') {
+      set({
+        activeBuild: {
+          ...activeBuild,
+          nodeAllocations: {},
+          isPersisted: false,
+          updatedAt: new Date().toISOString(),
+        },
+        undoStack: newUndoStack,
+      })
+    } else if (treeType === 'skill' && slotId) {
+      set({
+        activeBuild: {
+          ...activeBuild,
+          skillNodeAllocations: { ...activeBuild.skillNodeAllocations, [slotId]: {} },
+          isPersisted: false,
+          updatedAt: new Date().toISOString(),
+        },
+        undoStack: newUndoStack,
+      })
+    }
   },
 
   undoNodeChange: () => {

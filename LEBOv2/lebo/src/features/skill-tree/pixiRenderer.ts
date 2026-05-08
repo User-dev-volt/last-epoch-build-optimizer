@@ -79,6 +79,16 @@ function drawPreviewAdded(g: Graphics, x: number, y: number, r: number) {
   g.circle(x, y, r).stroke({ color: 0x33ff77, width: 3 })
 }
 
+function drawSearchDimOverlay(g: Graphics, x: number, y: number, r: number) {
+  // Draws a semi-transparent dark overlay achieving ~40% visibility on the underlying node
+  g.circle(x, y, r + 2).fill({ color: 0x0a0a0b, alpha: 0.6 })
+}
+
+function drawSearchHighlight(g: Graphics, x: number, y: number, r: number) {
+  // Gold outer ring distinguishes search-matched nodes
+  g.circle(x, y, r + 4).stroke({ color: 0xc9a84c, width: 2 })
+}
+
 export async function initRenderer(
   canvas: HTMLCanvasElement,
   callbacksRef: { current: RendererCallbacks }
@@ -107,6 +117,8 @@ export async function initRenderer(
   const dimmedGraphics = new Graphics()
   const previewRemovedGraphics = new Graphics()
   const previewAddedGraphics = new Graphics()
+  const searchDimOverlayGraphics = new Graphics()
+  const searchHighlightGraphics = new Graphics()
   // Pure interaction layer — no rendering, just hitArea containers
   const hitAreaContainer = new Container()
   // Text labels for point counts
@@ -123,6 +135,8 @@ export async function initRenderer(
     suggestedGraphics,
     previewRemovedGraphics,
     previewAddedGraphics,
+    searchDimOverlayGraphics,
+    searchHighlightGraphics,
     labelContainer,
     flashContainer,
     hitAreaContainer,
@@ -191,6 +205,8 @@ export async function initRenderer(
     dimmedGraphics.clear()
     previewRemovedGraphics.clear()
     previewAddedGraphics.clear()
+    searchDimOverlayGraphics.clear()
+    searchHighlightGraphics.clear()
     hitAreaContainer.removeChildren()
     labelContainer.removeChildren()
 
@@ -231,6 +247,11 @@ export async function initRenderer(
       } else {
         drawAvailable(availableGraphics, node.x, node.y, r)
       }
+
+      const isSearchHighlighted = highlightedNodes.searchHighlighted.has(node.id)
+      const isSearchDimmed = highlightedNodes.searchDimmed.has(node.id)
+      if (isSearchDimmed) drawSearchDimOverlay(searchDimOverlayGraphics, node.x, node.y, r)
+      if (isSearchHighlighted) drawSearchHighlight(searchHighlightGraphics, node.x, node.y, r)
 
       // Point count label inside the node — only shown when points are allocated
       const currentPts = nodeAllocations[node.id] ?? 0

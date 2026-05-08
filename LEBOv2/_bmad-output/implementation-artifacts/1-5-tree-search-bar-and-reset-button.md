@@ -1,6 +1,6 @@
 # Story 1.5: Tree Search Bar and RESET Button
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -32,8 +32,8 @@ So that I can quickly navigate large trees and undo all allocation choices at on
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Extend `HighlightedNodes` type and update PixiJS renderer (AC: #1)
-  - [ ] **`src/shared/types/treeData.ts`**: Add two fields to `HighlightedNodes`:
+- [x] Task 1: Extend `HighlightedNodes` type and update PixiJS renderer (AC: #1)
+  - [x] **`src/shared/types/treeData.ts`**: Add two fields to `HighlightedNodes`:
     ```typescript
     export interface HighlightedNodes {
       glowing: Set<string>
@@ -44,7 +44,7 @@ So that I can quickly navigate large trees and undo all allocation choices at on
       searchDimmed: Set<string>        // ADD: non-matching nodes → 40% opacity overlay
     }
     ```
-  - [ ] **`src/features/skill-tree/pixiRenderer.ts`**: Add two new Graphics objects and two new draw functions, update `renderTree`:
+  - [x] **`src/features/skill-tree/pixiRenderer.ts`**: Add two new Graphics objects and two new draw functions, update `renderTree`:
     - After `previewAddedGraphics` declaration, add:
       ```typescript
       const searchDimOverlayGraphics = new Graphics()
@@ -93,12 +93,12 @@ So that I can quickly navigate large trees and undo all allocation choices at on
       if (isSearchHighlighted) drawSearchHighlight(searchHighlightGraphics, node.x, node.y, r)
       ```
 
-- [ ] Task 2: Add `resetActiveTree` action to `buildStore.ts` (AC: #3, #4)
-  - [ ] **`src/shared/stores/buildStore.ts`**: Add to `BuildStore` interface:
+- [x] Task 2: Add `resetActiveTree` action to `buildStore.ts` (AC: #3, #4)
+  - [x] **`src/shared/stores/buildStore.ts`**: Add to `BuildStore` interface:
     ```typescript
     resetActiveTree: (treeType: 'passive' | 'skill', slotId?: string) => void
     ```
-  - [ ] Add implementation after `applySkillNodeChange`:
+  - [x] Add implementation after `applySkillNodeChange`:
     ```typescript
     resetActiveTree: (treeType, slotId) => {
       const { activeBuild, undoStack } = get()
@@ -127,10 +127,10 @@ So that I can quickly navigate large trees and undo all allocation choices at on
       }
     },
     ```
-  - [ ] RESET pushes the FULL pre-reset `BuildState` snapshot to the `undoStack` exactly like `applyNodeChange` does. Ctrl+Z via existing `undoNodeChange` restores it automatically — no new undo logic needed.
+  - [x] RESET pushes the FULL pre-reset `BuildState` snapshot to the `undoStack` exactly like `applyNodeChange` does. Ctrl+Z via existing `undoNodeChange` restores it automatically — no new undo logic needed.
 
-- [ ] Task 3: Create `TreeControls.tsx` component (AC: #1, #2, #3, #5)
-  - [ ] **`src/features/skill-tree/TreeControls.tsx`** (NEW):
+- [x] Task 3: Create `TreeControls.tsx` component (AC: #1, #2, #3, #5)
+  - [x] **`src/features/skill-tree/TreeControls.tsx`** (NEW):
     ```typescript
     interface TreeControlsProps {
       searchQuery: string
@@ -166,8 +166,8 @@ So that I can quickly navigate large trees and undo all allocation choices at on
     - `aria-label="Search skill tree nodes"` on the input
   - [ ] No `useReducedMotion` needed — no animations in TreeControls
 
-- [ ] Task 4: Wire `TreeControls` into `SkillTreeView.tsx` and compute search sets (AC: #1, #2, #3, #6)
-  - [ ] **`src/features/skill-tree/SkillTreeView.tsx`**:
+- [x] Task 4: Wire `TreeControls` into `SkillTreeView.tsx` and compute search sets (AC: #1, #2, #3, #6)
+  - [x] **`src/features/skill-tree/SkillTreeView.tsx`**:
   
   **4a. Update `EMPTY_HIGHLIGHTED` constant** (at top of file, before the component):
   ```typescript
@@ -292,8 +292,8 @@ So that I can quickly navigate large trees and undo all allocation choices at on
   - Passive tab canvas: replace `highlightedNodes={highlightedNodes}` → `highlightedNodes={passiveHighlightedNodes}`
   - Skill tab canvas: replace `highlightedNodes={EMPTY_HIGHLIGHTED}` → `highlightedNodes={skillHighlightedNodes}`
 
-- [ ] Task 5: Update test files for new `HighlightedNodes` fields (AC: compile/test)
-  - [ ] **`src/features/skill-tree/SkillTreeCanvas.test.tsx`**: In `DEFAULT_PROPS.highlightedNodes`, add:
+- [x] Task 5: Update test files for new `HighlightedNodes` fields (AC: compile/test)
+  - [x] **`src/features/skill-tree/SkillTreeCanvas.test.tsx`**: In `DEFAULT_PROPS.highlightedNodes`, add:
     ```typescript
     highlightedNodes: {
       glowing: new Set<string>(),
@@ -304,7 +304,7 @@ So that I can quickly navigate large trees and undo all allocation choices at on
       searchDimmed: new Set<string>(),         // ADD
     }
     ```
-  - [ ] **`src/features/skill-tree/pixiRenderer.test.ts`**: Both `renderTree` calls at lines 110 and 115 need updating:
+  - [x] **`src/features/skill-tree/pixiRenderer.test.ts`**: Both `renderTree` calls at lines 110 and 115 need updating:
     ```typescript
     renderer.renderTree(emptyTree, {}, {
       glowing: new Set(), dimmed: new Set(),
@@ -312,10 +312,10 @@ So that I can quickly navigate large trees and undo all allocation choices at on
       searchHighlighted: new Set(), searchDimmed: new Set(),  // ADD
     })
     ```
-  - [ ] **Scan for any other files** that construct `HighlightedNodes` objects directly (not via EMPTY_HIGHLIGHTED). Run: `grep -r "previewAdded: new Set"` to find all. The grep result showed only these two test files plus SkillTreeCanvas.test.tsx — update all found occurrences.
+  - [x] **Scan for any other files** that construct `HighlightedNodes` objects directly (not via EMPTY_HIGHLIGHTED). Run: `grep -r "previewAdded: new Set"` to find all. The grep result showed only these two test files plus SkillTreeCanvas.test.tsx — update all found occurrences.
 
-- [ ] Task 6: Unit tests (AC: #3, #4)
-  - [ ] **`src/shared/stores/buildStore.test.ts`** (existing file — add to it):
+- [x] Task 6: Unit tests (AC: #3, #4)
+  - [x] **`src/shared/stores/buildStore.test.ts`** (existing file — add to it):
     - Test: `resetActiveTree('passive')` clears `nodeAllocations` and pushes to `undoStack`
       ```typescript
       it('resetActiveTree("passive") clears passive allocations and pushes undo snapshot', () => {
@@ -332,7 +332,7 @@ So that I can quickly navigate large trees and undo all allocation choices at on
     - Test: `resetActiveTree('skill', 'slot-0')` clears `skillNodeAllocations['slot-0']` only, leaves other slots intact
     - Test: `resetActiveTree` with no active build does nothing (no throw)
     - Use the existing `minimalTreeData` fixture pattern already in the file
-  - [ ] **`src/features/skill-tree/TreeControls.test.tsx`** (NEW file, co-located with `TreeControls.tsx`):
+  - [x] **`src/features/skill-tree/TreeControls.test.tsx`** (NEW file, co-located with `TreeControls.tsx`):
     - Test: renders RESET button and search input
     - Test: typing in search input calls `onSearchChange` with the typed value
     - Test: clicking × clears search (calls `onSearchChange('')`)
@@ -430,11 +430,33 @@ src/shared/stores/buildStore.test.ts     — UPDATE: tests for resetActiveTree
 ## Dev Agent Record
 
 ### Agent Model Used
+claude-sonnet-4-6
 
 ### Debug Log References
+None — clean implementation with one TypeScript fix required.
 
 ### Completion Notes List
+- Task 1: Added `searchHighlighted` and `searchDimmed` to `HighlightedNodes` in `treeData.ts`. Added `searchDimOverlayGraphics` and `searchHighlightGraphics` Graphics objects to `pixiRenderer.ts`, wired into `worldContainer`, added `drawSearchDimOverlay` and `drawSearchHighlight` draw functions, and added overlay rendering in the node loop.
+- Task 2: Added `resetActiveTree(treeType, slotId?)` action to `BuildStore` interface and implementation in `buildStore.ts`. Pattern mirrors `applyNodeChange` — pushes full `BuildState` to `undoStack` then clears the targeted allocations.
+- Task 3: Created `TreeControls.tsx` with RESET button (left) and search input (right, 200px, 28px height). Clear (×) button renders only when `searchQuery !== ''`. Focus border toggles via React `onFocus`/`onBlur` state.
+- Task 4: Wired `TreeControls` into `SkillTreeView.tsx`. Key changes: moved `activeGameNodes` to `useMemo` before early returns; added `searchHighlighted`/`searchDimmed` memos using `activeTreeData`; added `passiveHighlightedNodes` and `skillHighlightedNodes` merged memos; updated canvas props; added `handleReset` callback; added `showControls` flag; updated `handleTabChange` to clear search on tab switch.
+- TypeScript fix: `HighlightedNodeIds` (optimizationStore) only has `glowing`/`dimmed`. In `highlightedNodes` memo, spread `EMPTY_HIGHLIGHTED` first to ensure all `HighlightedNodes` fields are present before spreading `highlightedNodeIds`.
+- Task 5: Updated `SkillTreeCanvas.test.tsx` and `pixiRenderer.test.ts` (2 occurrences) with the two new `HighlightedNodes` fields.
+- Task 6: Added 4 `resetActiveTree` tests to `buildStore.test.ts`. Created `TreeControls.test.tsx` with 8 tests including axe accessibility check.
+- All 70 targeted tests pass. TypeScript build clean. 502/508 total tests pass (6 pre-existing failures in ProviderSelector/Settings unrelated to this story).
 
 ### Review Findings
 
 ### File List
+- `lebo/src/shared/types/treeData.ts` — updated: added `searchHighlighted`, `searchDimmed` to `HighlightedNodes`
+- `lebo/src/features/skill-tree/pixiRenderer.ts` — updated: new Graphics objects, draw functions, renderTree changes
+- `lebo/src/shared/stores/buildStore.ts` — updated: `resetActiveTree` interface + implementation
+- `lebo/src/features/skill-tree/TreeControls.tsx` — new: search bar + RESET controls row component
+- `lebo/src/features/skill-tree/SkillTreeView.tsx` — updated: search state, memos, TreeControls wiring
+- `lebo/src/features/skill-tree/TreeControls.test.tsx` — new: 8 tests for TreeControls
+- `lebo/src/shared/stores/buildStore.test.ts` — updated: 4 tests for resetActiveTree
+- `lebo/src/features/skill-tree/SkillTreeCanvas.test.tsx` — updated: new HighlightedNodes fields in mock
+- `lebo/src/features/skill-tree/pixiRenderer.test.ts` — updated: new HighlightedNodes fields in 2 renderTree calls
+
+### Change Log
+- 2026-05-07: Implemented Story 1.5 — Tree Search Bar and RESET Button. Added search overlay rendering pipeline to PixiJS renderer, `resetActiveTree` action to buildStore, new `TreeControls` component, and full wiring in `SkillTreeView`. 70 tests pass, build clean.
