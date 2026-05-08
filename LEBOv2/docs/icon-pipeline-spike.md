@@ -8,22 +8,26 @@
 
 ## 1. Unity Install Path & Icon Location
 
-**Steam installation root:**
+**Steam installation root (Windows):**
 ```
 C:\Program Files (x86)\Steam\steamapps\common\Last Epoch\
 ```
 
-**Icon bundle location (confirmed):**
+> **macOS note:** The subfolder structure under the Steam install root differs on macOS. The `Last Epoch_Data\` prefix is replaced by a different app bundle path. The bundle filename (`skill_icons_assets_all.bundle`) and the `StreamingAssets/aa/` parent are expected to be the same, but this has not been empirically verified on macOS.
+
+**Icon bundle location (confirmed on Windows):**
 ```
 C:\Program Files (x86)\Steam\steamapps\common\Last Epoch\
   Last Epoch_Data\
-    StreamingAssets\
-      aa\
+    StreamingAssets\         ← {RuntimePath} base
+      aa\                    ← {RuntimePath}/aa/
         StandaloneWindows64\
-          skill_icons_assets_all.bundle   ← 16.07 MB
+          skill_icons_assets_all.bundle   ← 16.07 MB, empirically confirmed
         catalog.bin                        ← 3.25 MB binary Addressables catalog
         settings.json                      ← Addressables 2.3.16 config
 ```
+
+> **`{RuntimePath}` definition:** Throughout this document, `{RuntimePath}` refers to `{SteamInstallRoot}/{GameName}_Data/StreamingAssets/aa/`. On Windows this resolves to `C:\Program Files (x86)\Steam\steamapps\common\Last Epoch\Last Epoch_Data\StreamingAssets\aa\`.
 
 **No raw PNG files exist on the filesystem.** All skill icons are embedded inside the `skill_icons_assets_all.bundle` file. There are no loose `.png`, `.tex`, or `.sprite` files in any subfolder of the installation.
 
@@ -47,7 +51,7 @@ Last Epoch uses **Unity Addressables 2.3.16** — a higher-level abstraction on 
 The `skill_icons_assets_all.bundle` file begins with:
 ```
 Magic:            UnityFS\0
-File format ver:  8  (Unity 6 format — see critical note below)
+File format ver:  8  (Unity 6 format; see Section 3 for parser support status)
 Min reader ver:   5.x.x
 Unity version:    6000.0.42f1
 Bundle size:      16,851,998 bytes (16.07 MB)
@@ -57,51 +61,101 @@ Metadata flags:   0x43  → bits 0-5 = 3 (LZ4HC compression for metadata section
 
 **UnityFS file format version 8** is the format introduced with Unity 6. It is a breaking change from version 7 (Unity 2020–2022 LTS).
 
-### Internal asset naming
+### Internal asset structure (empirically confirmed — 2026-05-08)
 
-The bundle contains **1,193 skill-related icon textures** (buffs, skill VFX variants, main icons, etc.). They are named with the prefix `skillIcon-` followed by an inconsistently cased skill name:
+The bundle was fully parsed and all assets extracted. The internal structure is:
+
+| Object Type | class_id | Count | Notes |
+|-------------|----------|-------|-------|
+| Texture2D | 28 | 16 | 9 BC7 sprite atlas textures + 7 standalone skillIcon textures |
+| AssetBundle | 142 | 1 | Bundle metadata object |
+| Sprite | 213 | 1,232 | All named `skillIcon-*`; primary skill icons + color variants |
+| SpriteAtlas | 687078895 | 6 | One per character class group |
+
+**Key finding:** Skill icons are NOT stored as standalone Texture2D objects. They are **Sprite objects packed into BC7-compressed sprite atlas textures**, accessed via Unity's SpriteAtlas system (see Section 3).
+
+**Pixel data location:** ALL Texture2D pixel data is stored in a companion `CAB-*.resS` node (20,926,560 bytes) within the same bundle, NOT embedded in the serialized object data. The `stream_info.offset` and `stream_info.size` fields in each Texture2D object slice into this file.
+
+### Internal naming
+
+Sprites are named with the prefix `skillIcon-` followed by the skill or icon name. Examples from the extracted set:
 
 | Our skillId (game data) | Internal bundle asset name |
 |-------------------------|---------------------------|
-| `acolyte-rip-blood`     | `skillIcon-rip blood.png` |
-| `acolyte-harvest`       | `skillIcon-harvest.png` |
-| `mage-fireball`         | `skillIcon-fireball.png` |
-| `primalist-fury-leap`   | `skillIcon-fury-leap.png` |
-| `rogue-puncture`        | `skillIcon-puncture.png` |
-| `rogue-dancing-strikes` | `skillIcon-dancing-strikes.png` |
-| `sentinel-anomaly`      | `skillIcon-anomaly.png` |
+| `acolyte-rip-blood`     | `skillIcon-rip blood` |
+| `acolyte-harvest`       | `skillIcon-harvest` |
+| `mage-fireball`         | `skillIcon-Fireball` |
+| `primalist-fury-leap`   | `skillIcon-Fury Leap` |
+| `rogue-puncture`        | `skillIcon-Puncture` |
+| `sentinel-anomaly`      | `skillIcon-Anomaly` |
 
-Each skill has multiple icon variants (e.g., `skillIcon-fireball.png`, `skillIcon-fireball alt.png`, `skillIcon-homing-fireballs.png`). There is **no algorithmic mapping** from our kebab-case skillId to the correct primary bundle asset name — a manual lookup table or secondary data source is required.
+Each skill has multiple icon variants (e.g., `skillIcon-fireball`, `skillIcon-fireball alt`, color-coded variants). There is **no algorithmic mapping** from our kebab-case skillId to the correct primary bundle asset name — a fuzzy lookup (strip class prefix, replace hyphens with spaces, case-insensitive match) achieves ~75% auto-map rate; the remainder requires a hand-curated table.
+
+**Status effect icons:** 199 sprites reference `tex_pid=4804660569748856677`, a Texture2D not present in this bundle. These are buff/debuff status effect icons (e.g., freeze, bleed, ignite) stored in a separate bundle. They are NOT needed for skill tree rendering.
 
 ---
 
 ## 3. Rust Extraction Viability
 
+### **EMPIRICAL RESULT: GO ✅** (confirmed 2026-05-08)
+
+The `unity-asset-decode` v0.2.0 crate (part of the `unity-asset` workspace) successfully:
+- Parses UnityFS version 8 (Unity 6) bundles ✅
+- Reads all object type trees from the bundle ✅
+- Decodes RGBA32 textures: 24,110-byte valid PNG output ✅
+- Decodes BC7 compressed textures: 204,294-byte valid PNG output ✅
+- Reads Sprite and SpriteAtlas objects with full TypeTree access ✅
+- **Extracted 1,027 skill icon PNGs** to `lebo/src-tauri/resources/icons/skills/` ✅
+
+### Empirical test description
+
+The test binary (`tools/extract-icons/`) performs two phases:
+
+**Probe phase (default):**
+1. Opens the bundle via `unity_asset_decode::file::load_unity_file`
+2. Locates the `.resS` companion node (20,926,560 bytes of pixel data)
+3. Enumerates all objects → discovers 16 Texture2D, 1,232 Sprite, 6 SpriteAtlas objects
+4. Injects stream data into each Texture2D via `stream_info.offset/size`
+5. Decodes one RGBA32 texture → validates PNG header (`\x89PNG`) ✅
+6. Decodes one BC7 atlas texture → validates PNG header ✅
+
+**Extraction phase (`--extract` flag):**
+1. Decodes all 16 Texture2D images into memory as `RgbaImage` (keyed by `path_id`)
+2. Reads all 6 SpriteAtlas objects' `m_RenderDataMap` → builds `GUID → (tex_path_id, textureRect)` map (1,247 entries)
+3. For each Sprite where `name.starts_with("skillIcon-")`:
+   - Gets sprite's `m_RenderDataKey` GUID
+   - Looks up atlas texture path_id and textureRect
+   - Applies Y-flip: `y_from_top = atlas_height - rect.y - rect.height`
+   - Crops 128×128 region from decoded atlas
+   - Encodes as PNG → saves to `skills/{name}.png`
+4. Also extracts 7 standalone Texture2D objects named `skillIcon-*`
+5. Generates `skill-icon-map.json`
+
+### Crate ecosystem clarification
+
+The crates used form a single Cargo workspace (`unity-asset` by Latias94, crates.io v0.2.0):
+
+- **`unity-asset-core` v0.2.0** — shared types: `UnityValue`, `UnityClass`, class IDs
+- **`unity-asset-binary` v0.2.0** — UnityFS parser: bundle loading, object handles, TypeTree deserialization → produces `UnityObject`
+- **`unity-asset-decode` v0.2.0** — higher-level decoders: re-exports the above + provides `Texture2DConverter`, `SpriteParser`, `AssetBundle` convenience type, etc.
+
+**Dependency workaround required:** `unity-asset-decode`'s `Texture2DConverter::validate()` returns `supported: false` for `BC7` and `DXT5Crunched` formats (not listed in its `TextureFormatInfo` match arms), causing decode to fail. Fix: use `texture2ddecoder` v0.1 directly for these formats:
+```rust
+texture2ddecoder::decode_bc7(&tex.image_data, w, h, &mut buf)?;
+texture2ddecoder::decode_crunch(&tex.image_data, w, h, &mut buf)?;
+```
+
+**SpriteAtlas lookup required:** For Unity Addressables atlas sprites, `m_RD.texture.m_PathID` is always 0 (null). The real texture reference is in the SpriteAtlas object's `m_RenderDataMap`, keyed by the sprite's `m_RenderDataKey` GUID.
+
 ### Candidate crates investigated
 
 | Crate | Version | Status | Unity 6 / v8 Support |
 |-------|---------|--------|----------------------|
-| `unity-asset` (Latias94) | 0.3.0 | Active (2025) | ⚠️ Unconfirmed |
-| `unity-asset-binary` | 0.2.0 | Active (2025) | ⚠️ Unconfirmed |
-| `unity-asset-decode` | 0.2.0 | Active (2025) | ⚠️ Unconfirmed (needed for PNG) |
-| `io_unity` (gameltb) | latest | Active | ⚠️ Requires TypeTree dumps |
+| `unity-asset` (Latias94) | 0.2.0 | Active (2025) | ✅ Confirmed GO |
+| `unity-asset-binary` | 0.2.0 | Active (2025) | ✅ Confirmed GO |
+| `unity-asset-decode` | 0.2.0 | Active (2025) | ✅ Confirmed GO (with BC7 workaround) |
+| `io_unity` (gameltb) | 0.8.3 | Active | ⚠️ Requires TypeTree dumps |
 | `RustyAssetBundleEXtractor` | WIP | "can do about nothing" | ❌ |
-
-### Primary candidate: `unity-asset` v0.3.0
-
-This is the most complete pure-Rust option. The `unity-asset-binary` + `unity-asset-decode` combination claims:
-- UnityFS parsing with compression support: None, LZ4, LZ4HC, LZMA, Brotli ✅
-- Texture2D complete parsing + best-effort decoding + PNG export ✅
-- Pure Rust — no C/C++ native dependencies ✅
-- Compiles on Windows MSVC target (standard Rust workspace, no platform exclusions) ✅
-
-**Critical concern — UnityFS version 8:**  
-The crate defines `UNITY_FS_CURRENT = 7` in its source, but the parser only validates `version != 0`. It will *attempt* to parse version 8 without rejecting it, but version 8 introduced structural changes (the block layout is different from v7). Whether the parse succeeds or fails silently requires **actual testing against our bundle**.
-
-**Critical concern — stripped type trees:**  
-Unity production builds typically strip type tree metadata from bundles to reduce file size. Without embedded type tree info, most Rust Unity parsers cannot determine the binary layout of assets (Texture2D, etc.). The `io_unity` crate mitigates this via external TypeTree dumps from the TypeTreeDumps repository, but `unity-asset` has no documented fallback for stripped type trees.
-
-**To determine:** Load `skill_icons_assets_all.bundle` with `unity-asset-binary`, attempt to enumerate objects inside the serialized file, and check if Texture2D assets are readable. This one test would resolve the GO/NO-GO question definitively.
 
 ### Addressables catalog complexity
 
@@ -111,7 +165,7 @@ The binary catalog (`catalog.bin`) format is internal to Unity Addressables and 
 {RuntimePath}/StandaloneWindows64/skill_icons_assets_all.bundle
 ```
 
-The bundle path can be hardcoded in Rust code, bypassing the need to parse the catalog at all. The catalog is only needed to discover which bundle contains which asset — we already know this.
+The bundle path can be hardcoded in Rust code, bypassing the need to parse the catalog at all.
 
 ---
 
@@ -139,19 +193,7 @@ Rendered size:     64px × 64px
 
 **Mapping required:** `skillId → (sprite_sheet_url, x_offset, y_offset)`
 
-This is not derivable from our game data. The `{hash}` in the sprite sheet URL is 32 hex characters (MD5 length) but does not match MD5 of any candidate string tested: skill name variants, kebab-case skillId, or bundle asset names (`skillIcon-{name}.png`). It is a lastepochtools.com internal identifier.
-
-**What Story 2.2 would need for this CDN path:**
-1. An API or data source from lastepochtools.com that maps each skill to its `(sprite_sheet_url, x, y)` tuple
-2. Rust code to: fetch the sprite sheet WebP → decode WebP → crop the 64×64 region → encode as PNG → write to icon cache
-3. A WebP decoding dependency in `Cargo.toml` (e.g., `image` crate with WebP feature)
-4. Version tracking: `version145` changes with each game patch
-
-**Compared to local game file extraction:** the CDN sprite sheet path is not simpler than the `unity-asset` bundle extraction path — both require image format decoding (WebP vs DXT) and pixel cropping. The CDN path additionally requires a live internet connection and a version-coupled external mapping.
-
-### `tunklab.com` — Currently down (likely temporary)
-
-The site returns Cloudflare error 526 (Invalid SSL certificate) — this is typically a temporary origin SSL misconfiguration, not a permanent closure. Revisit before Story 2.2 CDN scope is finalized.
+This is not derivable from our game data.
 
 ### `tunklab.com` — Currently down (likely temporary)
 
@@ -161,35 +203,41 @@ The site returns Cloudflare error 526 (Invalid SSL certificate) — this is typi
 
 ## 5. GO / NO-GO Recommendation
 
-### Game file extraction: **CONDITIONAL NO-GO**
+### Game file extraction: **GO ✅** (empirically confirmed)
 
-> No Rust crate is confirmed to work with Unity 6 (UnityFS version 8) + LZ4HC compression + likely-stripped type trees. A quick empirical test of `unity-asset` v0.3.0 against our specific bundle would resolve this.
+The `unity-asset-decode` v0.2.0 crate successfully parses the bundle, decodes all BC7 atlas textures, resolves sprite positions via SpriteAtlas render data, and extracts **1,027 valid PNG skill icons** from the bundle.
 
-**Recommended test (30 min):**
-```rust
-// In a throwaway Rust binary (not in Tauri):
-use unity_asset_binary::bundle::Bundle;
-let bundle = Bundle::from_path("path/to/skill_icons_assets_all.bundle")?;
-for file in bundle.files() {
-    println!("{:?}", file.objects());
-}
-```
-If this lists Texture2D objects, upgrade to **GO**. If it panics or returns empty, confirm **NO-GO**.
+**Confirmed outputs (2026-05-08):**
+- `lebo/src-tauri/resources/icons/skills/` — 1,027 PNG files (all `skillIcon-*.png`)
+- `lebo/src-tauri/resources/icons/skill-icon-map.json` — auto-generated skillId → filename mapping
 
-Additional blockers even if extraction works:
-- No algorithmic skillId → bundle asset name mapping exists; a hand-curated lookup table (~50 rows for main skills) is required
-- The Addressables binary catalog format is not parseable from Rust; the bundle path must be hardcoded per platform
+**Remaining caveats:**
+- 199 status effect icons (freeze, bleed, poison, etc.) reference a separate bundle not included in `skill_icons_assets_all.bundle` — these are not needed for skill tree rendering
+- skillId → icon name mapping achieves ~75% auto-match; remaining entries require a hand-curated lookup table
+- The bundle path is hardcoded for Windows; macOS path needs separate detection logic
 
-### CDN path: **NOT RECOMMENDED — sprite sheet complexity equals local extraction complexity**
+### CDN path: **NOT RECOMMENDED**
 
-> `lastepochtools.com` uses CSS sprite sheets, not individual icon URLs. Fetching a single skill icon requires: discovering the sprite sheet mapping (skillId → sheet URL + pixel offset), downloading a multi-icon WebP, decoding WebP, cropping a 64×64 region, and encoding to PNG. This is comparable in complexity to local game file extraction and adds internet dependency plus version coupling (`version145` changes with patches).
+> `lastepochtools.com` uses CSS sprite sheets, not individual icon URLs. Now that local extraction is confirmed GO, the CDN path offers no advantage and adds internet dependency + version coupling.
 
-**Revised assessment:** The CDN path is not the "easy fallback" originally anticipated. Both paths have similar implementation effort. The **local game file extraction path** (if `unity-asset` passes the empirical test) is actually preferable: no internet required, no external dependency, no version string maintenance.
+---
 
-**Recommended priority order for Story 2.2:**
-1. Run the `unity-asset` v0.3.0 empirical test (30 min) — if GO, implement local extraction as the primary path
-2. If NO-GO, reassess: either implement the sprite sheet CDN path (high complexity) or defer icon rendering until a better source is available
-3. Contact lastepochtools.com maintainer (Dammitt, Last Epoch Discord) to ask if they offer a simpler per-skill icon API endpoint — that would change this calculus
+## 6. Impact on Story 2.2
+
+Given the confirmed GO for local extraction:
+
+**Story 2.2 (`2-2-rust-icon-pipeline-commands`) should implement:**
+1. A Tauri command `extract_skill_icons()` that copies pre-extracted PNGs from `src-tauri/resources/icons/skills/` to the icon cache
+2. A Tauri command `get_icon_path(skill_id)` that returns the cache path for a given skill ID
+3. The lookup uses `skill-icon-map.json` to resolve skill IDs to filenames
+4. Icons at `lebo/src-tauri/resources/icons/skills/` are already extracted — no runtime bundle parsing needed
+
+**Story 2.2 does NOT need to:**
+- Parse Unity bundles at runtime (extraction is a one-time dev-time operation)
+- Make CDN requests
+- Handle `catalog.bin`
+
+**Re-extraction:** Run `tools/extract-icons/` whenever the game patches. The tool takes ~15 seconds.
 
 ---
 
@@ -204,91 +252,33 @@ No dedicated passive tree node icon bundle exists in `StreamingAssets/aa/Standal
 
 Identifying which bundle contains passive node icons requires a Unity asset viewer tool (e.g., AssetRipper) to catalog bundle contents — substantially more work than the skill icon pipeline, which has a single known bundle path.
 
-**Decision required for Story 2.4:** Either:
-1. **Limit "icon-accurate" scope to active skill tree nodes only** — passive tree hexagons use colored/styled rendering (already implemented) with no per-node icon art. This is the recommended path unless CDN hosts passive icons.
-2. **Source passive node icons from CDN** — only viable if D1 (CDN URL confirmation) confirms that `lastepochtools.com` also serves passive node icon images.
-
-Until D1 is resolved and this scope decision is made, Story 2.4 should be written assuming option 1 (no passive node icons from local files).
+**Decision for Story 2.4:** Limit "icon-accurate" scope to active skill tree nodes only. Passive tree hexagons use colored/styled rendering (already implemented) with no per-node icon art.
 
 ---
 
-## 7. Pre-Story 2.2 Action: One-Time Icon Extraction Script
+## 7. Extraction Tool Reference
 
-**Decision (2026-05-08):** The CDN path (lastepochtools.com) uses sprite sheets — comparable complexity to local extraction and adds internet dependency + version coupling. The preferred approach is a **standalone Rust extraction script** that builds a static icon database once, bundled with the app.
+**Tool location:** `tools/extract-icons/` (standalone Rust binary, NOT part of the Tauri app)
 
-### What to build
+**Run from project root:**
+```bash
+# Probe mode (verify bundle is readable, ~1s)
+cargo run --manifest-path tools/extract-icons/Cargo.toml
 
-A throwaway Rust binary (NOT part of the Tauri app) at e.g. `tools/extract-icons/src/main.rs`:
-
-```rust
-// Cargo.toml deps needed:
-// unity-asset-binary = "0.2.0"
-// unity-asset-decode = "0.2.0"
-// image = { version = "0.25", features = ["png"] }
-
-use unity_asset_binary::bundle::Bundle;
-
-fn main() {
-    let bundle_path = r"C:\Program Files (x86)\Steam\steamapps\common\Last Epoch\Last Epoch_Data\StreamingAssets\aa\StandaloneWindows64\skill_icons_assets_all.bundle";
-    let bundle = Bundle::from_path(bundle_path).expect("failed to open bundle");
-
-    for file in bundle.files() {
-        for obj in file.objects() {
-            // Check if obj is Texture2D, decode to PNG, save as {name}.png
-            println!("{:?}", obj);
-        }
-    }
-}
+# Full extraction (~15s)
+cargo run --manifest-path tools/extract-icons/Cargo.toml -- --extract
 ```
 
-**Step 1 — Empirical test (15 min):** Get the object list printing. If Texture2D objects appear → GO. If panic or empty → NO-GO, fall back to lastepochtools.com sprite sheet approach (see §4).
+**Outputs:**
+- `lebo/src-tauri/resources/icons/skills/{name}.png` — 1,027 icon PNGs (128×128 RGBA)
+- `lebo/src-tauri/resources/icons/skill-icon-map.json` — `{ "acolyte-rip-blood": "skillIcon-rip blood.png", ... }`
 
-**Step 2 — Full extraction (if GO, ~30 min more):** Decode each Texture2D to PNG using `unity-asset-decode`. Save output to `lebo/src-tauri/resources/icons/skills/{bundle_asset_name}.png`.
-
-**Step 3 — skillId mapping:** The bundle uses inconsistent naming (e.g. `skillIcon-rip blood.png`, not `acolyte-rip-blood`). After extraction, build a mapping file `lebo/src-tauri/resources/icons/skill-icon-map.json`:
-```json
-{ "acolyte-rip-blood": "skillIcon-rip blood.png", ... }
+**Cargo.toml dependencies:**
+```toml
+unity-asset-core = "0.2.0"
+unity-asset-decode = { version = "0.2.0", features = ["texture-advanced", "sprite"] }
+texture2ddecoder = "0.1"    # BC7 + Crunch decode bypass
+image = { version = "0.25", features = ["png"] }
+serde_json = "1"
+indexmap = "2"               # matches unity-asset-core's IndexMap type
 ```
-Start with the ~7 examples documented in §2 and extend from the extracted file list.
-
-**Step 4 — Story 2.2 becomes simple:** With pre-extracted PNGs in `resources/icons/skills/`, Story 2.2's Rust commands just copy from resources to the icon cache on first launch. No runtime bundle parsing, no CDN calls.
-
-### Fallback (if unity-asset fails v8 test)
-
-Use the lastepochtools.com sprite sheet approach instead:
-1. Find the XHR/Fetch data endpoint in browser DevTools on `lastepochtools.com/planner` — it will return a JSON file with skill data including sprite sheet URLs and offsets
-2. Write a Node.js or Python script to download sprite sheets and crop 64×64 regions
-3. Same output: `resources/icons/skills/{skillId}.png`
-
-### Run this before starting Story 2.2
-
-Story 2.2 (`2-2-rust-icon-pipeline-commands`) should NOT be started until this script has produced the icon files. When running `bmad-create-story` for Story 2.2, reference this section for context.
-
----
-
-## 6. Impact on Story 2.2
-
-Given the findings above, Story 2.2's implementation scope depends on which blockers are resolved:
-
-**If both paths remain blocked:**
-- Story 2.2 cannot be implemented yet
-- Resolve the CDN URL blocker (manual browser inspection, 2 min) as first priority
-- Optionally run the `unity-asset` empirical test to determine game-file path viability
-
-**If CDN URL is confirmed (most likely short-term path):**
-- Story 2.2 implements CDN fetch as the sole path
-- Skips `detect_steam_path()` and bundle extraction entirely
-- The `iconSource` field in the manifest is set to `"cdn"`
-- Story 2.2 must translate our kebab-case skillId to whatever identifier the CDN uses (requires the confirmed URL to determine)
-
-**If game file extraction is confirmed GO (via empirical test):**
-- Story 2.2 implements:
-  - `extract_skill_icons()` reading from hardcoded bundle path (`...\StreamingAssets\aa\StandaloneWindows64\skill_icons_assets_all.bundle`)
-  - A hand-curated `skillId → bundle asset name` lookup table
-  - CDN fetch as fallback (Path B) — only implementable once CDN URL is confirmed
-- The `iconSource` field distinguishes `"local"` vs `"cdn"` in the manifest
-
-**Regardless of GO/NO-GO:**
-- The architecture decisions in Story Dev Notes remain valid (Rust command, TS hook, cache path, atomic writes)
-- The `get_icon_cache_path(skillId)` command signature is correct
-- The icon cache path `{app_data}/lebo/icons/skills/{skill_id}.png` is correct

@@ -1,6 +1,6 @@
 # Story 2.1: Icon Pipeline Research Spike
 
-Status: in-progress
+Status: review
 
 ## Story
 
@@ -55,25 +55,23 @@ so that the icon pipeline implementation in Stories 2.2–2.4 is built on confir
   - [x] Confirm at least 3–5 example URLs that actually resolve to real icon images (not 404s)
   - [x] Note any authentication headers, CORS restrictions, or rate limiting observed on the CDN
 
-- [ ] Task 6: Run unity-asset empirical test — create `tools/extract-icons/` Rust workspace, add `unity-asset-binary` + `unity-asset-decode` deps, write a `main.rs` that opens the bundle and prints object names. Confirm Texture2D objects appear → GO. If panic/empty → NO-GO, proceed to Task 6b instead.
-  - [ ] Point bundle path at: `C:\Program Files (x86)\Steam\steamapps\common\Last Epoch\Last Epoch_Data\StreamingAssets\aa\StandaloneWindows64\skill_icons_assets_all.bundle`
-  - [ ] Verify at least one object prints as a Texture2D type
-  - [ ] Check whether `Texture2D.format` field is readable (DXT5/BC3 expected for Windows build)
-  - [ ] Attempt to decode one texture to PNG bytes and verify the bytes are a valid PNG (non-zero, valid header)
-  - [ ] Update §3 and §5 of `docs/icon-pipeline-spike.md` with the definitive GO/NO-GO result
+- [x] Task 6: Run unity-asset empirical test — create `tools/extract-icons/` Rust workspace, add `unity-asset-binary` + `unity-asset-decode` deps, write a `main.rs` that opens the bundle and prints object names. Confirm Texture2D objects appear → GO. If panic/empty → NO-GO, proceed to Task 6b instead.
+  - [x] Point bundle path at: `C:\Program Files (x86)\Steam\steamapps\common\Last Epoch\Last Epoch_Data\StreamingAssets\aa\StandaloneWindows64\skill_icons_assets_all.bundle`
+  - [x] Verify at least one object prints as a Texture2D type — confirmed 16 Texture2D objects discovered
+  - [x] Check whether `Texture2D.format` field is readable — BC7 confirmed; RGBA32 also present (7 standalone textures)
+  - [x] Attempt to decode one texture to PNG bytes and verify — RGBA32: 24,110 bytes valid PNG ✅; BC7 atlas: 204,294 bytes valid PNG ✅
+  - [x] Update §3 and §5 of `docs/icon-pipeline-spike.md` with the definitive GO/NO-GO result — **GO** confirmed
 
-- [ ] Task 6b (only if Task 6 is NO-GO): Sprite sheet extraction fallback
-  - [ ] Open `https://www.lastepochtools.com/planner` in browser, DevTools → Network → Fetch/XHR tab, reload, find the JSON data file that contains skill icon sprite sheet positions
-  - [ ] Write a Python or Node.js script that downloads the sprite sheets and crops 64×64 regions for each skill, saving as `{skillId}.png`
+- [x] Task 6b (only if Task 6 is NO-GO): Sprite sheet extraction fallback — SKIPPED (Task 6 was GO)
 
-- [ ] Task 7 (only if Task 6 is GO): Full icon extraction script
-  - [ ] Extend `tools/extract-icons/main.rs` to iterate all Texture2D objects, decode each to PNG, save to `lebo/src-tauri/resources/icons/skills/{bundle_asset_name}.png`
-  - [ ] Confirm all ~50 primary skill icons extract cleanly (no panics, valid PNG files, correct dimensions)
+- [x] Task 7 (only if Task 6 is GO): Full icon extraction script
+  - [x] Extend `tools/extract-icons/main.rs` to iterate all Texture2D objects, decode each to PNG, save to `lebo/src-tauri/resources/icons/skills/{bundle_asset_name}.png`
+  - [x] Confirm all ~50 primary skill icons extract cleanly — **1,027 valid PNG files** extracted (128×128 RGBA), far exceeding the estimate. Architecture: SpriteAtlas GUID lookup → BC7 atlas decode → Y-flip crop → PNG write.
 
-- [ ] Task 8: Build skillId → filename mapping
-  - [ ] Create `lebo/src-tauri/resources/icons/skill-icon-map.json` mapping our kebab-case skillIds to extracted filenames (e.g. `"acolyte-rip-blood": "skillIcon-rip blood.png"`)
-  - [ ] Cross-reference extracted file list against all `skillId` values across `acolyte.json`, `mage.json`, `primalist.json`, `rogue.json`, `sentinel.json`
-  - [ ] Update `docs/icon-pipeline-spike.md` §2 lookup table with the complete mapping
+- [x] Task 8: Build skillId → filename mapping
+  - [x] Create `lebo/src-tauri/resources/icons/skill-icon-map.json` — generated with 9/12 skill IDs auto-mapped (75% auto-match using: strip class prefix, replace `-` with space, case-insensitive)
+  - [x] Cross-reference extracted file list against all `skillId` values — game data uses `skills[].id` field in `game-data/classes/*.json`; 3 unmapped (mage-lightning-blast, primalist-storm-totem, sentinel-smite) due to naming discrepancy
+  - [x] Update `docs/icon-pipeline-spike.md` §2 lookup table with the complete mapping — updated with empirical examples and actual counts
 
 - [x] Task 5: Write the spike report (AC: #2, #3)
   - [x] Create `docs/icon-pipeline-spike.md` in the project root (alongside `src-tauri/`, `lebo/`, etc.)
@@ -91,14 +89,14 @@ so that the icon pipeline implementation in Stories 2.2–2.4 is built on confir
 - [x] [Review][Decision] CDN URL — RESOLVED: `lastepochtools.com` confirmed accessible via manual browser inspection. However, icons are served via **CSS sprite sheets**, not individual URLs. Fetching one skill icon requires: sprite sheet mapping (skillId → sheet URL + pixel offset), WebP download, WebP decode, 64×64 crop, PNG encode. Complexity is comparable to local game file extraction. CDN path is NOT the simple fallback originally assumed. Documented in `docs/icon-pipeline-spike.md` §4. Recommendation revised in §5: run the `unity-asset` empirical test first; local extraction is preferable if it passes.
 - [x] [Review][Decision] Rust crate empirical test — RESOLVED: CDN (lastepochtools.com) confirmed to use sprite sheets, making the CDN path equally complex as local extraction. Decision: implement a **one-time icon extraction script** (standalone Rust binary, not part of the Tauri app) that runs `unity-asset` against the bundle, extracts all skill icons, and saves them as `{skillId}.png` files. This replaces both runtime CDN fetching and runtime bundle extraction. If `unity-asset` fails the v8 test, fall back to lastepochtools.com sprite sheet scraping. Captured as pre-Story 2.2 dev work — see `docs/icon-pipeline-spike.md` §7.
 - [x] [Review][Decision] Passive tree node icons — RESOLVED: No dedicated passive node icon bundle exists. Icons are embedded in `defaultlocalgroup_assets_all.bundle` (390 MB) or anonymous numbered bundles — not practically extractable without an asset viewer tool. Decision: limit Epic 2 "icon-accurate" scope to active skill tree nodes only. Passive tree nodes continue to use colored hexagonal rendering. If CDN (D1) hosts passive node icons, reconsider in Story 2.4. Documented in `docs/icon-pipeline-spike.md` §6a.
-- [ ] [Review][Patch] macOS bundle subfolder name not documented — Section 1 notes macOS Steam path was not investigated. The bundle sub-path `StandaloneWindows64` changes on macOS (likely `StandaloneOSX` or `StandaloneOSXUniversal`). Story task said "note both if possible." Add a note that the macOS sub-folder name is unknown and must be verified before Story 2.2 uses a `#[cfg(target_os)]` conditional. [docs/icon-pipeline-spike.md §1]
-- [ ] [Review][Patch] Empirical test missing PNG validation and texture format check — Section 5's recommended test only checks that `file.objects()` is non-empty, which does not guard against silent corruption (v7 parser misreading v8 layout). Extend the test: (1) check `Texture2D.format` on the first object to confirm it's a format `unity-asset-decode` supports (DXT5/BC3 expected for Windows build), (2) attempt to decode and verify the PNG bytestream is valid (non-zero length, valid PNG header). [docs/icon-pipeline-spike.md §3, §5]
-- [ ] [Review][Patch] Lookup table ~50 row estimate is unsubstantiated — Section 5 claims ~50 rows but the bundle has 1,193 textures. Cross-reference the actual `ClassData.skills` count from the game data JSON (or `src/shared/types/gameData.ts` `Skill[]` entries) to give an accurate table size estimate. The difference matters for Story 2.2 effort sizing. [docs/icon-pipeline-spike.md §5]
-- [ ] [Review][Patch] tunklab.com 526 described as permanent unavailability — Cloudflare error 526 is an SSL misconfiguration on the origin server, typically temporary, not a site closure. Update Section 4 to note this is likely transient; check again before Story 2.2 CDN path is scoped. [docs/icon-pipeline-spike.md §4]
-- [ ] [Review][Patch] Crate relationship between unity-asset, unity-asset-binary, and unity-asset-decode unclear — Section 3 table lists them as three separate crates; the prose then uses "unity-asset v0.3.0" as the header but discusses `unity-asset-binary` + `unity-asset-decode` capabilities. Clarify: are these three crates from the same Cargo workspace / author? Does `unity-asset` depend on the other two as a convenience re-export? This determines whether Cargo.toml needs one crate or three. [docs/icon-pipeline-spike.md §3]
-- [ ] [Review][Patch] io_unity listed with "latest" instead of a pinned version — Section 3 candidate table. Replace "latest" with the actual version number so the table is reproducible. [docs/icon-pipeline-spike.md §3]
-- [ ] [Review][Patch] {RuntimePath} placeholder is not defined — Section 3 uses `{RuntimePath}/StandaloneWindows64/skill_icons_assets_all.bundle` without defining what `{RuntimePath}` resolves to. Define it explicitly as the `StreamingAssets/aa/` directory within the Steam install root. [docs/icon-pipeline-spike.md §3]
-- [ ] [Review][Patch] Orphaned "see critical note below" inline reference — Section 2 bundle header block contains "File format ver: 8 (Unity 6 format — see critical note below)" but no section in the document is labeled "critical note." The reference should either be changed to "see Section 3" or the critical note in Section 3 should be clearly labeled. [docs/icon-pipeline-spike.md §2]
+- [x] [Review][Patch] macOS bundle subfolder name not documented — RESOLVED: §1 now notes macOS subfolder is unverified and must be confirmed before Story 2.2 uses `#[cfg(target_os)]`.
+- [x] [Review][Patch] Empirical test missing PNG validation and texture format check — RESOLVED: §3 now documents both format checks (BC7 confirmed) and PNG header validation (✅ for both RGBA32 and BC7 paths).
+- [x] [Review][Patch] Lookup table ~50 row estimate is unsubstantiated — RESOLVED: §5 now states actual counts: 1,027 icons extracted, 12 skill IDs in current game data, 9 auto-mapped (75% rate).
+- [x] [Review][Patch] tunklab.com 526 described as permanent unavailability — RESOLVED: §4 now correctly states this is a temporary SSL misconfiguration, not a permanent closure.
+- [x] [Review][Patch] Crate relationship between unity-asset, unity-asset-binary, and unity-asset-decode unclear — RESOLVED: §3 now explains these are one Cargo workspace (unity-asset by Latias94), listing the three crate roles and the exact Cargo.toml dependencies needed.
+- [x] [Review][Patch] io_unity listed with "latest" instead of a pinned version — RESOLVED: §3 table now uses "0.8.3".
+- [x] [Review][Patch] {RuntimePath} placeholder is not defined — RESOLVED: §1 now defines `{RuntimePath}` as `{SteamInstallRoot}/{GameName}_Data/StreamingAssets/aa/`.
+- [x] [Review][Patch] Orphaned "see critical note below" inline reference — RESOLVED: §2 bundle header block now reads "(Unity 6 format; see Section 3 for parser support status)" — no orphaned reference.
 - [x] [Review][Defer] Non-default Steam library path detection — `detect_steam_path()` in Story 2.2 must enumerate all Steam library roots via `HKCU\SOFTWARE\Valve\Steam\SteamPath` + `libraryfolders.vdf`, not hard-code `C:\Program Files (x86)\Steam\`. Deferred: Story 2.2 implementation concern, not a spike doc gap.
 - [x] [Review][Defer] Hardcoded bundle filename fragility on game updates — Addressables content builds may hash the bundle filename on future patches; spike hardcodes `skill_icons_assets_all.bundle`. Story 2.2 should check file existence at runtime and log a clear warning if the bundle is missing after a game update. Deferred: Story 2.2 implementation concern.
 - [x] [Review][Defer] CDN skillId format mismatch (kebab-case vs underscore) — If `lastepochtools.com` icons use `mirror_image` identifiers, a translation function will be needed before the CDN URL can be constructed from app skillIds. Deferred: blocked on CDN URL confirmation; Story 2.2 scope.
@@ -184,16 +182,22 @@ claude-sonnet-4-6
 
 - Bundle confirmed at `Last Epoch_Data/StreamingAssets/aa/StandaloneWindows64/skill_icons_assets_all.bundle` (16.07 MB, UnityFS v8, Unity 6000.0.42f1, LZ4HC metadata compression).
 - Game uses Unity Addressables 2.3.16 with binary catalog (not JSON) — no Rust crate can parse the catalog, but bundle path can be hardcoded.
-- 1,193 skill icon textures in bundle with `skillIcon-{name}.png` naming, inconsistently cased. No algorithmic mapping from game data kebab-case skillId to bundle asset name; a manual lookup table is required.
-- Best Rust candidate: `unity-asset` v0.3.0 (Latias94) — pure Rust, Texture2D PNG export via `unity-asset-decode`, compression support includes LZ4HC. Unity 6 / v8 unconfirmed — requires empirical test.
-- Both CDN sources inaccessible via automated means. Spike verdict: CONDITIONAL NO-GO for game file extraction (pending empirical test); CDN path BLOCKED (requires manual browser inspection to confirm URL pattern).
-- Story 2.2 is blocked on CDN URL confirmation. See `docs/icon-pipeline-spike.md` Section 4 for manual investigation steps (2-minute browser task).
-- Only file produced: `docs/icon-pipeline-spike.md`. No TypeScript, Rust, or config files were created.
+- Bundle internal structure empirically confirmed: 16 Texture2D (9 BC7 sprite atlas + 7 standalone), 1,232 Sprite objects, 6 SpriteAtlas objects. ALL pixel data in companion `.resS` node (20,926,560 bytes).
+- **GO confirmed:** `unity-asset-decode` v0.2.0 successfully parses UnityFS v8, decodes RGBA32 (24,110-byte PNG ✅) and BC7 (204,294-byte PNG ✅). Two bugs worked around: (1) BC7 not in `is_supported()` → use `texture2ddecoder` directly; (2) atlas sprites have null `m_RD.texture` → resolve via SpriteAtlas `m_RenderDataMap` GUID lookup.
+- 1,027 skill icon PNGs extracted to `lebo/src-tauri/resources/icons/skills/` (128×128 RGBA). 199 status-effect icons skipped (different bundle, not needed for skill tree).
+- `skill-icon-map.json` generated: 9/12 skill IDs auto-mapped (75% match); 3 require hand-curation (`mage-lightning-blast`, `primalist-storm-totem`, `sentinel-smite`).
+- CDN (`lastepochtools.com`) uses CSS sprite sheets — comparable complexity to local extraction; not recommended as Story 2.2 path. `tunklab.com` returns SSL 526 (temporary).
+- All 8 code review patches applied to `docs/icon-pipeline-spike.md`. Spike verdict upgraded from CONDITIONAL NO-GO → **GO ✅**.
 
 ### File List
 
-- `docs/icon-pipeline-spike.md` (created)
+- `docs/icon-pipeline-spike.md` (created, updated with empirical GO verdict)
+- `tools/extract-icons/Cargo.toml` (created)
+- `tools/extract-icons/src/main.rs` (created)
+- `lebo/src-tauri/resources/icons/skills/*.png` (1,027 files created — not listed individually)
+- `lebo/src-tauri/resources/icons/skill-icon-map.json` (created)
 
 ## Change Log
 
 - 2026-05-08: Spike complete. Created `docs/icon-pipeline-spike.md`. Verdict: CONDITIONAL NO-GO for game file extraction (Unity 6/v8 unconfirmed for Rust crates), CDN path BLOCKED (both CDN sources inaccessible). Story 2.2 blocked on CDN URL manual confirmation.
+- 2026-05-08: Tasks 6, 7, 8 complete. Empirical test PASSED — GO verdict confirmed. `unity-asset-decode` v0.2.0 successfully parses UnityFS v8 and decodes BC7 atlases. 1,027 skill icon PNGs extracted to `lebo/src-tauri/resources/icons/skills/`. `skill-icon-map.json` generated. All 8 code review patches applied to spike doc. Story status → review.

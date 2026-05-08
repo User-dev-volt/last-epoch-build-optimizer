@@ -1,0 +1,10 @@
+D:\Obsidian Brain\Brain\10_Active_Projects\LastEpochBuildOptimizer\LEBOv2\tools\extract-icons\target\debug\deps\bitstream_io-825795489944f022.d: C:\Users\MD_Ki\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitstream-io-4.10.0\src\lib.rs C:\Users\MD_Ki\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitstream-io-4.10.0\src\huffman.rs C:\Users\MD_Ki\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitstream-io-4.10.0\src\read.rs C:\Users\MD_Ki\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitstream-io-4.10.0\src\write.rs
+
+D:\Obsidian Brain\Brain\10_Active_Projects\LastEpochBuildOptimizer\LEBOv2\tools\extract-icons\target\debug\deps\libbitstream_io-825795489944f022.rlib: C:\Users\MD_Ki\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitstream-io-4.10.0\src\lib.rs C:\Users\MD_Ki\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitstream-io-4.10.0\src\huffman.rs C:\Users\MD_Ki\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitstream-io-4.10.0\src\read.rs C:\Users\MD_Ki\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitstream-io-4.10.0\src\write.rs
+
+D:\Obsidian Brain\Brain\10_Active_Projects\LastEpochBuildOptimizer\LEBOv2\tools\extract-icons\target\debug\deps\libbitstream_io-825795489944f022.rmeta: C:\Users\MD_Ki\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitstream-io-4.10.0\src\lib.rs C:\Users\MD_Ki\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitstream-io-4.10.0\src\huffman.rs C:\Users\MD_Ki\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitstream-io-4.10.0\src\read.rs C:\Users\MD_Ki\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitstream-io-4.10.0\src\write.rs
+
+C:\Users\MD_Ki\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitstream-io-4.10.0\src\lib.rs:
+C:\Users\MD_Ki\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitstream-io-4.10.0\src\huffman.rs:
+C:\Users\MD_Ki\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitstream-io-4.10.0\src\read.rs:
+C:\Users\MD_Ki\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitstream-io-4.10.0\src\write.rs:

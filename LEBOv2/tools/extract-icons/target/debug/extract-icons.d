@@ -1,0 +1,1 @@
+D:\Obsidian\ Brain\Brain\10_Active_Projects\LastEpochBuildOptimizer\LEBOv2\tools\extract-icons\target\debug\extract-icons.exe: D:\Obsidian\ Brain\Brain\10_Active_Projects\LastEpochBuildOptimizer\LEBOv2\tools\extract-icons\src\main.rs
