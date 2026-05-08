@@ -173,6 +173,25 @@ Additional blockers even if extraction works:
 
 ---
 
+## 6a. Passive Tree Node Icons — Supplemental Finding
+
+**Investigated during code review (2026-05-08).**
+
+No dedicated passive tree node icon bundle exists in `StreamingAssets/aa/StandaloneWindows64/`. The named bundle inventory contains only `skill_icons_assets_all.bundle` for icons. Passive node icons are almost certainly embedded in either:
+
+- `defaultlocalgroup_assets_all.bundle` (390 MB — Unity's catch-all Addressables group)
+- One or more of the 495 anonymous `duplicateassetssortedbylabel_assets_duplicatebundleN.bundle` files
+
+Identifying which bundle contains passive node icons requires a Unity asset viewer tool (e.g., AssetRipper) to catalog bundle contents — substantially more work than the skill icon pipeline, which has a single known bundle path.
+
+**Decision required for Story 2.4:** Either:
+1. **Limit "icon-accurate" scope to active skill tree nodes only** — passive tree hexagons use colored/styled rendering (already implemented) with no per-node icon art. This is the recommended path unless CDN hosts passive icons.
+2. **Source passive node icons from CDN** — only viable if D1 (CDN URL confirmation) confirms that `lastepochtools.com` also serves passive node icon images.
+
+Until D1 is resolved and this scope decision is made, Story 2.4 should be written assuming option 1 (no passive node icons from local files).
+
+---
+
 ## 6. Impact on Story 2.2
 
 Given the findings above, Story 2.2's implementation scope depends on which blockers are resolved:
