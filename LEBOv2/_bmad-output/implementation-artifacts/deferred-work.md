@@ -1,3 +1,12 @@
+## Deferred from: code review of 2-1-icon-pipeline-research-spike (2026-05-08)
+
+- **Non-default Steam library path detection** — `detect_steam_path()` in Story 2.2 must enumerate all Steam library roots via `HKCU\SOFTWARE\Valve\Steam\SteamPath` + `libraryfolders.vdf`, not hard-code the default `C:\Program Files (x86)\Steam\` path. A significant portion of users install large games on secondary drives.
+- **Hardcoded bundle filename fragility on game updates** — `skill_icons_assets_all.bundle` is the current filename but Addressables content builds may hash it on future patches. Story 2.2 should check file existence at runtime and log a clear diagnostic warning if the bundle is absent after a game update.
+- **CDN skillId format mismatch (kebab-case vs underscore)** — If `lastepochtools.com` icons use `mirror_image`-style identifiers, a translation function will be needed to convert app kebab-case skillIds before constructing the CDN URL. Blocked on CDN URL confirmation; Story 2.2 scope.
+- **Icon cache invalidation on game update** — The spike specifies the icon cache path but not what triggers a cache bust when the player updates Last Epoch. `initialize_icon_pipeline()` needs a version-comparison mechanism similar to the existing game data staleness check.
+- **macOS App Sandbox entitlements for Steam path** — A future Mac App Store build with App Sandbox cannot freely read `~/Library/Application Support/Steam/` without an explicit entitlement or security-scope bookmark flow. Future macOS distribution concern.
+- **Epic Games / Game Pass install paths not addressed** — The spike scoped to Steam only. Epic and Xbox Game Pass paths differ; Xbox `WindowsApps` paths are typically read-denied without special permissions. Out of current project scope.
+
 ## Deferred from: code review of 1-4-active-skill-tab-skill-picker-integration (2026-05-07)
 
 - **`applySkillNodeChange` not atomic** — `buildStore.ts` — Uses `get()`/`set()` pattern; stale snapshot on rapid clicks could lose intermediate undo states. Pre-existing pattern in `applyNodeChange`.
