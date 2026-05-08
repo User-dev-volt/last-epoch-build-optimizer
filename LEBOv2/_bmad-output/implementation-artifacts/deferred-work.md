@@ -20,3 +20,10 @@
 
 - **Silent failure on missing nodeId** — `buildStore.ts:96` returns `{ success: false }` with no `error` field when the nodeId is not found in `treeData`. Defensive guard that shouldn't fire in normal usage but produces an invisible no-op if it does. Consider adding `error: 'Node not found in tree'` for debuggability.
 - **`new Text()` GC pressure in pixiRenderer** — `pixiRenderer.ts:245` creates and destroys PixiJS `Text` objects on every `renderTree` call. No object pooling. Pre-existing architecture. Address if frame-time spikes appear under high allocation counts (object pool or reuse existing Text children).
+
+## Deferred from: code review of 1-5-tree-search-bar-and-reset-button (2026-05-07)
+
+- **`activeTabIndex > 5` magic number + dep array** — `SkillTreeView.tsx:83` — Replaces dynamic `>= 1 + activeSkills.length` guard with hardcoded `> 5`. Equivalent for current fixed 5-slot tab bar but fragile if slot count becomes dynamic. Dep array change from `[activeSkills.length, activeTabIndex]` to `[activeTabIndex]` loses reactivity to skill-count changes.
+- **Double node iteration in search memos** — `SkillTreeView.tsx:172` — `searchHighlighted` and `searchDimmed` each traverse `activeTreeData.nodes` independently. Acceptable for current tree sizes (50–200 nodes); consider single-pass partition if larger trees are introduced.
+- **Inline `style` objects in `TreeControls` recreated every render** — `TreeControls.tsx` — All style props are inline object literals; reallocated on every keystroke. Switch to module-level constants or Tailwind classes.
+- **Weaver Tree tab not covered by `showControls`** — `SkillTreeView.tsx:343` — AC 6 requires search/reset on the Weaver Tree tab. `showControls` only handles passive and skill tabs. Revisit when Story 4.2 implements the Weaver Tree tab.

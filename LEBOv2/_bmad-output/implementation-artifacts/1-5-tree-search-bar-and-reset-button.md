@@ -447,6 +447,22 @@ None — clean implementation with one TypeScript fix required.
 
 ### Review Findings
 
+**Decision-needed (2):**
+- [ ] [Review][Decision] `outline: none` on search input — spec contradiction: Task 3 explicitly says `outline: none` + border-change pattern for the search input, but NFR12 in Dev Notes says "do NOT add outline: none" for both RESET and search. The implementation follows Task 3. Decide: keep Task 3's React-state focus border approach (current), or remove `outline: none` and let the global `:focus-visible` ring handle it instead. [`TreeControls.tsx`]
+- [ ] [Review][Decision] Optimizer-suggested node dimmed by search overlay — when a node is in both `glowing` (optimizer suggested) AND `searchDimmed` (doesn't match search query), the dim overlay is drawn on top of the glow ring with no guard. The spec says non-matching nodes render at 40% opacity but doesn't define precedence over optimizer hints. Decide: should optimizer-suggested nodes be exempt from the search dim overlay, or is "search wins" the intended behavior? [`pixiRenderer.ts:253`]
+
+**Patch (4):**
+- [ ] [Review][Patch] Main `SkillTreeTabBar` uses `setActiveTabIndex` not `handleTabChange` — search query and pickerState are never cleared on tab switch in the normal (non-early-return) render path [`SkillTreeView.tsx:352`]
+- [ ] [Review][Patch] `cursor: 'none'` on × clear button — typo, should be `cursor: 'pointer'` [`TreeControls.tsx:~78`]
+- [ ] [Review][Patch] `resetActiveTree` pushes undo snapshot even when allocations already empty — wasted undo budget; user gets a Ctrl+Z that restores same empty state [`buildStore.ts:158`]
+- [ ] [Review][Patch] `handleReset` calls `setSearchQuery('')` unconditionally — executes even when neither passive nor skill branch fires (`!isPassiveTab && !slotId`), clearing search with no actual reset performed [`SkillTreeView.tsx:~224`]
+
+**Deferred (4):**
+- [x] [Review][Defer] `activeTabIndex > 5` magic number replaces `>= 1 + activeSkills.length` — equivalent for current fixed 5-slot tab bar (Edge Case Hunter confirmed `SKILL_SLOT_LABELS` has 5 entries); dep array change to `[activeTabIndex]` is fragile if slots become dynamic [`SkillTreeView.tsx:83`] — deferred, pre-existing design constraint
+- [x] [Review][Defer] `searchHighlighted` and `searchDimmed` memos each iterate `activeTreeData.nodes` independently — double traversal + double name lookup per keystroke; acceptable for current tree sizes (50–200 nodes) [`SkillTreeView.tsx:172`] — deferred, pre-existing
+- [x] [Review][Defer] Inline `style` objects in `TreeControls` are recreated every render — every keystroke reallocates all style objects; switch to module-level constants or Tailwind classes to avoid churn [`TreeControls.tsx`] — deferred, pre-existing
+- [x] [Review][Defer] Weaver Tree tab not covered by `showControls` (AC 6) — Story 4.2 work; will require revisiting `showControls` logic when Weaver Tree tab is implemented [`SkillTreeView.tsx:343`] — deferred, pre-existing
+
 ### File List
 - `lebo/src/shared/types/treeData.ts` — updated: added `searchHighlighted`, `searchDimmed` to `HighlightedNodes`
 - `lebo/src/features/skill-tree/pixiRenderer.ts` — updated: new Graphics objects, draw functions, renderTree changes
