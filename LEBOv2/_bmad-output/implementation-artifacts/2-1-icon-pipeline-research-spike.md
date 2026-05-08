@@ -1,6 +1,6 @@
 # Story 2.1: Icon Pipeline Research Spike
 
-Status: done
+Status: in-progress
 
 ## Story
 
@@ -54,6 +54,26 @@ so that the icon pipeline implementation in Stories 2.2–2.4 is built on confir
   - [x] Verify that the `skillId` values we have in `classes/{classId}.json` (e.g., the `skills` array in the game data) match the identifier used in CDN URLs — or document the mapping needed
   - [x] Confirm at least 3–5 example URLs that actually resolve to real icon images (not 404s)
   - [x] Note any authentication headers, CORS restrictions, or rate limiting observed on the CDN
+
+- [ ] Task 6: Run unity-asset empirical test — create `tools/extract-icons/` Rust workspace, add `unity-asset-binary` + `unity-asset-decode` deps, write a `main.rs` that opens the bundle and prints object names. Confirm Texture2D objects appear → GO. If panic/empty → NO-GO, proceed to Task 6b instead.
+  - [ ] Point bundle path at: `C:\Program Files (x86)\Steam\steamapps\common\Last Epoch\Last Epoch_Data\StreamingAssets\aa\StandaloneWindows64\skill_icons_assets_all.bundle`
+  - [ ] Verify at least one object prints as a Texture2D type
+  - [ ] Check whether `Texture2D.format` field is readable (DXT5/BC3 expected for Windows build)
+  - [ ] Attempt to decode one texture to PNG bytes and verify the bytes are a valid PNG (non-zero, valid header)
+  - [ ] Update §3 and §5 of `docs/icon-pipeline-spike.md` with the definitive GO/NO-GO result
+
+- [ ] Task 6b (only if Task 6 is NO-GO): Sprite sheet extraction fallback
+  - [ ] Open `https://www.lastepochtools.com/planner` in browser, DevTools → Network → Fetch/XHR tab, reload, find the JSON data file that contains skill icon sprite sheet positions
+  - [ ] Write a Python or Node.js script that downloads the sprite sheets and crops 64×64 regions for each skill, saving as `{skillId}.png`
+
+- [ ] Task 7 (only if Task 6 is GO): Full icon extraction script
+  - [ ] Extend `tools/extract-icons/main.rs` to iterate all Texture2D objects, decode each to PNG, save to `lebo/src-tauri/resources/icons/skills/{bundle_asset_name}.png`
+  - [ ] Confirm all ~50 primary skill icons extract cleanly (no panics, valid PNG files, correct dimensions)
+
+- [ ] Task 8: Build skillId → filename mapping
+  - [ ] Create `lebo/src-tauri/resources/icons/skill-icon-map.json` mapping our kebab-case skillIds to extracted filenames (e.g. `"acolyte-rip-blood": "skillIcon-rip blood.png"`)
+  - [ ] Cross-reference extracted file list against all `skillId` values across `acolyte.json`, `mage.json`, `primalist.json`, `rogue.json`, `sentinel.json`
+  - [ ] Update `docs/icon-pipeline-spike.md` §2 lookup table with the complete mapping
 
 - [x] Task 5: Write the spike report (AC: #2, #3)
   - [x] Create `docs/icon-pipeline-spike.md` in the project root (alongside `src-tauri/`, `lebo/`, etc.)
