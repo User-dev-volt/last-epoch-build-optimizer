@@ -119,28 +119,35 @@ The bundle path can be hardcoded in Rust code, bypassing the need to parse the c
 
 ### `assets.lastepochtools.com` — Does not exist
 
-The URL pattern assumed in the epics (`https://assets.lastepochtools.com/skills/{skill_id}.png`) is **incorrect**. The subdomain `assets.lastepochtools.com` does not resolve — DNS lookup fails with `ERR_NAME_NOT_RESOLVED`. This URL pattern cannot be used.
+The URL pattern assumed in the epics (`https://assets.lastepochtools.com/skills/{skill_id}.png`) is **incorrect**. The subdomain `assets.lastepochtools.com` does not resolve.
 
-### `www.lastepochtools.com` — Cloudflare-protected
+### `www.lastepochtools.com` — Confirmed accessible (manual browser inspection 2026-05-08)
 
-The main domain is protected by Cloudflare WAF and returns HTTP 403 to all automated access, including headless Playwright (real Chrome). The actual icon URL pattern for lastepochtools.com **could not be confirmed** via automated research.
+The domain is protected by Cloudflare WAF against automated access but loads normally in a real browser. The confirmed icon URL pattern from manual browser DevTools inspection is:
 
-From search results, skill pages use underscore-delimited identifiers in their URLs (e.g., `/skills/mirror_image`), suggesting CDN icon URLs might also use underscores. This is unconfirmed.
+```
+https://www.lastepochtools.com/data/{version}/planner/res/{hash}
+```
 
-### `tunklab.com` — Down
+**Confirmed example:** Abyssal Echoes (Acolyte/Lich):
+```
+https://www.lastepochtools.com/data/version145/planner/res/01a7d73f4d0c94422564bdc8e9a068
+```
 
-The site returns Cloudflare error 526 (Invalid SSL certificate). The service is unavailable and cannot be used.
+**Key observations:**
+1. **`{version}` is game-version-scoped** — `version145` corresponds to game version 1.4.5. This path segment will change when Last Epoch patches, requiring the app to track the current version string.
+2. **`{hash}` is an opaque identifier** — 30-character hex string that does NOT correspond to our `skillId` values (e.g., `acolyte-abyssal-echoes`). The derivation of this hash is unknown — it may be a truncated Unity asset GUID, an MD5 of an internal identifier, or a lastepochtools.com internal database key.
+3. **No `.png` extension** — the URL has no file extension. The server presumably returns the correct `image/png` content-type header.
 
-### Confirmed CDN URLs: None
+**Unresolved: skillId → hash mapping.** The hash is 32 hex characters (MD5 length) but does not match MD5 of any obvious candidate string: skill name, kebab-case skillId, bundle asset name (`skillIcon-{name}.png`), or underscore variant. It is likely a lastepochtools.com internal database ID or a Unity asset GUID stored in their data pipeline.
 
-No CDN URL that resolves to an actual skill icon image could be confirmed during this spike. **3–5 example working URLs cannot be provided.** This is a hard blocker for Story 2.2's CDN path.
+To resolve: check the DevTools **Fetch/XHR** tab on a skill page for an API call (e.g., `/api/skills` or `/data/version145/...`) that returns JSON with skill data including the icon path/hash. That response would let us build a complete skillId → hash mapping table, or identify whether the hash is derivable from game data we already have.
 
-### Manual investigation required
+**The CDN URL includes a game version** (`version145` = game v1.4.5) — this path segment changes with each game patch, meaning the URL template has a moving part that requires maintenance or dynamic resolution.
 
-The only way to confirm the CDN URL pattern is:
+### `tunklab.com` — Currently down (likely temporary)
 
-1. **Human browser inspection:** Open `https://www.lastepochtools.com/skills` in a regular (non-headless) browser, navigate to any skill page, open DevTools → Network tab, filter by `.png`, and copy the image request URL. This takes ~2 minutes and is blocked for automated tools.
-2. **Community contact:** Contact Dammitt (lastepochtools.com maintainer) on the Last Epoch Discord server to request the CDN URL template. The server can be found at the link in the site footer.
+The site returns Cloudflare error 526 (Invalid SSL certificate) — this is typically a temporary origin SSL misconfiguration, not a permanent closure. Revisit before Story 2.2 CDN scope is finalized.
 
 ---
 
