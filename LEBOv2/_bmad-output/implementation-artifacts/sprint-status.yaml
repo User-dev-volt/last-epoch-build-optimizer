@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-06
-last_updated: 2026-05-12 (story 2.2 ready-for-dev)
+last_updated: 2026-05-12 (story 2.2 review)
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -54,7 +54,7 @@ development_status:
   # Epic 2: Icon-Accurate Skill Tree Rendering
   epic-2: in-progress
   2-1-icon-pipeline-research-spike: done
-  2-2-rust-icon-pipeline-commands: ready-for-dev
+  2-2-rust-icon-pipeline-commands: review
   2-3-typescript-icon-texture-loading-useicontextures-hook: backlog
   2-4-pixijs-icon-rendering-with-placeholder-fallback: backlog
   epic-2-retrospective: optional

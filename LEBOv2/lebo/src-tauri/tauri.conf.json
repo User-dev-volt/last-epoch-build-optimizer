@@ -45,7 +45,9 @@
       "resources/game-data/classes/mage.json",
       "resources/game-data/classes/primalist.json",
       "resources/game-data/classes/acolyte.json",
-      "resources/game-data/classes/rogue.json"
+      "resources/game-data/classes/rogue.json",
+      "resources/icons/skill-icon-map.json",
+      "resources/icons/skills/*"
     ],
     "windows": {
       "digestAlgorithm": "sha256",

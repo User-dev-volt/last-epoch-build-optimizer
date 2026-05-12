@@ -8,6 +8,7 @@ const ERROR_TYPE_MAP: Record<string, ErrorType> = {
   DATA_STALE: 'DATA_STALE',
   STORAGE_ERROR: 'STORAGE_ERROR',
   AUTH_ERROR: 'AUTH_ERROR',
+  ICON_ERROR: 'ICON_ERROR',
 }
 
 const USER_MESSAGES: Record<ErrorType, string> = {
@@ -18,6 +19,7 @@ const USER_MESSAGES: Record<ErrorType, string> = {
   DATA_STALE: 'Game data may be outdated. Consider updating your game data.',
   STORAGE_ERROR: 'A storage error occurred. Your data in memory is safe — try saving again.',
   AUTH_ERROR: 'No API key configured. Add your Claude API key in Settings.',
+  ICON_ERROR: 'Could not load skill icons. Icons will show as placeholders.',
   UNKNOWN: 'An unexpected error occurred. Please try again.',
 }
 

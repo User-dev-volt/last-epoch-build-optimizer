@@ -16,6 +16,7 @@ use commands::game_data_commands::{
     check_data_version, download_game_data_update, get_manifest, initialize_game_data,
     load_game_data,
 };
+use commands::icon_commands::{get_icon_cache_path, initialize_icon_pipeline};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -51,6 +52,8 @@ pub fn run() {
             load_build,
             delete_build,
             rename_build,
+            initialize_icon_pipeline,
+            get_icon_cache_path,
             invoke_claude_api,
             set_api_key,
             check_api_key_configured,

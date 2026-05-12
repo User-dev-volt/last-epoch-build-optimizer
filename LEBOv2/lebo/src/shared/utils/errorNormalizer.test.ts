@@ -44,6 +44,12 @@ describe('normalizeAppError', () => {
     expect(result.message).toBe('No OpenRouter API key configured. Add your key in Settings.')
   })
 
+  it('detects ICON_ERROR from string', () => {
+    const result = normalizeAppError('ICON_ERROR: copy failed')
+    expect(result.type).toBe('ICON_ERROR')
+    expect(result.detail).toBe('ICON_ERROR: copy failed')
+  })
+
   it('detects STORAGE_ERROR from string', () => {
     const result = normalizeAppError('STORAGE_ERROR: sqlite write failed')
     expect(result.type).toBe('STORAGE_ERROR')
@@ -74,7 +80,7 @@ describe('normalizeAppError', () => {
   it('all error types have non-empty user-facing messages', () => {
     const types = [
       'API_ERROR', 'NETWORK_ERROR', 'TIMEOUT', 'PARSE_ERROR',
-      'DATA_STALE', 'STORAGE_ERROR', 'AUTH_ERROR', 'UNKNOWN',
+      'DATA_STALE', 'STORAGE_ERROR', 'AUTH_ERROR', 'ICON_ERROR', 'UNKNOWN',
     ]
     for (const type of types) {
       const result = normalizeAppError(`${type}: test`)
