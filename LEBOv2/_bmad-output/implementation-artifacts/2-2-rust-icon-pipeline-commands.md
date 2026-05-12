@@ -1,6 +1,6 @@
 # Story 2.2: Rust Icon Pipeline Commands
 
-Status: review
+Status: done
 
 ## Story
 
@@ -318,7 +318,7 @@ Issues identified during adversarial review. Address all of these before closing
 
 ### Post-Remediation Review — 2026-05-12
 
-- [ ] [Review][Patch] tauri.conf.json glob "resources/icons/skills/*" is non-recursive — change to "resources/icons/skills/**/*" to cover future subdirectories; currently flat so no immediate bug [tauri.conf.json:48]
+- [x] [Review][Patch] tauri.conf.json glob "resources/icons/skills/*" is non-recursive — change to "resources/icons/skills/**/*" to cover future subdirectories; currently flat so no immediate bug [tauri.conf.json:48]
 - [x] [Review][Defer] Concurrent get_icon_cache_path callers all incur disk reads before IconMapCache warms — Mutex released after empty-check; all concurrent slow-path callers enter disk read simultaneously [icon_commands.rs:~L145] — deferred, benign; data is deterministic and tiny, correctness unaffected
 - [x] [Review][Defer] path.to_string_lossy() silently replaces non-UTF-8 chars in %APPDATA% paths [icon_commands.rs:~L88] — deferred, Windows %APPDATA% is effectively always valid UTF-8; caller falls back to placeholder on None
 - [x] [Review][Defer] Blocking std::fs::copy × 1,027 files inside async Tauri command [icon_commands.rs:~L97] — deferred, one-time startup copy well under 100ms; revisit only if profiling flags it
