@@ -1,3 +1,19 @@
+## Known Vitest baseline (as of story 2.2, 2026-05-12)
+
+6 pre-existing test failures exist in the suite that are **not regressions** introduced by any story work. The passing bar for all stories is 502/508 (not 508/508). These failures are:
+
+- `ProviderSelector` and `Settings` component tests — 6 tests fail due to Headless UI dialog portal rendering incompatibilities with jsdom. These are pre-existing since Epic 1 and tracked here as the known baseline. Fix is blocked on either upgrading jsdom or switching to a full browser test runner for those components.
+
+Any story that introduces new failures beyond this 502/508 baseline must fix them before marking the story complete.
+
+## Deferred from: code review of 2-2-rust-icon-pipeline-commands (2026-05-12)
+
+- **Production build verification** — `bundle.resources` glob `"resources/icons/skills/*"` was not verified in a full `pnpm tauri build`. Tauri 2 supports glob patterns in resources, but the actual build output should be smoke-tested before the first release to confirm all 1,027 PNGs are bundled correctly.
+
+- **Icon cache staleness / invalidation** — Once `skill-icon-map.json` exists in the cache, updated icons from game patches are never picked up. This is intentional for Phase 2 (icons change rarely; dev re-runs `tools/extract-icons/ --extract` on game patches). Story 6.3 (Manifest v2 & Atomic Data Update Pipeline) is the planned remediation point for in-app icon freshness detection.
+
+- **`App.tsx` caller behavior on `initialize_icon_pipeline` failure** — Story 2.3 (`useIconTextures`) is the actual caller. On `Err`, it should log the error via `console.error` and continue without blocking render; the hook treats an empty/partial cache the same as a cold cache (all lookups return `null`, all nodes render as placeholder fill). Do NOT surface an error toast for icon init failure — it is non-blocking.
+
 ## Deferred from: code review of 2-1-icon-pipeline-research-spike (2026-05-08)
 
 - **Non-default Steam library path detection** — `detect_steam_path()` in Story 2.2 must enumerate all Steam library roots via `HKCU\SOFTWARE\Valve\Steam\SteamPath` + `libraryfolders.vdf`, not hard-code the default `C:\Program Files (x86)\Steam\` path. A significant portion of users install large games on secondary drives.

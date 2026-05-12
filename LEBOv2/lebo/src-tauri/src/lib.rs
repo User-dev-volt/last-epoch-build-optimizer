@@ -16,11 +16,12 @@ use commands::game_data_commands::{
     check_data_version, download_game_data_update, get_manifest, initialize_game_data,
     load_game_data,
 };
-use commands::icon_commands::{get_icon_cache_path, initialize_icon_pipeline};
+use commands::icon_commands::{get_icon_cache_path, initialize_icon_pipeline, IconMapCache};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(IconMapCache(std::sync::Mutex::new(None)))
         .setup(|app| {
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(services::connectivity_service::start_watcher(handle));

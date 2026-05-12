@@ -16,7 +16,7 @@ so that the icon rendering in Story 2.4 has icons ready to display.
 
 2. **Given** `initialize_icon_pipeline()` has already run (icon cache populated)
    **When** it is called again on a subsequent launch
-   **Then** it detects the cache is already populated (by checking for `skill-icon-map.json` in the cache dir), skips the copy, and emits `icon-pipeline:initialized` with no file writes
+   **Then** it detects the cache is already populated (by checking for `skill-icon-map.json` in the cache dir), skips the copy, and emits `icon-pipeline:initialized` with `{ "iconSource": "game-files" }` — same payload as the first-run path
 
 3. **Given** the icon cache has been initialized
    **When** `get_icon_cache_path(skillId: String)` is called with a skill ID that exists in the skill-icon-map (e.g., `"mage-fireball"`)
@@ -212,6 +212,27 @@ let map: HashMap<String, String> = serde_json::from_str(&raw)
 ```
 `serde_json` is already a dependency (`serde_json = "1"` in `Cargo.toml`).
 
+### `copy_dir_recursive` Duplication
+
+`icon_commands.rs` contains its own `copy_dir_recursive` that returns `Result<(), String>` (ICON_ERROR-prefixed). The one in `game_data_service.rs` returns `std::io::Result<()>`. They are intentionally separate because of the differing error types — extracting a shared utility would require a common error enum. A comment in `icon_commands.rs` marks this divergence risk. Do not silently unify them without a migration plan for the error type difference.
+
+### Known Limitation: Icon Cache Staleness
+
+Once `skill-icon-map.json` is present in the cache, subsequent `initialize_icon_pipeline()` calls are no-ops. There is no version comparison or staleness detection for icons. When the game patches and new icons are needed, the developer runs `tools/extract-icons/ --extract` (~15 seconds) and commits. In-app icon freshness detection is deferred to Story 6.3 (Manifest v2 & Atomic Data Update Pipeline). This is documented in `deferred-work.md`.
+
+### Story 2.3 Caller Contract for `initialize_icon_pipeline`
+
+Story 2.3's `useIconTextures` hook is the expected TypeScript caller. On `Err`, it must:
+- Call `console.error(err)` to surface the detail in dev tools
+- Continue without blocking render (do NOT throw or surface a toast)
+- Treat an empty/partial cache identically to a cold cache: all `getIconCachePath` calls return `null`, all nodes render as placeholder fill
+
+Use `src/shared/commands/iconCommands.ts` for the typed wrappers — they are now part of Story 2.2's file list.
+
+### Unmapped Skill IDs Are Not a Fixed Enumeration
+
+The three currently unmapped skill IDs (`mage-lightning-blast`, `primalist-storm-totem`, `sentinel-smite`) are listed in this story only as examples of the expected `Ok(None)` return behavior. They are not hardcoded in the Rust implementation — the code simply performs a map lookup and returns `None` on miss. Future game patches or manual curation may change which IDs are mapped; no code change is needed unless the `skill-icon-map.json` file is updated.
+
 ### What This Story Does NOT Implement
 
 - `detect_steam_path()` — not needed (icons are pre-bundled)
@@ -309,6 +330,7 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+**Initial implementation (2026-05-12):**
 - Created `icon_commands.rs` with `initialize_icon_pipeline` (idempotent copy-from-resources + event emit) and `get_icon_cache_path` (map lookup with file-existence check). Both return `Ok(None)` gracefully for unmapped/missing icons — no error surfaced to the caller.
 - Registered both commands in `commands/mod.rs` and `lib.rs` `invoke_handler!` following existing patterns.
 - Added `"resources/icons/skill-icon-map.json"` and `"resources/icons/skills/*"` to `tauri.conf.json` bundle resources.
@@ -317,12 +339,34 @@ claude-sonnet-4-6
 - Vitest: 22/22 passing in errorNormalizer tests (was 21); full suite 502/508 (6 pre-existing ProviderSelector/Settings failures unchanged).
 - TypeScript build: clean. Rust `cargo check`: clean.
 
+**Review finding remediation (2026-05-12):**
+- **Finding #1 (No Rust tests):** Extracted `load_icon_map`, `resolve_icon_path`, `copy_icon_resources` as pure path-based helpers. Added 7 Rust unit tests covering: absent map → None, valid parse, unmapped skill → None, missing-file-despite-map-entry → None, file-present → absolute path, copy creates expected files, idempotent skip detection. All 7 pass.
+- **Finding #2 (Side effect in get_icon_cache_path):** Split `ensure_icon_cache_dir` (path + create_dir_all) from `icon_cache_dir` (path only). `get_icon_cache_path` now uses `icon_cache_dir` — no directory creation on a read-only lookup.
+- **Finding #3 (Map re-read per call):** Added `IconMapCache(Mutex<Option<HashMap<String, String>>>)` as Tauri managed state. `get_icon_cache_path` uses in-memory cache on subsequent calls; only reads disk on the first call. Registered with `.manage(IconMapCache(Mutex::new(None)))` in `lib.rs`.
+- **Finding #4 (AC #2 payload unspecified on skip path):** Updated AC #2 to explicitly state `{ "iconSource": "game-files" }` is emitted on both paths.
+- **Finding #5 (copy_dir_recursive undocumented):** Added in-code comment and Dev Notes section documenting the intentional duplication and why unified extraction is non-trivial.
+- **Finding #7 (AC #7 omnibus):** Noted in Dev Notes; AC #7 remains omnibus in this story but the independent conditions are well-covered by individual implementation tasks. Splitting is a spec-cleanup concern for future stories.
+- **Finding #8 (Cache staleness):** Documented as known limitation in Dev Notes and in `deferred-work.md`. Story 6.3 is the remediation point.
+- **Finding #9 (App.tsx caller behavior unspecified):** Added Story 2.3 Caller Contract section in Dev Notes: `console.error` on failure, do not block render, do not toast.
+- **Finding #10 (No TS type definitions):** Created `src/shared/commands/iconCommands.ts` with typed `initializeIconPipeline()` and `getIconCachePath()` wrappers using `invokeCommand`.
+- **Finding #11 (Unmapped IDs enumerated in spec):** Added Dev Notes caveat that these are examples of None-return behavior, not a hardcoded list.
+- **Finding #12 (6 undocumented failures):** Added known baseline section to `deferred-work.md` documenting 6 pre-existing ProviderSelector/Settings failures as the established passing bar.
+- **Finding #6 (No production build verified):** Documented in `deferred-work.md` as pending verification before first release. `pnpm build` and `cargo check` are clean.
+- Vitest: 503/509 (6 same pre-existing failures). TypeScript build: clean. Rust `cargo test icon_commands`: 7/7 pass. Rust `cargo check`: clean.
+
 ### File List
 
-- `lebo/src-tauri/src/commands/icon_commands.rs` (created)
+- `lebo/src-tauri/src/commands/icon_commands.rs` (created; updated with pure helpers, IconMapCache state, side-effect fix, 7 unit tests)
 - `lebo/src-tauri/src/commands/mod.rs` (modified — added `pub mod icon_commands;`)
-- `lebo/src-tauri/src/lib.rs` (modified — added icon command imports + invoke_handler! entries)
+- `lebo/src-tauri/src/lib.rs` (modified — added icon command imports + IconMapCache managed state + invoke_handler! entries)
 - `lebo/src-tauri/tauri.conf.json` (modified — added icon resources to bundle)
 - `lebo/src/shared/types/errors.ts` (modified — added `'ICON_ERROR'` to ErrorType union)
 - `lebo/src/shared/utils/errorNormalizer.ts` (modified — added ICON_ERROR to ERROR_TYPE_MAP and USER_MESSAGES)
 - `lebo/src/shared/utils/errorNormalizer.test.ts` (modified — added ICON_ERROR test + updated exhaustive types list)
+- `lebo/src/shared/commands/iconCommands.ts` (created — typed TS wrappers for initializeIconPipeline and getIconCachePath)
+- `_bmad-output/implementation-artifacts/deferred-work.md` (modified — added known test baseline + 2.2 review deferrals)
+
+### Change Log
+
+- 2026-05-12: Initial implementation — Rust commands, TS error types, tauri.conf.json bundling, errorNormalizer test
+- 2026-05-12: Review finding remediation — Rust unit tests (7), IconMapCache managed state, side-effect fix in get_icon_cache_path, TS typed command wrappers, AC #2 payload spec, Dev Notes clarifications, deferred-work.md baseline documentation
