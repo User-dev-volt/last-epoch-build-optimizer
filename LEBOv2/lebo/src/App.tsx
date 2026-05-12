@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { initGameData } from './features/game-data/gameDataLoader'
+import { initializeIconPipeline } from './shared/commands/iconCommands'
 import { loadBuildsOnStartup, saveBuild } from './features/build-manager/buildPersistence'
 import { useAutoSave } from './features/build-manager/useAutoSave'
 import { useConnectivity } from './shared/hooks/useConnectivity'
@@ -41,6 +42,7 @@ export function App() {
   useEffect(() => {
     initGameData().catch(console.error)
     loadBuildsOnStartup().catch(console.error)
+    initializeIconPipeline().catch(console.error)
 
     // Sequential vault reads — must be chained to avoid concurrent Stronghold access
     const { setLlmProvider, setApiKeyConfigured, setOpenRouterConfigured } = useAppStore.getState()

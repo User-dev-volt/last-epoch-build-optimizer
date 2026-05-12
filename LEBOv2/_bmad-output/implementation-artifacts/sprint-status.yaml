@@ -55,7 +55,7 @@ development_status:
   epic-2: in-progress
   2-1-icon-pipeline-research-spike: done
   2-2-rust-icon-pipeline-commands: done
-  2-3-typescript-icon-texture-loading-useicontextures-hook: ready-for-dev
+  2-3-typescript-icon-texture-loading-useicontextures-hook: review
   2-4-pixijs-icon-rendering-with-placeholder-fallback: backlog
   epic-2-retrospective: optional
 

@@ -1,6 +1,6 @@
 # Story 2.3: TypeScript Icon Texture Loading (useIconTextures Hook)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -32,51 +32,51 @@ So that the props-only canvas contract is maintained while icons render in nodes
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `src/features/icon-pipeline/useIconTextures.ts` (AC: #1, #2, #5)
-  - [ ] Subscribe to `icon-pipeline:initialized` event using `listen` from `@tauri-apps/api/event` inside a `useEffect`; set a `pipelineReady` state to true when event fires
-  - [ ] When `pipelineReady` becomes true, call `getIconCachePath(skillId)` (from `src/shared/commands/iconCommands.ts`) for each entry in `skillIds`; collect non-null results as `Array<{ skillId, url: string }>`
-  - [ ] Convert each local path to a WebView-accessible URL via `convertFileSrc(path)` (from `@tauri-apps/api/core`) before passing to `Assets.load`
-  - [ ] Load textures: call `Assets.load<Texture>(convertedUrl)` per entry (or batch if PixiJS supports it); update `Map<string, Texture>` state as each Promise resolves (progressive — do NOT await all before returning)
-  - [ ] Return the partial/growing `Map<string, Texture>` from the hook
-  - [ ] On `skillIds` change: only load icons for newly added IDs; do not reload IDs already in the map (PixiJS Assets cache handles dedup by URL)
-  - [ ] Cleanup: unlisten the Tauri event on unmount
+- [x] Task 1: Create `src/features/icon-pipeline/useIconTextures.ts` (AC: #1, #2, #5)
+  - [x] Subscribe to `icon-pipeline:initialized` event using `listen` from `@tauri-apps/api/event` inside a `useEffect`; set a `pipelineReady` state to true when event fires
+  - [x] When `pipelineReady` becomes true, call `getIconCachePath(skillId)` (from `src/shared/commands/iconCommands.ts`) for each entry in `skillIds`; collect non-null results as `Array<{ skillId, url: string }>`
+  - [x] Convert each local path to a WebView-accessible URL via `convertFileSrc(path)` (from `@tauri-apps/api/core`) before passing to `Assets.load`
+  - [x] Load textures: call `Assets.load<Texture>(convertedUrl)` per entry (or batch if PixiJS supports it); update `Map<string, Texture>` state as each Promise resolves (progressive — do NOT await all before returning)
+  - [x] Return the partial/growing `Map<string, Texture>` from the hook
+  - [x] On `skillIds` change: only load icons for newly added IDs; do not reload IDs already in the map (PixiJS Assets cache handles dedup by URL)
+  - [x] Cleanup: unlisten the Tauri event on unmount
 
-- [ ] Task 2: Extend `SkillTreeCanvasProps` and `RendererInstance` in `types.ts` (AC: #3, #7)
-  - [ ] Add `iconTextures: Map<string, Texture>` as a required prop to `SkillTreeCanvasProps`
-  - [ ] Update `RendererInstance.renderTree` signature: `renderTree(data: TreeData, nodeAllocations: Record<string, number>, highlightedNodes: HighlightedNodes, iconTextures: Map<string, Texture>): void`
-  - [ ] Import `Texture` from `'pixi.js'` in `types.ts`
+- [x] Task 2: Extend `SkillTreeCanvasProps` and `RendererInstance` in `types.ts` (AC: #3, #7)
+  - [x] Add `iconTextures: Map<string, Texture>` as a required prop to `SkillTreeCanvasProps`
+  - [x] Update `RendererInstance.renderTree` signature: `renderTree(data: TreeData, nodeAllocations: Record<string, number>, highlightedNodes: HighlightedNodes, iconTextures: Map<string, Texture>): void`
+  - [x] Import `Texture` from `'pixi.js'` in `types.ts`
 
-- [ ] Task 3: Update `SkillTreeCanvas.tsx` to accept and forward `iconTextures` (AC: #3)
-  - [ ] Destructure `iconTextures` from props
-  - [ ] Update `dataRef.current` to include `iconTextures`
-  - [ ] In the mount effect's initial `r.renderTree(...)` call, pass `iconTextures`
-  - [ ] In the data-change `useEffect` that calls `rendererRef.current?.renderTree(...)`, pass `iconTextures`
-  - [ ] In the reduced-motion `useEffect` re-render, pass `iconTextures`
+- [x] Task 3: Update `SkillTreeCanvas.tsx` to accept and forward `iconTextures` (AC: #3)
+  - [x] Destructure `iconTextures` from props
+  - [x] Update `dataRef.current` to include `iconTextures`
+  - [x] In the mount effect's initial `r.renderTree(...)` call, pass `iconTextures`
+  - [x] In the data-change `useEffect` that calls `rendererRef.current?.renderTree(...)`, pass `iconTextures`
+  - [x] In the reduced-motion `useEffect` re-render, pass `iconTextures`
 
-- [ ] Task 4: Update `pixiRenderer.ts` `renderTree` to accept `iconTextures` (AC: #7)
-  - [ ] Add `iconTextures: Map<string, Texture>` as the 4th parameter to the internal `renderTree` function
-  - [ ] Store `iconTextures` in a `let iconTexturesRef = new Map<string, Texture>()` closure variable accessible to draw functions for Story 2.4
-  - [ ] No other changes to draw functions — Story 2.4 adds Sprite rendering
+- [x] Task 4: Update `pixiRenderer.ts` `renderTree` to accept `iconTextures` (AC: #7)
+  - [x] Add `iconTextures: Map<string, Texture>` as the 4th parameter to the internal `renderTree` function
+  - [x] Store `iconTextures` in a `let iconTexturesMap = new Map<string, Texture>()` closure variable accessible to draw functions for Story 2.4
+  - [x] No other changes to draw functions — Story 2.4 adds Sprite rendering
 
-- [ ] Task 5: Update `SkillTreeView.tsx` to call `useIconTextures` and pass prop (AC: #1, #3)
-  - [ ] Collect skill IDs: `const skillIds = useMemo(() => classData?.skills.map(s => s.skillId) ?? [], [classData])`
-  - [ ] Call `const iconTextures = useIconTextures(skillIds)` at the top of the component (unconditionally — hook rules)
-  - [ ] Pass `iconTextures={iconTextures}` to both `<SkillTreeCanvas>` render sites (passive tab and skill tab)
+- [x] Task 5: Update `SkillTreeView.tsx` to call `useIconTextures` and pass prop (AC: #1, #3)
+  - [x] Collect skill IDs: `const skillIds = useMemo(() => classData?.skills.map(s => s.skillId) ?? [], [classData])`
+  - [x] Call `const iconTextures = useIconTextures(skillIds)` at the top of the component (unconditionally — hook rules)
+  - [x] Pass `iconTextures={iconTextures}` to both `<SkillTreeCanvas>` render sites (passive tab and skill tab)
 
-- [ ] Task 6: Update `App.tsx` startup to call `initializeIconPipeline()` (AC: #6)
-  - [ ] Import `initializeIconPipeline` from `src/shared/commands/iconCommands.ts`
-  - [ ] In the startup `useEffect` (alongside `initGameData()`), add `initializeIconPipeline().catch(console.error)` — fire-and-forget, same pattern as `initGameData()`
+- [x] Task 6: Update `App.tsx` startup to call `initializeIconPipeline()` (AC: #6)
+  - [x] Import `initializeIconPipeline` from `src/shared/commands/iconCommands.ts`
+  - [x] In the startup `useEffect` (alongside `initGameData()`), add `initializeIconPipeline().catch(console.error)` — fire-and-forget, same pattern as `initGameData()`
 
-- [ ] Task 7: Write `src/features/icon-pipeline/useIconTextures.test.ts` (AC: #1, #2, #5)
-  - [ ] Mock `@tauri-apps/api/event` → `listen` as `vi.fn().mockResolvedValue(vi.fn())`
-  - [ ] Mock `@tauri-apps/api/core` → `convertFileSrc` as `(p: string) => p`
-  - [ ] Mock `src/shared/commands/iconCommands` → `getIconCachePath` returning null or a path
-  - [ ] Mock `pixi.js` → `Assets.load` returning a fake Texture object
-  - [ ] Test: hook does not call `getIconCachePath` before `icon-pipeline:initialized` fires
-  - [ ] Test: hook calls `getIconCachePath` for each skillId after event fires
-  - [ ] Test: null paths are excluded from the returned Map
-  - [ ] Test: non-null paths are passed through `convertFileSrc` then to `Assets.load`
-  - [ ] Test: returned Map contains resolved textures for non-null paths
+- [x] Task 7: Write `src/features/icon-pipeline/useIconTextures.test.ts` (AC: #1, #2, #5)
+  - [x] Mock `@tauri-apps/api/event` → `listen` as `vi.fn().mockResolvedValue(vi.fn())`
+  - [x] Mock `@tauri-apps/api/core` → `convertFileSrc` as `(p: string) => p`
+  - [x] Mock `src/shared/commands/iconCommands` → `getIconCachePath` returning null or a path
+  - [x] Mock `pixi.js` → `Assets.load` returning a fake Texture object
+  - [x] Test: hook does not call `getIconCachePath` before `icon-pipeline:initialized` fires
+  - [x] Test: hook calls `getIconCachePath` for each skillId after event fires
+  - [x] Test: null paths are excluded from the returned Map
+  - [x] Test: non-null paths are passed through `convertFileSrc` then to `Assets.load`
+  - [x] Test: returned Map contains resolved textures for non-null paths
 
 ## Dev Notes
 
@@ -254,12 +254,19 @@ Any test file that renders `SkillTreeView` (including `SkillTreeCanvas` indirect
 
 ### Agent Model Used
 
-(to be filled)
+claude-sonnet-4-6
 
 ### Completion Notes List
 
-(to be filled)
+- Created `useIconTextures` hook in new `icon-pipeline` feature folder. Listens for `icon-pipeline:initialized` Tauri event, then progressively loads textures via PixiJS Assets after converting OS paths with `convertFileSrc`. Tracks loaded IDs in a ref to avoid re-loading on skillIds changes.
+- Extended `types.ts` with `Texture` import from pixi.js; added `iconTextures: Map<string, Texture>` as required prop to `SkillTreeCanvasProps` and 4th parameter to `RendererInstance.renderTree`.
+- Updated `SkillTreeCanvas.tsx`: added `iconTextures` to destructured props, `dataRef`, and all three `renderTree` call sites (mount, data-change effect, reduced-motion effect).
+- Updated `pixiRenderer.ts`: added `iconTextures` 4th param and closure variable `iconTexturesMap` (stored for Story 2.4 draw functions; `void` expression prevents `noUnusedLocals` error).
+- Updated `SkillTreeView.tsx`: added `skillIds` useMemo, `useIconTextures` hook call, and `iconTextures` prop on both passive and skill tab `<SkillTreeCanvas>` render sites.
+- Updated `App.tsx`: added `initializeIconPipeline().catch(console.error)` fire-and-forget call alongside `initGameData()` in startup useEffect.
+- Fixed two existing test files to pass the new `iconTextures` argument: `pixiRenderer.test.ts` (2 `renderTree` calls) and `SkillTreeCanvas.test.tsx` (`DEFAULT_PROPS`).
+- All 6 new hook tests pass. Full suite: 509/515 pass (6 pre-existing failures in Settings/ProviderSelector unrelated to this story). Build passes with zero type errors.
 
 ### Change Log
 
-(to be filled)
+- 2026-05-12: Implemented story 2.3 — TypeScript icon texture loading via useIconTextures hook. All ACs satisfied, 6 new tests, no regressions.

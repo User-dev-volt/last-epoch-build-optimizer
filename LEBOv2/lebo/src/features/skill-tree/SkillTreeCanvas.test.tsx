@@ -45,6 +45,7 @@ const DEFAULT_PROPS = {
   treeData: TWO_NODE_TREE,
   nodeAllocations: {},
   highlightedNodes: { glowing: new Set<string>(), dimmed: new Set<string>(), previewRemoved: new Set<string>(), previewAdded: new Set<string>(), searchHighlighted: new Set<string>(), searchDimmed: new Set<string>() },
+  iconTextures: new Map<string, import('pixi.js').Texture>(),
   onNodeClick: vi.fn(),
   onNodeHover: vi.fn(),
   onKeyboardNavigate: vi.fn(),

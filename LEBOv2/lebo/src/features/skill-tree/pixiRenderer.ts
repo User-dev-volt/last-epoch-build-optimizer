@@ -1,4 +1,5 @@
 import { Application, Circle, Container, Graphics, Text } from 'pixi.js'
+import type { Texture } from 'pixi.js'
 import type { TreeData, TreeNode, HighlightedNodes, RendererCallbacks, RendererInstance } from './types'
 
 // PixiJS v8's logPrettyShaderError calls .split() on getShaderSource/getShaderInfoLog results,
@@ -190,12 +191,16 @@ export async function initRenderer(
   )
 
   let lastRenderedNodeMap: Map<string, TreeNode> = new Map()
+  let iconTexturesMap: Map<string, Texture> = new Map()
 
   function renderTree(
     data: TreeData,
     nodeAllocations: Record<string, number>,
-    highlightedNodes: HighlightedNodes
+    highlightedNodes: HighlightedNodes,
+    iconTextures: Map<string, Texture>
   ) {
+    iconTexturesMap = iconTextures
+    void iconTexturesMap
     lastRenderedNodeMap = new Map(data.nodes.map((n) => [n.id, n]))
     edgeGraphics.clear()
     lockedGraphics.clear()

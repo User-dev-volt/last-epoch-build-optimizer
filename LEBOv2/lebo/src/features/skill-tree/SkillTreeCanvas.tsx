@@ -9,6 +9,7 @@ export function SkillTreeCanvas({
   treeData,
   nodeAllocations,
   highlightedNodes,
+  iconTextures,
   onNodeClick,
   onNodeHover,
   onKeyboardNavigate,
@@ -18,7 +19,7 @@ export function SkillTreeCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rendererRef = useRef<RendererInstance | null>(null)
   const callbacksRef = useRef<RendererCallbacks>({ onNodeClick, onNodeHover })
-  const dataRef = useRef({ treeData, nodeAllocations, highlightedNodes })
+  const dataRef = useRef({ treeData, nodeAllocations, highlightedNodes, iconTextures })
   const treeDataRef = useRef(treeData)
   const bfsOrderRef = useRef<string[]>([])
   const focusedNodeIdRef = useRef<string | null>(null)
@@ -63,7 +64,7 @@ export function SkillTreeCanvas({
   // Keep refs current after every render
   useEffect(() => {
     callbacksRef.current = { onNodeClick, onNodeHover }
-    dataRef.current = { treeData, nodeAllocations, highlightedNodes }
+    dataRef.current = { treeData, nodeAllocations, highlightedNodes, iconTextures }
     treeDataRef.current = treeData
     bfsOrderRef.current = bfsOrder
     reducedMotionRef.current = reducedMotion
@@ -147,8 +148,8 @@ export function SkillTreeCanvas({
         const { width, height } = container.getBoundingClientRect()
         r.resize(width, height)
         r.setReducedMotion(reducedMotionRef.current)
-        const { treeData: td, nodeAllocations: na, highlightedNodes: hn } = dataRef.current
-        r.renderTree(td, na, hn)
+        const { treeData: td, nodeAllocations: na, highlightedNodes: hn, iconTextures: it } = dataRef.current
+        r.renderTree(td, na, hn, it)
 
         syncButtonPositions()
         unsubTicker = r.addTickerListener(syncButtonPositions)
@@ -170,16 +171,16 @@ export function SkillTreeCanvas({
 
   // Re-render whenever tree data changes
   useEffect(() => {
-    rendererRef.current?.renderTree(treeData, nodeAllocations, highlightedNodes)
-  }, [treeData, nodeAllocations, highlightedNodes])
+    rendererRef.current?.renderTree(treeData, nodeAllocations, highlightedNodes, iconTextures)
+  }, [treeData, nodeAllocations, highlightedNodes, iconTextures])
 
   // Propagate reduced motion preference to renderer and re-render so the change takes effect immediately
   useEffect(() => {
     const r = rendererRef.current
     if (!r) return
     r.setReducedMotion(reducedMotion)
-    const { treeData: td, nodeAllocations: na, highlightedNodes: hn } = dataRef.current
-    r.renderTree(td, na, hn)
+    const { treeData: td, nodeAllocations: na, highlightedNodes: hn, iconTextures: it } = dataRef.current
+    r.renderTree(td, na, hn, it)
   }, [reducedMotion])
 
   // Trigger flash animation — each failure creates a new array reference to re-run this effect

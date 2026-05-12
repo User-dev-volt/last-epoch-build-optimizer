@@ -14,6 +14,7 @@ import { SkillTreeTabBar } from './SkillTreeTabBar'
 import { useSkillTree } from './useSkillTree'
 import { SkillPickerGrid } from '../skill-picker/SkillPickerGrid'
 import { TreeControls } from './TreeControls'
+import { useIconTextures } from '../icon-pipeline/useIconTextures'
 
 const EMPTY_ALLOCATED: Record<string, number> = {}
 const EMPTY_SKILL_ALLOC: Record<string, Record<string, number>> = {}
@@ -86,6 +87,9 @@ export function SkillTreeView() {
   }, [activeTabIndex])
 
   const classData = selectedClassId && gameData ? gameData.classes[selectedClassId] : null
+
+  const skillIds = useMemo(() => classData?.skills.map((s) => s.skillId) ?? [], [classData])
+  const iconTextures = useIconTextures(skillIds)
 
   const allGameNodes = useMemo<Record<string, GameNode>>(() => {
     if (!classData) return {}
@@ -388,6 +392,7 @@ export function SkillTreeView() {
               treeData={treeData!}
               nodeAllocations={nodeAllocations}
               highlightedNodes={passiveHighlightedNodes}
+              iconTextures={iconTextures}
               onNodeClick={handleNodeClick}
               onNodeHover={handleNodeHover}
               onKeyboardNavigate={handleKeyboardNavigate}
@@ -436,6 +441,7 @@ export function SkillTreeView() {
               treeData={skillTreeData}
               nodeAllocations={slotAllocations}
               highlightedNodes={skillHighlightedNodes}
+              iconTextures={iconTextures}
               onNodeClick={handleNodeClick}
               onNodeHover={handleNodeHover}
               onKeyboardNavigate={handleKeyboardNavigate}
