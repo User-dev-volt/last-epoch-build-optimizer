@@ -267,6 +267,36 @@ Unlike game data, icons do not have a freshness check in Phase 2. When the game 
 - [Source: `lebo/src-tauri/tauri.conf.json`] — existing `bundle.resources` format to extend
 - [Source: Story 2.1 Dev Notes — Completion Notes] — 1,027 PNGs at `lebo/src-tauri/resources/icons/skills/`, map at `lebo/src-tauri/resources/icons/skill-icon-map.json`
 
+## Review Findings
+
+Issues identified during adversarial review. Address all of these before closing the story.
+
+1. **No Rust unit tests.** `initialize_icon_pipeline` and `get_icon_cache_path` have multiple code paths (idempotent skip, missing file, partial-copy failure, map miss, file-present-but-missing-on-disk) with zero Rust test coverage. Add tests using a temp directory fixture.
+
+2. **`get_icon_cache_path` has an undisclosed side effect.** It calls `ensure_icon_cache_dir`, which creates the directory if missing. A read-only lookup should not create directories on disk. Either skip directory creation in this path or document the side effect explicitly.
+
+3. **Map file re-read on every `get_icon_cache_path` call.** Each call opens, reads, and JSON-parses `skill-icon-map.json`. Story 2.4 will call this per skill node (20+ times). Cache the parsed `HashMap` — either as a `Lazy<Mutex<...>>` static or pass it as Tauri managed state.
+
+4. **AC #2 never specifies the event payload on the skip path.** The skip path emits `icon-pipeline:initialized` but the AC doesn't state the payload. Confirm it emits `{ "iconSource": "game-files" }` on both paths and update AC #2 to say so explicitly.
+
+5. **`copy_dir_recursive` resolution undocumented.** The helper is private to `game_data_service.rs`. The file list shows no new shared utility was created, implying duplication. Document which path was taken (duplicate vs. extracted) and, if duplicated, add a comment noting the divergence risk.
+
+6. **No production build verified.** Completion Notes confirm `cargo check` and TypeScript build only. `bundle.resources` glob (`"resources/icons/skills/*"`) may or may not be supported — the fallback was noted but the actual result is unrecorded. Run `pnpm tauri build` and confirm resources are accessible at runtime before closing.
+
+7. **AC #7 is an omnibus criterion.** It bundles four independent conditions into one AC (invoke_handler registration, error prefix, TypeScript ErrorType update, tauri.conf.json bundling). Split into separate ACs or sub-items so partial failure can be reported clearly.
+
+8. **Cache staleness: no detection or invalidation path.** Once `skill-icon-map.json` exists in cache, updated icons from game patches are never picked up. This is intentional for Phase 2 — document it explicitly as a known limitation and note that Story 6.3 (Manifest v2) is the planned remediation point.
+
+9. **`App.tsx` caller behavior on `Err` is unspecified.** AC #6 says the command returns `Err("ICON_ERROR: ...")` on failure and the app continues, but never specifies what the TypeScript startup caller does with the error (log and continue? surface a toast?). Specify the expected caller behavior here so Story 2.3 doesn't have to guess.
+
+10. **No TypeScript command type definitions.** `initialize_icon_pipeline` returns `void` and `get_icon_cache_path` returns `string | null`. These are described in prose but never codified. Add a `src/shared/commands/iconCommands.ts` (or equivalent) with typed wrappers so Story 2.3 has a concrete contract to import.
+
+11. **Spec contradicts its own "don't hardcode" rule.** The 3 unmapped skill IDs are listed by name in AC #4, the task subtasks, and Dev Notes — three places — despite the explicit instruction not to hardcode them. Remove or caveat these enumerations so the spec doesn't imply they are the complete and permanent list.
+
+12. **6 pre-existing Vitest failures are undocumented debt.** Completion Notes accept 502/508 passing without linking to any tracked issue for the 6 ProviderSelector/Settings failures. Document these as a known baseline (e.g., in `deferred-work.md`) so future stories have an unambiguous passing bar.
+
+---
+
 ## Dev Agent Record
 
 ### Agent Model Used
