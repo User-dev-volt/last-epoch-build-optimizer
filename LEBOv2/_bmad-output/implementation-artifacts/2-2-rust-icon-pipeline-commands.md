@@ -316,6 +316,14 @@ Issues identified during adversarial review. Address all of these before closing
 
 12. **6 pre-existing Vitest failures are undocumented debt.** Completion Notes accept 502/508 passing without linking to any tracked issue for the 6 ProviderSelector/Settings failures. Document these as a known baseline (e.g., in `deferred-work.md`) so future stories have an unambiguous passing bar.
 
+### Post-Remediation Review — 2026-05-12
+
+- [ ] [Review][Patch] tauri.conf.json glob "resources/icons/skills/*" is non-recursive — change to "resources/icons/skills/**/*" to cover future subdirectories; currently flat so no immediate bug [tauri.conf.json:48]
+- [x] [Review][Defer] Concurrent get_icon_cache_path callers all incur disk reads before IconMapCache warms — Mutex released after empty-check; all concurrent slow-path callers enter disk read simultaneously [icon_commands.rs:~L145] — deferred, benign; data is deterministic and tiny, correctness unaffected
+- [x] [Review][Defer] path.to_string_lossy() silently replaces non-UTF-8 chars in %APPDATA% paths [icon_commands.rs:~L88] — deferred, Windows %APPDATA% is effectively always valid UTF-8; caller falls back to placeholder on None
+- [x] [Review][Defer] Blocking std::fs::copy × 1,027 files inside async Tauri command [icon_commands.rs:~L97] — deferred, one-time startup copy well under 100ms; revisit only if profiling flags it
+- [x] [Review][Defer] Test temp dirs leak on test panic — fs::remove_dir_all only runs on happy path [icon_commands.rs tests:~L185] — deferred, test hygiene only; no production impact
+
 ---
 
 ## Dev Agent Record

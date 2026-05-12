@@ -6,6 +6,13 @@
 
 Any story that introduces new failures beyond this 502/508 baseline must fix them before marking the story complete.
 
+## Deferred from: code review of 2-2-rust-icon-pipeline-commands post-remediation (2026-05-12)
+
+- **Concurrent get_icon_cache_path cold-cache reads** — `icon_commands.rs` — Mutex is released after the empty-check; all concurrent callers (e.g. 20+ per-node calls from Story 2.4) each incur a disk read before any of them populates the cache. Benign: data is deterministic and the map file is tiny. Fix with `OnceLock` or hold the lock across the slow path if concurrent reads become observable.
+- **path.to_string_lossy() on non-UTF-8 paths** — `icon_commands.rs:~L88` — Returns a lossy UTF-8 string that silently replaces non-UTF-8 chars with U+FFFD. On Windows, `%APPDATA%` is almost always valid UTF-8, and the caller falls back to placeholder on `None`. Low real-world risk.
+- **Blocking sync file I/O in async Tauri command** — `icon_commands.rs:~L97` — `std::fs::copy` × 1,027 files blocks the async runtime thread during `initialize_icon_pipeline`. One-time startup operation; acceptable until profiling shows otherwise. Fix with `spawn_blocking` or `tokio::fs` if needed.
+- **Test temp dir leak on panic** — `icon_commands.rs` test module — `fs::remove_dir_all` only runs on happy path; panicking tests leave temp dirs behind. Test hygiene only; no production impact.
+
 ## Deferred from: code review of 2-2-rust-icon-pipeline-commands (2026-05-12)
 
 - **Production build verification** — `bundle.resources` glob `"resources/icons/skills/*"` was not verified in a full `pnpm tauri build`. Tauri 2 supports glob patterns in resources, but the actual build output should be smoke-tested before the first release to confirm all 1,027 PNGs are bundled correctly.
