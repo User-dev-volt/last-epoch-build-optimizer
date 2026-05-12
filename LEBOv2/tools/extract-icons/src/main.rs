@@ -21,6 +21,7 @@ type AtlasEntry = (i64, f32, f32, f32, f32);
 
 fn main() -> unity_asset_decode::Result<()> {
     let extract = std::env::args().any(|a| a == "--extract");
+    let debug = std::env::args().any(|a| a == "--debug");
 
     println!("Opening bundle: {BUNDLE_PATH}");
     let file = load_unity_file(BUNDLE_PATH)?;
@@ -134,9 +135,60 @@ fn main() -> unity_asset_decode::Result<()> {
         }
     }
 
-    if !extract {
-        println!("\nRun with --extract to export all skill icons.");
-        return Ok(());
+    if debug || !extract {
+        // Debug: dump one full BC7 atlas and save one sprite with both y-formula variants
+        let cwd = std::env::current_dir().unwrap_or_default();
+        let first_bc7 = texture2d_objects.iter()
+            .find(|(_, t)| t.format == TextureFormat::BC7 && !t.image_data.is_empty());
+        if let Some((pid, atlas_tex)) = first_bc7 {
+            if let Ok(atlas_img) = decode_to_rgba(atlas_tex) {
+                let atlas_path = cwd.join("debug_atlas.png");
+                if let Ok(png) = encode_png(&atlas_img) {
+                    std::fs::write(&atlas_path, &png).ok();
+                    println!("DEBUG: saved atlas {:?} ({}×{}) → {}", atlas_tex.name, atlas_img.width(), atlas_img.height(), atlas_path.display());
+                }
+                // Find first skillIcon sprite that resolves to this atlas
+                for obj in &sprite_objects {
+                    let props = obj.class.properties();
+                    let name = get_str(props, "m_Name").unwrap_or_default();
+                    if !name.starts_with("skillIcon-") { continue; }
+                    let guid = match sprite_guid(props) { Some(g) => g, None => continue };
+                    let entry = match atlas_data.get(&guid) { Some(e) => e, None => continue };
+                    if entry.0 != *pid { continue; }
+                    let (_, rx, ry, rw, rh) = *entry;
+                    let ah = atlas_img.height() as f32;
+                    println!("DEBUG sprite {:?}: textureRect=({rx:.0},{ry:.0},{rw:.0}×{rh:.0})  atlas_h={ah:.0}", name);
+                    // Variant A: no flip (current fix)
+                    let ya = ry.floor() as u32;
+                    let xc = rx.floor() as u32;
+                    let wc = rw.ceil() as u32;
+                    let hc = rh.ceil() as u32;
+                    if xc + wc <= atlas_img.width() && ya + hc <= atlas_img.height() {
+                        let crop = image::imageops::crop_imm(&atlas_img, xc, ya, wc, hc).to_image();
+                        if let Ok(png) = encode_png(&crop) {
+                            let p = cwd.join("debug_sprite_noflip.png");
+                            std::fs::write(&p, &png).ok();
+                            println!("DEBUG: noflip crop → {} (y={})", p.display(), ya);
+                        }
+                    }
+                    // Variant B: with flip
+                    let yb = (ah - ry - rh).floor() as u32;
+                    if xc + wc <= atlas_img.width() && yb + hc <= atlas_img.height() {
+                        let crop = image::imageops::crop_imm(&atlas_img, xc, yb, wc, hc).to_image();
+                        if let Ok(png) = encode_png(&crop) {
+                            let p = cwd.join("debug_sprite_flip.png");
+                            std::fs::write(&p, &png).ok();
+                            println!("DEBUG: flip crop → {} (y={})", p.display(), yb);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        if !extract {
+            println!("\nRun with --extract to export all skill icons.");
+            return Ok(());
+        }
     }
 
     // Task 7: Full extraction
@@ -298,7 +350,9 @@ fn crop_and_save(
 ) -> Result<(), String> {
     let atlas_h = atlas.height() as f32;
     let x = rx.floor() as u32;
-    let y = (atlas_h - ry - rh).floor() as u32; // Unity Y-flip
+    // Unity D3D bundles store pixel data bottom-up (row 0 = bottom of image).
+    // textureRect.y is also Y-from-bottom, so they're in the same space — no flip needed.
+    let y = ry.floor() as u32;
     let w = rw.ceil() as u32;
     let h = rh.ceil() as u32;
 
@@ -359,10 +413,12 @@ fn decode_to_rgba(tex: &Texture2D) -> Result<image::RgbaImage, String> {
 }
 
 fn u32_to_rgba(buf: Vec<u32>, w: u32, h: u32) -> Result<image::RgbaImage, String> {
+    // texture2ddecoder color() packs as u32::from_le_bytes([b, g, r, a])
+    // so bit layout: bits 0-7=B, 8-15=G, 16-23=R, 24-31=A
     let rgba: Vec<u8> = buf.iter()
         .flat_map(|&p| {
-            [(p & 0xFF) as u8, ((p >> 8) & 0xFF) as u8,
-             ((p >> 16) & 0xFF) as u8, ((p >> 24) & 0xFF) as u8]
+            [((p >> 16) & 0xFF) as u8, ((p >> 8) & 0xFF) as u8,
+             (p & 0xFF) as u8, ((p >> 24) & 0xFF) as u8]
         })
         .collect();
     image::RgbaImage::from_raw(w, h, rgba)
