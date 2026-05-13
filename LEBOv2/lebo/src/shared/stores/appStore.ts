@@ -19,6 +19,7 @@ interface AppStore {
   updateStatus: 'idle' | 'downloading' | 'ready' | 'error'
   updateProgress: number
   updateDismissed: boolean
+  iconSource: 'game-files' | 'community-cdn' | 'placeholder' | null
   setOnline: (online: boolean) => void
   setCurrentView: (view: 'main' | 'settings') => void
   setPanelState: (panel: 'left' | 'right', state: PanelCollapseState) => void
@@ -29,6 +30,7 @@ interface AppStore {
   setUpdateStatus: (status: 'idle' | 'downloading' | 'ready' | 'error') => void
   setUpdateProgress: (progress: number) => void
   setUpdateDismissed: (dismissed: boolean) => void
+  setIconSource: (v: 'game-files' | 'community-cdn' | 'placeholder') => void
 }
 
 export const useAppStore = create<AppStore>()((set) => ({
@@ -43,6 +45,7 @@ export const useAppStore = create<AppStore>()((set) => ({
   updateStatus: 'idle',
   updateProgress: 0,
   updateDismissed: false,
+  iconSource: null,
   setOnline: (online) => set({ isOnline: online, isOnlineChecked: true }),
   setCurrentView: (view) => set({ currentView: view }),
   setPanelState: (panel, state) =>
@@ -54,4 +57,5 @@ export const useAppStore = create<AppStore>()((set) => ({
   setUpdateStatus: (status) => set({ updateStatus: status }),
   setUpdateProgress: (progress) => set({ updateProgress: progress }),
   setUpdateDismissed: (dismissed) => set({ updateDismissed: dismissed }),
+  setIconSource: (v) => set({ iconSource: v }),
 }))

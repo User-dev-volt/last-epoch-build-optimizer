@@ -1,6 +1,6 @@
 # Story 2.4: PixiJS Icon Rendering with Placeholder Fallback
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -32,38 +32,38 @@ so that the tree is always interactive and the visual upgrade is immediate when 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `Sprite` rendering to `pixiRenderer.ts` (AC: #1, #2, #5)
-  - [ ] Import `Sprite` (and `Graphics` as mask) from `'pixi.js'` — add to existing import line
-  - [ ] Declare `iconContainer = new Container()` inside `initRenderer`, add to `worldContainer` between `allocatedGraphics` and `labelContainer` in the `addChild` call
-  - [ ] Declare `let lastRenderedIconIds = new Set<string>()` in the closure (for stagger tracking)
-  - [ ] In `renderTree`: call `iconContainer.removeChildren()` alongside the other `.clear()` calls at the top
-  - [ ] In the node draw loop, after the state-based draw call, check `iconTexturesMap.get(node.id)` — if texture exists, create a `Sprite`, set anchor 0.5/0.5, position to `node.x/node.y`, size to `r * 1.6` × `r * 1.6`, create a circular `Graphics` mask at same coords, add both mask and sprite to `iconContainer`
-  - [ ] Remove the `void iconTexturesMap` no-op line (it was there only to suppress unused-local warning; actual usage replaces it)
-  - [ ] Track newly added icon nodeIds: compare current icon set to `lastRenderedIconIds`; if `reducedMotionEnabled = false`, run 50ms scale-in ticker animation on new sprites only; update `lastRenderedIconIds` at end of `renderTree`
+- [x] Task 1: Add `Sprite` rendering to `pixiRenderer.ts` (AC: #1, #2, #5)
+  - [x] Import `Sprite` (and `Graphics` as mask) from `'pixi.js'` — add to existing import line
+  - [x] Declare `iconContainer = new Container()` inside `initRenderer`, add to `worldContainer` between `allocatedGraphics` and `labelContainer` in the `addChild` call
+  - [x] Declare `let lastRenderedIconIds = new Set<string>()` in the closure (for stagger tracking)
+  - [x] In `renderTree`: call `iconContainer.removeChildren()` alongside the other `.clear()` calls at the top
+  - [x] In the node draw loop, after the state-based draw call, check `iconTexturesMap.get(node.id)` — if texture exists, create a `Sprite`, set anchor 0.5/0.5, position to `node.x/node.y`, size to `r * 1.6` × `r * 1.6`, create a circular `Graphics` mask at same coords, add both mask and sprite to `iconContainer`
+  - [x] Remove the `void iconTexturesMap` no-op line (it was there only to suppress unused-local warning; actual usage replaces it)
+  - [x] Track newly added icon nodeIds: compare current icon set to `lastRenderedIconIds`; if `reducedMotionEnabled = false`, run 50ms scale-in ticker animation on new sprites only; update `lastRenderedIconIds` at end of `renderTree`
 
-- [ ] Task 2: Implement 50ms scale-in stagger animation for new icons (AC: #3, #5)
-  - [ ] Add a `pendingIconAnimations: Array<{ sprite: Sprite; startTime: number; delay: number }>` closure variable
-  - [ ] In `renderTree`, for each newly added icon (not in `lastRenderedIconIds`), push to `pendingIconAnimations` with `delay = index * 50` ms and initial `sprite.scale.set(0)` / `sprite.alpha = 0`
-  - [ ] Add a persistent ticker callback (registered once in `initRenderer`, not per `renderTree`) that processes `pendingIconAnimations`: each frame, advance each pending item; once `(now - startTime) >= delay`, animate from scale 0.7→1.0 over 100ms; remove when complete
-  - [ ] When `reducedMotionEnabled = true`: skip animation entirely — sprites render at full scale/alpha immediately (no delay, no animation ticker entries)
-  - [ ] In `destroy()`, clear `pendingIconAnimations = []` to prevent stale callbacks
+- [x] Task 2: Implement 50ms scale-in stagger animation for new icons (AC: #3, #5)
+  - [x] Add a `pendingIconAnimations: Array<{ sprite: Sprite; startTime: number; delay: number }>` closure variable
+  - [x] In `renderTree`, for each newly added icon (not in `lastRenderedIconIds`), push to `pendingIconAnimations` with `delay = index * 50` ms and initial `sprite.scale.set(0)` / `sprite.alpha = 0`
+  - [x] Add a persistent ticker callback (registered once in `initRenderer`, not per `renderTree`) that processes `pendingIconAnimations`: each frame, advance each pending item; once `(now - startTime) >= delay`, animate from scale 0.7→1.0 over 100ms; remove when complete
+  - [x] When `reducedMotionEnabled = true`: skip animation entirely — sprites render at full scale/alpha immediately (no delay, no animation ticker entries)
+  - [x] In `destroy()`, clear `pendingIconAnimations = []` to prevent stale callbacks
 
-- [ ] Task 3: Extend `appStore` with `iconSource` and wire `useIconTextures` to dispatch it (AC: #6)
-  - [ ] In `src/shared/stores/appStore.ts`: add `iconSource: 'game-files' | 'community-cdn' | 'placeholder' | null` field (default `null`) and `setIconSource(v: ...)` setter
-  - [ ] In `src/features/icon-pipeline/useIconTextures.ts`: update the `listen('icon-pipeline:initialized', ...)` callback to extract the `iconSource` payload field and call `useAppStore.getState().setIconSource(payload.iconSource)`
-  - [ ] The event payload type is `{ iconSource: 'game-files' | 'community-cdn' | 'placeholder' }` — type-assert or destructure from the Tauri event payload
+- [x] Task 3: Extend `appStore` with `iconSource` and wire `useIconTextures` to dispatch it (AC: #6)
+  - [x] In `src/shared/stores/appStore.ts`: add `iconSource: 'game-files' | 'community-cdn' | 'placeholder' | null` field (default `null`) and `setIconSource(v: ...)` setter
+  - [x] In `src/features/icon-pipeline/useIconTextures.ts`: update the `listen('icon-pipeline:initialized', ...)` callback to extract the `iconSource` payload field and call `useAppStore.getState().setIconSource(payload.iconSource)`
+  - [x] The event payload type is `{ iconSource: 'game-files' | 'community-cdn' | 'placeholder' }` — type-assert or destructure from the Tauri event payload
 
-- [ ] Task 4: Add `iconSource` label to Settings panel (AC: #6)
-  - [ ] In `src/features/settings/Settings.tsx`: subscribe to `useAppStore(s => s.iconSource)`
-  - [ ] Add a new `<section>` below the keyboard shortcuts section with label "Icon Source" showing: `iconSource === 'game-files' ? 'game files' : iconSource === 'community-cdn' ? 'community CDN' : iconSource === 'placeholder' ? 'placeholder' : 'not initialized'`
-  - [ ] Render as a read-only text row matching the existing Settings panel styling; no interaction
+- [x] Task 4: Add `iconSource` label to Settings panel (AC: #6)
+  - [x] In `src/features/settings/Settings.tsx`: subscribe to `useAppStore(s => s.iconSource)`
+  - [x] Add a new `<section>` below the keyboard shortcuts section with label "Icon Source" showing: `iconSource === 'game-files' ? 'game files' : iconSource === 'community-cdn' ? 'community CDN' : iconSource === 'placeholder' ? 'placeholder' : 'not initialized'`
+  - [x] Render as a read-only text row matching the existing Settings panel styling; no interaction
 
-- [ ] Task 5: Update `pixiRenderer.test.ts` to cover icon rendering (AC: #1, #2)
-  - [ ] Add test: `renderTree` with non-empty `iconTextures` Map → `Sprite` constructor called once per mapped node
-  - [ ] Add test: `renderTree` with empty `iconTextures` Map → no `Sprite` constructors called
-  - [ ] Add test: calling `renderTree` twice — second call clears `iconContainer.removeChildren()` before re-adding sprites
-  - [ ] Mock `Sprite` in the existing `vi.mock('pixi.js', ...)` block: `Sprite` as a constructable vi.fn() with `.anchor = { set: vi.fn() }`, `.width`, `.height`, `.mask` as writable props
-  - [ ] Add `iconContainer` stub to the `makeContainer()` mock (it's added via `worldContainer.addChild`)
+- [x] Task 5: Update `pixiRenderer.test.ts` to cover icon rendering (AC: #1, #2)
+  - [x] Add test: `renderTree` with non-empty `iconTextures` Map → `Sprite` constructor called once per mapped node
+  - [x] Add test: `renderTree` with empty `iconTextures` Map → no `Sprite` constructors called
+  - [x] Add test: calling `renderTree` twice — second call clears `iconContainer.removeChildren()` before re-adding sprites
+  - [x] Mock `Sprite` in the existing `vi.mock('pixi.js', ...)` block: `Sprite` as a constructable vi.fn() with `.anchor = { set: vi.fn() }`, `.width`, `.height`, `.mask` as writable props
+  - [x] Add `iconContainer` stub to the `makeContainer()` mock (it's added via `worldContainer.addChild`)
 
 ## Dev Notes
 
@@ -276,6 +276,22 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+None — implementation followed story spec exactly.
+
 ### Completion Notes List
 
+- Task 1: Added `Sprite` + circular `Graphics` mask rendering inside node loop in `pixiRenderer.ts`. `iconContainer` inserted between `allocatedGraphics` and `dimmedGraphics` so icons render above backgrounds but under suggestion/preview overlays. Removed `void iconTexturesMap` suppressor.
+- Task 2: Persistent `iconAnimTick` registered once in `initRenderer` via `app.ticker.add`. Scale-in animates 0.7→1.0 over 100ms with 50ms per-icon stagger. `lastRenderedIconIds` + `lastTreeId` guards ensure only newly arrived icons animate; tree change resets all tracking. `reducedMotionEnabled` skips animation entirely. Ticker removed and array cleared in `destroy()`.
+- Task 3: `appStore` extended with `iconSource: ... | null` (default null) and `setIconSource` setter. `useIconTextures` event listener updated to generic `listen<{iconSource: ...}>` and dispatches to store.
+- Task 4: Settings panel reads `iconSource` from store, renders "Data Sources" section with read-only `—`/`game files`/`community CDN`/`placeholder` label.
+- Task 5: `pixiRenderer.test.ts` updated — `MockSprite` hoisted as `vi.fn(function(){...})` (regular function required for `new` constructor calls), `ticker.remove` added to mock, 3 new icon rendering tests all pass. `useIconTextures.test.ts` updated — added `appStore` mock and upgraded `triggerInitialized` to pass typed event payload.
+- All 515 tests pass (6 pre-existing failures in ProviderSelector/Settings unrelated to this story). Build succeeds with zero type errors.
+
 ### File List
+
+- `lebo/src/features/skill-tree/pixiRenderer.ts`
+- `lebo/src/features/skill-tree/pixiRenderer.test.ts`
+- `lebo/src/shared/stores/appStore.ts`
+- `lebo/src/features/icon-pipeline/useIconTextures.ts`
+- `lebo/src/features/icon-pipeline/useIconTextures.test.ts`
+- `lebo/src/features/settings/Settings.tsx`

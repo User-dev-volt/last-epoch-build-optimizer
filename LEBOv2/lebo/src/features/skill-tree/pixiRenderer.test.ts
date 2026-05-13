@@ -4,12 +4,28 @@ import type { TreeData, RendererCallbacks } from './types'
 import { mockTreeData } from './mockTreeData'
 
 // Use vi.hoisted so these refs are available inside the vi.mock factory
-const { mockApp, mockRendererResize, mockAppDestroy } = vi.hoisted(() => {
+const { mockApp, mockRendererResize, mockAppDestroy, MockSprite } = vi.hoisted(() => {
   const mockRendererResize = vi.fn()
   const mockAppDestroy = vi.fn()
+
+  function makeSprite() {
+    return {
+      anchor: { set: vi.fn() },
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+      alpha: 1,
+      scale: { set: vi.fn() },
+      mask: null as unknown,
+    }
+  }
+  const MockSprite = vi.fn(function () { return makeSprite() })
+
   return {
     mockRendererResize,
     mockAppDestroy,
+    MockSprite,
     mockApp: {
       init: vi.fn().mockResolvedValue(undefined),
       stage: {
@@ -22,7 +38,7 @@ const { mockApp, mockRendererResize, mockAppDestroy } = vi.hoisted(() => {
       screen: { width: 800, height: 600 },
       canvas: { addEventListener: vi.fn(), removeEventListener: vi.fn() },
       renderer: { resize: mockRendererResize },
-      ticker: { FPS: 60, add: vi.fn() },
+      ticker: { FPS: 60, add: vi.fn(), remove: vi.fn() },
       destroy: mockAppDestroy,
     },
   }
@@ -78,7 +94,7 @@ vi.mock('pixi.js', () => {
     return { x, y, radius: r, type: 'circle' }
   }
 
-  return { Application, Container, Graphics, Text, Circle }
+  return { Application, Container, Graphics, Text, Sprite: MockSprite, Circle }
 })
 
 function makeCallbacksRef(): { current: RendererCallbacks } {
@@ -125,5 +141,63 @@ describe('initRenderer', () => {
     const renderer = await initRenderer(makeCanvas(), makeCallbacksRef())
     renderer.destroy()
     expect(mockAppDestroy).toHaveBeenCalled()
+  })
+
+  it('renderTree with non-empty iconTextures calls Sprite constructor once per mapped node', async () => {
+    const renderer = await initRenderer(makeCanvas(), makeCallbacksRef())
+    const singleNodeTree: TreeData = {
+      nodes: [{ id: 'node1', x: 100, y: 100, size: 'medium', state: 'available', maxPoints: 1, connections: [] }],
+      edges: [],
+    }
+    const iconTextures = new Map([['node1', {} as import('pixi.js').Texture]])
+    const emptyHighlight = {
+      glowing: new Set<string>(),
+      dimmed: new Set<string>(),
+      previewRemoved: new Set<string>(),
+      previewAdded: new Set<string>(),
+      searchHighlighted: new Set<string>(),
+      searchDimmed: new Set<string>(),
+    }
+    renderer.renderTree(singleNodeTree, {}, emptyHighlight, iconTextures)
+    expect(MockSprite).toHaveBeenCalledTimes(1)
+  })
+
+  it('renderTree with empty iconTextures calls no Sprite constructors', async () => {
+    const renderer = await initRenderer(makeCanvas(), makeCallbacksRef())
+    const singleNodeTree: TreeData = {
+      nodes: [{ id: 'node1', x: 100, y: 100, size: 'medium', state: 'available', maxPoints: 1, connections: [] }],
+      edges: [],
+    }
+    const emptyHighlight = {
+      glowing: new Set<string>(),
+      dimmed: new Set<string>(),
+      previewRemoved: new Set<string>(),
+      previewAdded: new Set<string>(),
+      searchHighlighted: new Set<string>(),
+      searchDimmed: new Set<string>(),
+    }
+    renderer.renderTree(singleNodeTree, {}, emptyHighlight, new Map())
+    expect(MockSprite).not.toHaveBeenCalled()
+  })
+
+  it('calling renderTree twice clears iconContainer before re-adding sprites', async () => {
+    const renderer = await initRenderer(makeCanvas(), makeCallbacksRef())
+    const singleNodeTree: TreeData = {
+      nodes: [{ id: 'node1', x: 100, y: 100, size: 'medium', state: 'available', maxPoints: 1, connections: [] }],
+      edges: [],
+    }
+    const iconTextures = new Map([['node1', {} as import('pixi.js').Texture]])
+    const emptyHighlight = {
+      glowing: new Set<string>(),
+      dimmed: new Set<string>(),
+      previewRemoved: new Set<string>(),
+      previewAdded: new Set<string>(),
+      searchHighlighted: new Set<string>(),
+      searchDimmed: new Set<string>(),
+    }
+    renderer.renderTree(singleNodeTree, {}, emptyHighlight, iconTextures)
+    renderer.renderTree(singleNodeTree, {}, emptyHighlight, iconTextures)
+    // Sprite called once per renderTree call (2 total), and iconContainer.removeChildren called each time
+    expect(MockSprite).toHaveBeenCalledTimes(2)
   })
 })

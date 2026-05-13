@@ -3,6 +3,7 @@ import { ProviderSelector } from './ProviderSelector'
 
 export function Settings() {
   const setCurrentView = useAppStore((s) => s.setCurrentView)
+  const iconSource = useAppStore((s) => s.iconSource)
 
   return (
     <div
@@ -75,6 +76,22 @@ export function Settings() {
               ))}
             </tbody>
           </table>
+        </section>
+
+        <section>
+          <p className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text-primary)' }}>
+            Data Sources
+          </p>
+          <div className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+            <span style={{ color: 'var(--color-text-muted)' }}>Icon source: </span>
+            {iconSource === 'game-files'
+              ? 'game files'
+              : iconSource === 'community-cdn'
+                ? 'community CDN'
+                : iconSource === 'placeholder'
+                  ? 'placeholder'
+                  : '—'}
+          </div>
         </section>
       </div>
     </div>

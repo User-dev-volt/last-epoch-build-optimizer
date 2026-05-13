@@ -4,6 +4,7 @@ import type { UnlistenFn } from '@tauri-apps/api/event'
 import { convertFileSrc } from '@tauri-apps/api/core'
 import { Assets, Texture } from 'pixi.js'
 import { getIconCachePath } from '../../shared/commands/iconCommands'
+import { useAppStore } from '../../shared/stores/appStore'
 
 export function useIconTextures(skillIds: string[]): Map<string, Texture> {
   const [iconTextures, setIconTextures] = useState<Map<string, Texture>>(new Map())
@@ -15,8 +16,11 @@ export function useIconTextures(skillIds: string[]): Map<string, Texture> {
     isMountedRef.current = true
     let unlisten: UnlistenFn | null = null
 
-    listen('icon-pipeline:initialized', () => {
-      if (isMountedRef.current) setPipelineReady(true)
+    listen<{ iconSource: 'game-files' | 'community-cdn' | 'placeholder' }>('icon-pipeline:initialized', (event) => {
+      if (isMountedRef.current) {
+        setPipelineReady(true)
+        useAppStore.getState().setIconSource(event.payload.iconSource)
+      }
     })
       .then((fn) => {
         // P1: if unmount raced the Promise, call unlisten immediately

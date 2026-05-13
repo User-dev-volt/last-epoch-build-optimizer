@@ -15,6 +15,9 @@ vi.mock('pixi.js', () => ({
   Assets: { load: vi.fn() },
   Texture: class {},
 }))
+vi.mock('../../shared/stores/appStore', () => ({
+  useAppStore: { getState: () => ({ setIconSource: vi.fn() }) },
+}))
 
 import { listen } from '@tauri-apps/api/event'
 import { getIconCachePath } from '../../shared/commands/iconCommands'
@@ -26,14 +29,16 @@ const mockGetIconCachePath = vi.mocked(getIconCachePath)
 const mockAssetsLoad = vi.mocked(Assets.load)
 
 describe('useIconTextures', () => {
-  let triggerInitialized: () => void
+  type InitEvent = { payload: { iconSource: 'game-files' | 'community-cdn' | 'placeholder' } }
+  let triggerInitialized: (event?: InitEvent) => void
   let capturedUnlisten: UnlistenFn
+  const defaultInitEvent: InitEvent = { payload: { iconSource: 'placeholder' } }
 
   beforeEach(() => {
     vi.clearAllMocks()
     capturedUnlisten = vi.fn()
     mockListen.mockImplementation((_event, callback) => {
-      triggerInitialized = callback as () => void
+      triggerInitialized = (event = defaultInitEvent) => (callback as (e: InitEvent) => void)(event)
       return Promise.resolve(capturedUnlisten)
     })
   })
@@ -101,7 +106,7 @@ describe('useIconTextures', () => {
     let resolveUnlisten!: (fn: UnlistenFn) => void
     const delayedUnlisten = vi.fn()
     mockListen.mockImplementation((_event, callback) => {
-      triggerInitialized = callback as () => void
+      triggerInitialized = (event = defaultInitEvent) => (callback as (e: InitEvent) => void)(event)
       return new Promise((res) => { resolveUnlisten = res })
     })
     const { unmount } = renderHook(() => useIconTextures(['skill-a']))

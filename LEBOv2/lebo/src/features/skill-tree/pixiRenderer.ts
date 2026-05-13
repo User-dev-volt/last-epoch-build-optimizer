@@ -1,4 +1,4 @@
-import { Application, Circle, Container, Graphics, Text } from 'pixi.js'
+import { Application, Circle, Container, Graphics, Sprite, Text } from 'pixi.js'
 import type { Texture } from 'pixi.js'
 import type { TreeData, TreeNode, HighlightedNodes, RendererCallbacks, RendererInstance } from './types'
 
@@ -126,12 +126,15 @@ export async function initRenderer(
   const labelContainer = new Container()
   // Flash animation layer — above labels, below hit areas; managed independently of renderTree
   const flashContainer = new Container()
+  // Icon sprites — above node backgrounds, below suggestion/preview overlays and labels
+  const iconContainer = new Container()
 
   worldContainer.addChild(
     edgeGraphics,
     lockedGraphics,
     availableGraphics,
     allocatedGraphics,
+    iconContainer,
     dimmedGraphics,
     suggestedGraphics,
     previewRemovedGraphics,
@@ -192,6 +195,29 @@ export async function initRenderer(
 
   let lastRenderedNodeMap: Map<string, TreeNode> = new Map()
   let iconTexturesMap: Map<string, Texture> = new Map()
+  let lastRenderedIconIds = new Set<string>()
+  let lastTreeId: string | undefined
+
+  interface PendingIconAnim {
+    sprite: Sprite
+    startTime: number
+    delay: number
+  }
+  let pendingIconAnimations: PendingIconAnim[] = []
+
+  const iconAnimTick = () => {
+    const now = performance.now()
+    pendingIconAnimations = pendingIconAnimations.filter(({ sprite, startTime, delay }) => {
+      if (now < startTime + delay) return true
+      const elapsed = now - (startTime + delay)
+      const ANIM_DURATION = 100
+      const progress = Math.min(elapsed / ANIM_DURATION, 1)
+      sprite.scale.set(0.7 + 0.3 * progress)
+      sprite.alpha = progress
+      return progress < 1
+    })
+  }
+  app.ticker.add(iconAnimTick)
 
   function renderTree(
     data: TreeData,
@@ -200,8 +226,17 @@ export async function initRenderer(
     iconTextures: Map<string, Texture>
   ) {
     iconTexturesMap = iconTextures
-    void iconTexturesMap
     lastRenderedNodeMap = new Map(data.nodes.map((n) => [n.id, n]))
+
+    // Reset icon tracking when the tree changes (all icons animate in fresh)
+    const currentTreeId = data.nodes[0]?.id
+    if (currentTreeId !== lastTreeId) {
+      lastRenderedIconIds = new Set()
+      lastTreeId = currentTreeId
+    }
+    const prevIconIds = lastRenderedIconIds
+    const newIconIds = new Set<string>()
+
     edgeGraphics.clear()
     lockedGraphics.clear()
     availableGraphics.clear()
@@ -212,6 +247,7 @@ export async function initRenderer(
     previewAddedGraphics.clear()
     searchDimOverlayGraphics.clear()
     searchHighlightGraphics.clear()
+    iconContainer.removeChildren()
     hitAreaContainer.removeChildren()
     labelContainer.removeChildren()
 
@@ -258,6 +294,36 @@ export async function initRenderer(
       if (isSearchDimmed && !isGlowing) drawSearchDimOverlay(searchDimOverlayGraphics, node.x, node.y, r)
       if (isSearchHighlighted) drawSearchHighlight(searchHighlightGraphics, node.x, node.y, r)
 
+      // Icon sprite — centered in node, clipped to circle
+      const texture = iconTexturesMap.get(node.id)
+      if (texture) {
+        const sprite = new Sprite(texture)
+        sprite.anchor.set(0.5, 0.5)
+        sprite.x = node.x
+        sprite.y = node.y
+        const iconSize = r * 1.6
+        sprite.width = iconSize
+        sprite.height = iconSize
+
+        const mask = new Graphics()
+        mask.circle(node.x, node.y, r - 1).fill(0xffffff)
+        sprite.mask = mask
+
+        iconContainer.addChild(mask)
+        iconContainer.addChild(sprite)
+        newIconIds.add(node.id)
+
+        if (!reducedMotionEnabled && !prevIconIds.has(node.id)) {
+          sprite.scale.set(0)
+          sprite.alpha = 0
+          pendingIconAnimations.push({
+            sprite,
+            startTime: performance.now(),
+            delay: pendingIconAnimations.length * 50,
+          })
+        }
+      }
+
       // Point count label inside the node — only shown when points are allocated
       const currentPts = nodeAllocations[node.id] ?? 0
       if (currentPts > 0) {
@@ -303,6 +369,8 @@ export async function initRenderer(
       })
       hitAreaContainer.addChild(hit)
     }
+
+    lastRenderedIconIds = newIconIds
   }
 
   let reducedMotionEnabled = false
@@ -325,6 +393,8 @@ export async function initRenderer(
 
   function destroy() {
     app.canvas.removeEventListener('contextmenu', onContextMenu)
+    app.ticker.remove(iconAnimTick)
+    pendingIconAnimations = []
     // false = do not remove canvas from DOM; React owns the canvas element's lifecycle
     app.destroy(false, { children: true })
   }
