@@ -1,6 +1,6 @@
 # Story 3.1: Character Level Input and Passive Point Budget Calculation
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -317,3 +317,31 @@ None.
 - `lebo/src/features/context-panel/SkillInput.test.tsx` — modified (added fields to mockBuild)
 - `lebo/src/features/layout/RightPanel.test.tsx` — modified (added fields to MOCK_BUILD)
 - `lebo/src/features/optimization/SuggestionsList.test.tsx` — modified (added fields to MOCK_BUILD)
+
+## Adversarial Review (Second Pass)
+
+**Outcome:** Changes Requested
+**Date:** 2026-05-13
+**Reviewer:** claude-sonnet-4-6
+
+**Summary:** 9 action items. All original tasks pass and tests are green, but this pass surfaced: an unconfirmed passive point formula, a broken input-clearing UX bug, a double-activation defect from a raw `<label>` wrapping Headless UI `<Switch>`, a missing NFR12 focus ring on the level input, an IIFE code smell in `SkillTreeView`, a missing `MAX_PASSIVE_POINTS` constant, and two UX additions agreed with the product owner: an icon prefix on `UnspentCounter` and a read-only level echo on skill tabs.
+
+### Action Items
+
+- [ ] [High] **Verify passive point formula** — confirm `level + 20` against game data or an authoritative community source (Last Epoch wiki, datamine, or in-game observation). Update the comment in `budgetCalculator.ts` with a concrete citation. If the formula differs, update `calculatePassivePoints` and adjust `budgetCalculator.test.ts` accordingly. Story must not close `done` while this is unverified.
+
+- [ ] [High] **Fix `handleLevelChange` snap-to-1 bug** — `parseInt("") → NaN → clamp → 1` fires immediately when the user clears the field, making it impossible to retype. Fix: introduce a local `inputValue: string` state in `BudgetToggle`. `onChange` updates local state only (no store write). `onBlur` (and `onKeyDown Enter`) clamps and writes to the store. Render `value={inputValue}` instead of `value={characterLevel}`. This is standard controlled-input UX for bounded number fields. Update `BudgetToggle.test.tsx` to cover the clear → blur → store-write sequence.
+
+- [ ] [High] **Fix double-activation: `<label>` wrapping `<Switch>`** — A raw HTML `<label>` wrapping a Headless UI `<Switch>` fires two activation events on click (label's native activation + Switch's `onChange`), toggling the switch twice and leaving it unchanged. Replace with Headless UI `<Field>` + `<Label>` components, which are designed for this layout and handle event propagation correctly. Update `BudgetToggle.test.tsx` to assert a single `setBudgetEnforced` call per click.
+
+- [ ] [Med] **Add gold focus ring to level `<input>`** — The level input in `BudgetToggle` has no `:focus-visible` styling, violating NFR12 (2px gold focus ring on all interactive elements). Add `onFocus` / `onBlur` local state to toggle `outline: '2px solid var(--color-accent-gold)'` on the input's inline style, or use a `focusVisible` CSS class if global styles support it. Do not use `outline: none`. Add an axe check in `BudgetToggle.test.tsx` if not already present.
+
+- [ ] [Med] **Refactor IIFE out of `SkillTreeView` JSX** — The `{isPassiveTab && activeBuild && (() => { ... })()}` block is an unnecessary IIFE. Move `allocatedPassivePoints` and `unspentPassivePoints` to plain `const` declarations above the `return` statement (they already depend on values in scope). The IIFE wrapper adds noise with no benefit.
+
+- [ ] [Med] **Add `MAX_PASSIVE_POINTS` constant to `budgetCalculator.ts`** — The actual maximum passive budget (level 100 → 120 points) has no named constant. Add `export const MAX_PASSIVE_POINTS = MAX_CHARACTER_LEVEL + PASSIVE_POINT_BONUS`. Story 3.3 must import and use this constant in any enforcement logic rather than writing `100` or `120` as a magic number.
+
+- [ ] [Med] **Add icon prefix to `UnspentCounter`** — Render a small diamond glyph (`◆`, 10px, matching `countColor`) immediately before the count number to give visual context without text. The "(Budget off)" label already uses text; the icon fills the role of a non-text label for the number. Verify the chosen glyph renders at the target font in the app (screenshot the passive tab row after implementing).
+
+- [ ] [Med] **Level input: editable on passive tab, read-only echo on skill tabs** — The Level input currently disappears entirely on skill tabs, even though character level governs skill budgets (Story 3.2). On skill tabs, render a read-only display (e.g., `<span>Lv. {characterLevel}</span>`) in the same header-row position where `BudgetToggle` renders on the passive tab. Suggested approach: extract `<LevelDisplay />` (read-only span) and keep full `<BudgetToggle />` for passive tab only. `SkillTreeView` already has `isPassiveTab` in scope — gate which component renders. The `BudgetToggle` is **not** rendered on skill tabs (no switch shown there); only the level echo.
+
+- [ ] [Low] **Annotate N/A resolutions in `Review Follow-ups (AI)`** — Nine medium/low action items from the first review were closed as "N/A; references code that was reverted." Add a bracketed note to each explaining that the referenced constructs (`resolveWeight`, `computeMasteryMax`, `initScoringEngine`, `scoreStore`, etc.) were part of an over-scoped initial implementation that was reverted before the first review session. This prevents future readers from thinking those issues were resolved by code changes when they were resolved by deletion.
