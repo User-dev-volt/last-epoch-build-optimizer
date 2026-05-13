@@ -1,6 +1,6 @@
 # Story 3.1: Character Level Input and Passive Point Budget Calculation
 
-Status: done
+Status: ready-for-dev
 
 ## Story
 
@@ -85,6 +85,24 @@ so that I can plan builds within my actual character's limitations.
   - [x] Verify `createBuild` initializes `characterLevel: 1` and `budgetEnforced: false`
   - [x] Verify `setCharacterLevel` updates `activeBuild.characterLevel`
   - [x] Verify `setBudgetEnforced` updates `activeBuild.budgetEnforced`
+
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][High] Pre-condition: Verify `NodeEffect.magnitude` scale in game data before formula is used — confirm it exists, document its scale (integer percent or decimal fraction), and calibrate `calculatePassivePoints` accordingly
+- [ ] [AI-Review][High] Pre-condition: Verify `EquippedSkill` (or `SkillEntry`) has a `type` field typed as `'spell' | 'melee' | 'ranged'`; if absent, add it with default `'unknown'` before implementing context remap in Story 3.3
+- [ ] [AI-Review][High] Pre-condition: Verify `GameNode.maxPoints` (or `maxRanks`) is always a positive integer for valid nodes
+- [ ] [AI-Review][High] Formula guard: `calculatePassivePoints` must guard against division — ensure `Score = masteryMax > 0 ? clamp(...) : 0`; no implicit division by zero
+- [ ] [AI-Review][High] `maxPoints === 0` guard: If a node's `maxPoints` is 0 (malformed data), skip its contribution and emit `console.warn('[scoring] node with maxPoints=0 skipped: ${nodeId}')` guarded by `if (import.meta.env.DEV)`
+- [ ] [AI-Review][Med] `resolveWeight`: Weight resolution must extract the first underscore-delimited token from the effect tag, look up `TYPE_WEIGHTS`, and default to 1 — not fall through silently
+- [ ] [AI-Review][Med] Context remap — move not duplicate: Reclassified tags must leave Speed and join Damage only; no double-counting in both dimensions
+- [ ] [AI-Review][Med] Majority denominator: Empty (null/unfilled) equipped skill slots must be excluded from the majority denominator count
+- [ ] [AI-Review][Med] `masteryMax` recomputation on context change: Denominator must be recomputed using the same remap as the numerator — recompute before scores are recalculated when equipped skills change
+- [ ] [AI-Review][Med] Tree topology in greedy simulation: `computeMasteryMax` must take an `edges` parameter and respect prerequisite graph — only reachable nodes may be allocated
+- [ ] [AI-Review][Med] `PASSIVE_POINT_BUDGET = 100`: Replace magic number with named constant in `budgetCalculator.ts`
+- [ ] [AI-Review][Low] `masteryMax` cache invalidation: Cache entry must be invalidated when game data is re-fetched (staleness refresh)
+- [ ] [AI-Review][Low] Performance test: Tighten to 50 iterations after 5-iteration warm-up; assert P99 ≤ 16ms (not just a single sample)
+- [ ] [AI-Review][Low] `scoreStore` shape: Remove `utility` field; type `lastUpdatedAt` explicitly as `Date.now()` return value
+- [ ] [AI-Review][Low] `initScoringEngine` cleanup: Must return a single combined cleanup function covering both subscriptions (buildStore + equipped skills); `App.tsx` calls this on unmount
 
 ## Dev Notes
 
@@ -215,6 +233,32 @@ From `pixiRenderer.test.ts` and `ContextPanel.test.tsx`:
 - `SkillTreeView.tsx` lines 113, 346 — `baseAllocatedNodes` and `activeAllocations`
 - `SkillTreeView.tsx` lines 382-410 — insertion point for budget row (between skill header and TreeControls)
 - `LeftPanel.tsx` lines 53-68 — gold/muted button style pattern to match
+
+## Senior Developer Review (AI)
+
+**Outcome:** Changes Requested
+**Date:** 2026-05-13
+**Reviewer:** claude-sonnet-4-6
+
+**Summary:** 15 action items identified. The original implementation completed all tasks and tests pass, but the review surfaced missing guards and spec gaps that must be addressed: division-by-zero protection in the scoring formula, missing type fields on game data types needed for future stories (3.2, 3.3), `maxPoints === 0` node handling, context remap correctness (move not duplicate), empty slot exclusion from majority count, tree topology enforcement in greedy simulation, named constant for the passive point budget, cache invalidation on data refresh, tighter performance test spec, store shape cleanup (`utility`, `lastUpdatedAt`), and dual-subscription cleanup pattern in `initScoringEngine`.
+
+### Action Items
+
+- [ ] [High] Pre-condition: Verify `NodeEffect.magnitude` scale in game data
+- [ ] [High] Pre-condition: Verify/add `SkillEntry.type: 'spell' | 'melee' | 'ranged' | 'unknown'`
+- [ ] [High] Pre-condition: Verify `GameNode.maxPoints` is always a positive integer for valid nodes
+- [ ] [High] Formula: Explicit `masteryMax > 0` guard — no implicit division
+- [ ] [High] `maxPoints === 0` node: Skip + dev-mode `console.warn`
+- [ ] [Med] `resolveWeight`: First underscore-delimited token → `TYPE_WEIGHTS` lookup → default 1
+- [ ] [Med] Context remap: Tags move from Speed to Damage (not duplicated to both)
+- [ ] [Med] Majority denominator: Exclude empty/null equipped skill slots
+- [ ] [Med] `masteryMax` recomputation: Use same remap as numerator after context change
+- [ ] [Med] Tree topology: `computeMasteryMax` takes `edges` param; respects prerequisites
+- [ ] [Med] `PASSIVE_POINT_BUDGET = 100`: Named constant, not magic number
+- [ ] [Low] `masteryMax` cache: Invalidated on game data re-fetch
+- [ ] [Low] Performance test: 50 iterations / 5 warm-up / assert P99 ≤ 16ms
+- [ ] [Low] `scoreStore` shape: Remove `utility`; `lastUpdatedAt` typed as `Date.now()`
+- [ ] [Low] `initScoringEngine`: Single combined cleanup function for both subscriptions
 
 ## Dev Agent Record
 
