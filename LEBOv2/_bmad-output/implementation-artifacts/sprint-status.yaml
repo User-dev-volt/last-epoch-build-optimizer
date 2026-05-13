@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-06
-last_updated: 2026-05-12 (story 2.3 done)
+last_updated: 2026-05-12 (story 2.4 ready-for-dev)
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -56,7 +56,7 @@ development_status:
   2-1-icon-pipeline-research-spike: done
   2-2-rust-icon-pipeline-commands: done
   2-3-typescript-icon-texture-loading-useicontextures-hook: done
-  2-4-pixijs-icon-rendering-with-placeholder-fallback: backlog
+  2-4-pixijs-icon-rendering-with-placeholder-fallback: ready-for-dev
   epic-2-retrospective: optional
 
   # Epic 3: Character Level & Point Budget System
