@@ -1,6 +1,6 @@
 # Story 2.3: TypeScript Icon Texture Loading (useIconTextures Hook)
 
-Status: review
+Status: done
 
 ## Story
 
@@ -273,9 +273,9 @@ claude-sonnet-4-6
 
 ### Review Findings
 
-- [ ] [Review][Patch] `unlisten` race — Tauri listener leaks if component unmounts before `listen()` Promise resolves [`useIconTextures.ts:19-22`]
-- [ ] [Review][Patch] No `isMounted` guard in texture loading effect — `setIconTextures` may be called after unmount [`useIconTextures.ts:32-44`]
-- [ ] [Review][Patch] `loadedIdsRef.current.add(skillId)` called before `getIconCachePath` resolves — failed IDs permanently blocked from retry [`useIconTextures.ts:36`]
-- [ ] [Review][Patch] No `.catch()` on `Assets.load` — unhandled rejection silently drops texture with no retry path [`useIconTextures.ts:40`]
+- [x] [Review][Patch] `unlisten` race — Tauri listener leaks if component unmounts before `listen()` Promise resolves [`useIconTextures.ts:19-22`]
+- [x] [Review][Patch] No `isMounted` guard in texture loading effect — `setIconTextures` may be called after unmount [`useIconTextures.ts:32-44`]
+- [x] [Review][Patch] `loadedIdsRef.current.add(skillId)` called before `getIconCachePath` resolves — failed IDs permanently blocked from retry [`useIconTextures.ts:36`]
+- [x] [Review][Patch] No `.catch()` on `Assets.load` — unhandled rejection silently drops texture with no retry path [`useIconTextures.ts:40`]
 - [x] [Review][Defer] `loadedIdsRef` accumulates across class switches — memory grows per session, spec-intended (PixiJS URL-cache dedup) [`useIconTextures.ts:11`] — deferred, pre-existing
 - [x] [Review][Defer] `classData` not memoized in `SkillTreeView` — `skillIds` gets new array reference on unrelated store updates; guarded by `loadedIdsRef`, perf only [`SkillTreeView.tsx:89`] — deferred, pre-existing

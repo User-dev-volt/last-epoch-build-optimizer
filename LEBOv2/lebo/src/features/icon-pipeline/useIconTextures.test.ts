@@ -96,4 +96,49 @@ describe('useIconTextures', () => {
     unmount()
     expect(capturedUnlisten).toHaveBeenCalled()
   })
+
+  it('calls unlisten immediately when listen Promise resolves after unmount (P1 race)', async () => {
+    let resolveUnlisten!: (fn: UnlistenFn) => void
+    const delayedUnlisten = vi.fn()
+    mockListen.mockImplementation((_event, callback) => {
+      triggerInitialized = callback as () => void
+      return new Promise((res) => { resolveUnlisten = res })
+    })
+    const { unmount } = renderHook(() => useIconTextures(['skill-a']))
+    await act(async () => {})
+    unmount()
+    // Promise resolves after unmount — unlisten must be called immediately
+    await act(async () => { resolveUnlisten(delayedUnlisten) })
+    expect(delayedUnlisten).toHaveBeenCalled()
+  })
+
+  it('null-path skillId is not added to loadedIdsRef — can be retried on next effect run (P3)', async () => {
+    // First call returns null, second call returns a path
+    mockGetIconCachePath
+      .mockResolvedValueOnce(null)
+      .mockResolvedValue('/cache/skill-a.png')
+    mockAssetsLoad.mockResolvedValue({} as never)
+    const { rerender } = renderHook(() => useIconTextures(['skill-a']))
+    await act(async () => {})
+    await act(async () => { triggerInitialized() })
+    await act(async () => {})
+    // skill-a got null — not in loadedIdsRef, so a re-render with same ids should retry
+    expect(mockGetIconCachePath).toHaveBeenCalledTimes(1)
+    rerender()
+    await act(async () => {})
+    // Effect B re-runs because skillIds reference is new — skill-a not in ref, retried
+    expect(mockGetIconCachePath).toHaveBeenCalledTimes(2)
+  })
+
+  it('Assets.load rejection is caught and does not throw (P4)', async () => {
+    mockGetIconCachePath.mockResolvedValue('/cache/skill-a.png')
+    mockAssetsLoad.mockRejectedValue(new Error('decode error'))
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { } = renderHook(() => useIconTextures(['skill-a']))
+    await act(async () => {})
+    await act(async () => { triggerInitialized() })
+    await act(async () => {})
+    expect(consoleSpy).toHaveBeenCalled()
+    consoleSpy.mockRestore()
+  })
 })
