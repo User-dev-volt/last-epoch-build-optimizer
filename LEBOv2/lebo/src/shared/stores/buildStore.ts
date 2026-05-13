@@ -20,6 +20,7 @@ export interface BuildStore {
   setSelectedMastery: (masteryId: string | null) => void
   createBuild: (masteryName: string) => void
   setCharacterLevel: (level: number) => void
+  setSkillLevel: (slotId: string, level: number) => void
   setBudgetEnforced: (v: boolean) => void
   setActiveBuildPersisted: () => void
   clearActiveBuild: () => void
@@ -77,6 +78,7 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
         budgetEnforced: false,
         nodeAllocations: {},
         skillNodeAllocations: {},
+        activeSkillLevels: {},
         contextData: { gear: [], skills: [], idols: [] },
         isPersisted: false,
         createdAt: now,
@@ -90,6 +92,20 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
     set((s) =>
       s.activeBuild
         ? { activeBuild: { ...s.activeBuild, characterLevel: level, isPersisted: false, updatedAt: new Date().toISOString() } }
+        : {}
+    ),
+
+  setSkillLevel: (slotId, level) =>
+    set((s) =>
+      s.activeBuild
+        ? {
+            activeBuild: {
+              ...s.activeBuild,
+              activeSkillLevels: { ...s.activeBuild.activeSkillLevels, [slotId]: level },
+              isPersisted: false,
+              updatedAt: new Date().toISOString(),
+            },
+          }
         : {}
     ),
 
@@ -119,6 +135,7 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
         budgetEnforced: false,
         nodeAllocations: {},
         skillNodeAllocations: {},
+        activeSkillLevels: {},
         contextData: { gear: [], skills: [], idols: [] },
         isPersisted: false,
         createdAt: now,

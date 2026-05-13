@@ -15,6 +15,7 @@ const mockBuild: BuildState = {
   budgetEnforced: false,
   nodeAllocations: { 'node-a': 1, 'node-b': 2 },
   skillNodeAllocations: {},
+  activeSkillLevels: {},
   contextData: { gear: [], skills: [], idols: [] },
   isPersisted: false,
   createdAt: '2026-01-01T00:00:00Z',
@@ -118,6 +119,14 @@ describe('buildStore', () => {
     expect(s.activeBuild!.budgetEnforced).toBe(false)
   })
 
+  it('createBuild initializes activeSkillLevels: {}', () => {
+    useBuildStore.getState().setSelectedClass('sentinel')
+    useBuildStore.getState().setSelectedMastery('void_knight')
+    useBuildStore.getState().createBuild('Void Knight')
+    const s = useBuildStore.getState()
+    expect(s.activeBuild!.activeSkillLevels).toEqual({})
+  })
+
   it('createBuild is a no-op when class or mastery is not selected', () => {
     useBuildStore.getState().setSelectedClass('sentinel')
     // no mastery selected
@@ -216,6 +225,41 @@ describe('buildStore — setCharacterLevel and setBudgetEnforced', () => {
   it('setBudgetEnforced is a no-op when activeBuild is null', () => {
     useBuildStore.getState().setActiveBuild(null)
     useBuildStore.getState().setBudgetEnforced(true)
+    expect(useBuildStore.getState().activeBuild).toBeNull()
+  })
+})
+
+describe('buildStore — setSkillLevel', () => {
+  beforeEach(() => {
+    useBuildStore.setState(initialState, true)
+    useBuildStore.getState().setActiveBuild(mockBuild)
+  })
+
+  it('sets activeSkillLevels[slotId] for the given slot', () => {
+    useBuildStore.getState().setSkillLevel('slot-0', 12)
+    expect(useBuildStore.getState().activeBuild!.activeSkillLevels['slot-0']).toBe(12)
+  })
+
+  it('sets isPersisted: false and updates updatedAt', () => {
+    useBuildStore.getState().setActiveBuild({ ...mockBuild, isPersisted: true })
+    const before = useBuildStore.getState().activeBuild!.updatedAt
+    useBuildStore.getState().setSkillLevel('slot-0', 5)
+    const s = useBuildStore.getState().activeBuild!
+    expect(s.isPersisted).toBe(false)
+    expect(s.updatedAt).not.toBe(before)
+  })
+
+  it('preserves existing skill levels for other slots', () => {
+    useBuildStore.getState().setSkillLevel('slot-0', 10)
+    useBuildStore.getState().setSkillLevel('slot-1', 15)
+    const s = useBuildStore.getState().activeBuild!
+    expect(s.activeSkillLevels['slot-0']).toBe(10)
+    expect(s.activeSkillLevels['slot-1']).toBe(15)
+  })
+
+  it('is a no-op when activeBuild is null', () => {
+    useBuildStore.getState().setActiveBuild(null)
+    useBuildStore.getState().setSkillLevel('slot-0', 10)
     expect(useBuildStore.getState().activeBuild).toBeNull()
   })
 })
@@ -359,6 +403,7 @@ describe('buildStore — updateContextGear', () => {
       budgetEnforced: false,
       nodeAllocations: {},
       skillNodeAllocations: {},
+      activeSkillLevels: {},
       contextData: { gear: [], skills: [], idols: [] },
       isPersisted: false,
       createdAt: '2026-01-01T00:00:00Z',
@@ -387,6 +432,7 @@ describe('buildStore — updateContextSkills', () => {
     budgetEnforced: false,
     nodeAllocations: {},
     skillNodeAllocations: {},
+    activeSkillLevels: {},
     contextData: { gear: [], skills: [], idols: [] },
     isPersisted: false,
     createdAt: '2026-01-01T00:00:00Z',
@@ -432,6 +478,7 @@ describe('buildStore — updateContextIdols', () => {
     budgetEnforced: false,
     nodeAllocations: {},
     skillNodeAllocations: {},
+    activeSkillLevels: {},
     contextData: { gear: [], skills: [], idols: [] },
     isPersisted: false,
     createdAt: '2026-01-01T00:00:00Z',
@@ -476,6 +523,7 @@ const buildWithSkill: BuildState = {
   budgetEnforced: false,
   nodeAllocations: {},
   skillNodeAllocations: {},
+  activeSkillLevels: {},
   contextData: { gear: [], skills: [], idols: [] },
   isPersisted: false,
   createdAt: '2026-01-01T00:00:00Z',
@@ -561,6 +609,7 @@ describe('buildStore — resetActiveTree', () => {
       budgetEnforced: false,
       nodeAllocations: {},
       skillNodeAllocations: { 'slot-0': { 'skill-root': 2 }, 'slot-1': { 'other-node': 1 } },
+      activeSkillLevels: {},
       contextData: { gear: [], skills: [], idols: [] },
       isPersisted: false,
       createdAt: '2026-01-01T00:00:00Z',

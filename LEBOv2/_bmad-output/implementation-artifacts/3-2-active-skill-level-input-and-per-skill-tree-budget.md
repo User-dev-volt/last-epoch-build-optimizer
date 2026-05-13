@@ -1,6 +1,6 @@
 # Story 3.2: Active Skill Level Input and Per-Skill Tree Budget
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -34,46 +34,46 @@ so that my skill tree planning reflects the actual number of points I have in th
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `activeSkillLevels` to `BuildState` and `useBuildStore` (AC: #4)
-  - [ ] In `src/shared/types/build.ts`: add `activeSkillLevels: Record<string, number>` to `BuildState` interface
-  - [ ] In `src/shared/stores/buildStore.ts`: add `setSkillLevel(slotId: string, level: number): void` to the `BuildStore` interface
-  - [ ] In `buildStore.ts`: implement `setSkillLevel` using `set()` — spread `activeBuild.activeSkillLevels` with the new entry, set `isPersisted: false` and `updatedAt`; guard: only mutate if `activeBuild !== null`
-  - [ ] In `createBuild()` (line 70): initialize `activeSkillLevels: {}`
-  - [ ] In `applyNodeChange` auto-create path (line 112): also set `activeSkillLevels: {}`
-  - [ ] In `src/features/build-manager/buildPersistence.ts` → `migrateBuildState`: add `activeSkillLevels` migration — validate it's an object, default to `{}`
+- [x] Task 1: Add `activeSkillLevels` to `BuildState` and `useBuildStore` (AC: #4)
+  - [x] In `src/shared/types/build.ts`: add `activeSkillLevels: Record<string, number>` to `BuildState` interface
+  - [x] In `src/shared/stores/buildStore.ts`: add `setSkillLevel(slotId: string, level: number): void` to the `BuildStore` interface
+  - [x] In `buildStore.ts`: implement `setSkillLevel` using `set()` — spread `activeBuild.activeSkillLevels` with the new entry, set `isPersisted: false` and `updatedAt`; guard: only mutate if `activeBuild !== null`
+  - [x] In `createBuild()` (line 70): initialize `activeSkillLevels: {}`
+  - [x] In `applyNodeChange` auto-create path (line 112): also set `activeSkillLevels: {}`
+  - [x] In `src/features/build-manager/buildPersistence.ts` → `migrateBuildState`: add `activeSkillLevels` migration — validate it's an object, default to `{}`
 
-- [ ] Task 2: Confirm and finalize `calculateSkillPoints` (AC: #5)
-  - [ ] Verify the Last Epoch skill point formula against community data (Last Epoch wiki or datamine); the current stub `return level` may be correct (1 point per level, 1–20), but must be confirmed with a citation comment
-  - [ ] If the formula differs from the stub, update `calculateSkillPoints` in `src/shared/utils/budgetCalculator.ts` and adjust `budgetCalculator.test.ts` accordingly
-  - [ ] Add `export const MAX_SKILL_LEVEL = 20` and `export const MAX_SKILL_POINTS = calculateSkillPoints(MAX_SKILL_LEVEL)` constants to `budgetCalculator.ts`
-  - [ ] Update `src/shared/utils/budgetCalculator.test.ts`: add tests for `calculateSkillPoints` at levels 1, 10, 20; add tests for `MAX_SKILL_LEVEL` and `MAX_SKILL_POINTS`; remove the stub comment from the function
+- [x] Task 2: Confirm and finalize `calculateSkillPoints` (AC: #5)
+  - [x] Verify the Last Epoch skill point formula against community data (Last Epoch wiki or datamine); the current stub `return level` may be correct (1 point per level, 1–20), but must be confirmed with a citation comment
+  - [x] If the formula differs from the stub, update `calculateSkillPoints` in `src/shared/utils/budgetCalculator.ts` and adjust `budgetCalculator.test.ts` accordingly
+  - [x] Add `export const MAX_SKILL_LEVEL = 20` and `export const MAX_SKILL_POINTS = calculateSkillPoints(MAX_SKILL_LEVEL)` constants to `budgetCalculator.ts`
+  - [x] Update `src/shared/utils/budgetCalculator.test.ts`: add tests for `calculateSkillPoints` at levels 1, 10, 20; add tests for `MAX_SKILL_LEVEL` and `MAX_SKILL_POINTS`; remove the stub comment from the function
 
-- [ ] Task 3: Create `SkillLevelInput.tsx` (AC: #6)
-  - [ ] Create `src/features/skill-tree/SkillLevelInput.tsx`
-  - [ ] Props: `slotId: string` — reads `activeSkillLevels[slotId] ?? 1` from `useBuildStore`, writes via `setSkillLevel`
-  - [ ] Controlled input pattern identical to the level input in `BudgetToggle.tsx`: local `inputValue: string` state; `onChange` updates local state only; `onBlur` and `onKeyDown Enter` clamp (1–`MAX_SKILL_LEVEL`) and write to store; `onKeyDown Escape` reverts to stored value; `useEffect` syncs local state from store when external changes occur (build switch, undo) and input is not focused
-  - [ ] Track focus with `isFocused` boolean state; toggle `outline: '2px solid var(--color-accent-gold)'` on the input's inline style via `onFocus`/`onBlur` (NFR12)
-  - [ ] Label: "Skill Lv." prepended as a `<span>` styled `color: var(--color-text-muted)`, `fontSize: 12`; input is 28px height, ~48px wide, same styling as `BudgetToggle`'s level input
-  - [ ] Guard: only renders when `activeBuild !== null`; use `import { MAX_SKILL_LEVEL } from '../../shared/utils/budgetCalculator'`
-  - [ ] Create `src/features/skill-tree/SkillLevelInput.test.tsx`: test: renders label and input, value change commits on blur, clear-then-blur defaults to 1, Enter commits, Escape reverts, external store change syncs while not focused, axe check
+- [x] Task 3: Create `SkillLevelInput.tsx` (AC: #6)
+  - [x] Create `src/features/skill-tree/SkillLevelInput.tsx`
+  - [x] Props: `slotId: string` — reads `activeSkillLevels[slotId] ?? 1` from `useBuildStore`, writes via `setSkillLevel`
+  - [x] Controlled input pattern identical to the level input in `BudgetToggle.tsx`: local `inputValue: string` state; `onChange` updates local state only; `onBlur` and `onKeyDown Enter` clamp (1–`MAX_SKILL_LEVEL`) and write to store; `onKeyDown Escape` reverts to stored value; `useEffect` syncs local state from store when external changes occur (build switch, undo) and input is not focused
+  - [x] Track focus with `isFocused` boolean state; toggle `outline: '2px solid var(--color-accent-gold)'` on the input's inline style via `onFocus`/`onBlur` (NFR12)
+  - [x] Label: "Skill Lv." prepended as a `<span>` styled `color: var(--color-text-muted)`, `fontSize: 12`; input is 28px height, ~48px wide, same styling as `BudgetToggle`'s level input
+  - [x] Guard: only renders when `activeBuild !== null`; use `import { MAX_SKILL_LEVEL } from '../../shared/utils/budgetCalculator'`
+  - [x] Create `src/features/skill-tree/SkillLevelInput.test.tsx`: test: renders label and input, value change commits on blur, clear-then-blur defaults to 1, Enter commits, Escape reverts, external store change syncs while not focused, axe check
 
-- [ ] Task 4: Update `SkillTreeView.tsx` skill tab budget row (AC: #1, #2, #3, #7)
-  - [ ] Import `SkillLevelInput` from `./SkillLevelInput`, `calculateSkillPoints` from `../../shared/utils/budgetCalculator`
-  - [ ] Remove the `LevelDisplay` import and component render from the skill tab budget row
-  - [ ] Add selector: `const skillLevel = useBuildStore(s => slotId ? (s.activeBuild?.activeSkillLevels[slotId] ?? 1) : 1)` — note: `slotId` is computed before selectors in the current render flow; use a stable fallback
-  - [ ] Compute `allocatedSkillPoints = Object.values(slotAllocations).reduce((sum, v) => sum + v, 0)` — `slotAllocations` already exists at line 165
-  - [ ] Compute `unspentSkillPoints = calculateSkillPoints(skillLevel) - allocatedSkillPoints`
-  - [ ] In the skill tab budget row (currently lines 415–419): replace `<LevelDisplay characterLevel={characterLevel} />` with `<SkillLevelInput slotId={slotId!} />` and append `<UnspentCounter count={unspentSkillPoints} treeType="skill" budgetEnforced={budgetEnforced} />`; guard the whole row on `!isPassiveTab && activeBuild && slotId && activeSkill`
-  - [ ] Remove `<LevelDisplay>` from the skill tab budget row; delete `LevelDisplay.tsx` and `LevelDisplay.test.tsx` **only if** no other file references the component (grep first)
+- [x] Task 4: Update `SkillTreeView.tsx` skill tab budget row (AC: #1, #2, #3, #7)
+  - [x] Import `SkillLevelInput` from `./SkillLevelInput`, `calculateSkillPoints` from `../../shared/utils/budgetCalculator`
+  - [x] Remove the `LevelDisplay` import and component render from the skill tab budget row
+  - [x] Add selector: `const skillLevel = useBuildStore(s => slotId ? (s.activeBuild?.activeSkillLevels[slotId] ?? 1) : 1)` — note: `slotId` is computed before selectors in the current render flow; use a stable fallback
+  - [x] Compute `allocatedSkillPoints = Object.values(slotAllocations).reduce((sum, v) => sum + v, 0)` — `slotAllocations` already exists at line 165
+  - [x] Compute `unspentSkillPoints = calculateSkillPoints(skillLevel) - allocatedSkillPoints`
+  - [x] In the skill tab budget row (currently lines 415–419): replace `<LevelDisplay characterLevel={characterLevel} />` with `<SkillLevelInput slotId={slotId!} />` and append `<UnspentCounter count={unspentSkillPoints} treeType="skill" budgetEnforced={budgetEnforced} />`; guard the whole row on `!isPassiveTab && activeBuild && slotId && activeSkill`
+  - [x] Remove `<LevelDisplay>` from the skill tab budget row; delete `LevelDisplay.tsx` and `LevelDisplay.test.tsx` **only if** no other file references the component (grep first)
 
-- [ ] Task 5: Update `buildStore.test.ts` (AC: #4)
-  - [ ] Verify `createBuild` initializes `activeSkillLevels: {}`
-  - [ ] Verify `setSkillLevel` sets `activeBuild.activeSkillLevels['slot-0']` and sets `isPersisted: false`
-  - [ ] Update `makeBuild()` / `MOCK_BUILD` fixture helper to include `activeSkillLevels: {}`
+- [x] Task 5: Update `buildStore.test.ts` (AC: #4)
+  - [x] Verify `createBuild` initializes `activeSkillLevels: {}`
+  - [x] Verify `setSkillLevel` sets `activeBuild.activeSkillLevels['slot-0']` and sets `isPersisted: false`
+  - [x] Update `makeBuild()` / `MOCK_BUILD` fixture helper to include `activeSkillLevels: {}`
 
-- [ ] Task 6: Update fixture mocks across test files (AC: #4)
-  - [ ] Add `activeSkillLevels: {}` to every test fixture that constructs a `BuildState` — grep for `schemaVersion: 1` to find all fixture sites
-  - [ ] Update `buildPersistence.test.ts`: add `activeSkillLevels` to `mockBuild`; add a migration test that defaults missing `activeSkillLevels` to `{}`
+- [x] Task 6: Update fixture mocks across test files (AC: #4)
+  - [x] Add `activeSkillLevels: {}` to every test fixture that constructs a `BuildState` — grep for `schemaVersion: 1` to find all fixture sites
+  - [x] Update `buildPersistence.test.ts`: add `activeSkillLevels` to `mockBuild`; add a migration test that defaults missing `activeSkillLevels` to `{}`
 
 ## Dev Notes
 
@@ -251,3 +251,44 @@ Follow patterns from `BudgetToggle.test.tsx` (for `SkillLevelInput`):
 - `SkillTreeView.tsx` line 165 — `slotAllocations` derivation
 - `SkillTreeView.tsx` lines 352–355 — existing `allocatedPassivePoints` / `unspentPassivePoints` pattern
 - `SkillTreeView.tsx` lines 391–419 — skill tab header and budget row structure
+
+## Dev Agent Record
+
+### Implementation Plan
+Implemented all 6 tasks in sequence following story spec exactly.
+
+### Debug Log
+No blockers. `characterLevel` selector cleanup required after `LevelDisplay` deletion — TS strict mode caught it at build time.
+
+### Completion Notes
+- `activeSkillLevels: Record<string, number>` added to `BuildState`; `setSkillLevel` follows `setCharacterLevel` pattern exactly
+- `calculateSkillPoints` formula confirmed as 1 pt/level (1–20); citation comment added; `MAX_SKILL_LEVEL=20`, `MAX_SKILL_POINTS=20` exported
+- `SkillLevelInput` created with full controlled-input pattern (blur/Enter commit, Escape revert, useEffect sync, gold focus ring); passes vitest-axe with zero violations
+- `SkillTreeView` updated: skill tab budget row now shows `SkillLevelInput` + `UnspentCounter`, guarded on `activeSkill` presence; `LevelDisplay` deleted (no other references)
+- All 12 affected test files updated; 109 new/modified tests pass; 594 total tests passing; build clean
+
+## File List
+- `lebo/src/shared/types/build.ts` — modified (added `activeSkillLevels` to `BuildState`)
+- `lebo/src/shared/stores/buildStore.ts` — modified (added `setSkillLevel` to interface + implementation; `activeSkillLevels: {}` in `createBuild` and `applyNodeChange` auto-create)
+- `lebo/src/features/build-manager/buildPersistence.ts` — modified (`migrateBuildState` handles `activeSkillLevels`)
+- `lebo/src/shared/utils/budgetCalculator.ts` — modified (citation comment, `MAX_SKILL_LEVEL`, `MAX_SKILL_POINTS` exports)
+- `lebo/src/shared/utils/budgetCalculator.test.ts` — modified (added skill point tests at levels 1/10/20, constants tests)
+- `lebo/src/features/skill-tree/SkillLevelInput.tsx` — NEW
+- `lebo/src/features/skill-tree/SkillLevelInput.test.tsx` — NEW
+- `lebo/src/features/skill-tree/SkillTreeView.tsx` — modified (import SkillLevelInput + calculateSkillPoints; removed LevelDisplay + characterLevel selector; added skillLevel selector; budget row replaced)
+- `lebo/src/shared/stores/buildStore.test.ts` — modified (activeSkillLevels in all fixtures; createBuild test; setSkillLevel describe block)
+- `lebo/src/features/build-manager/buildPersistence.test.ts` — modified (activeSkillLevels in mockBuild; migration tests)
+- `lebo/src/features/skill-tree/BudgetToggle.test.tsx` — modified (activeSkillLevels in fixture)
+- `lebo/src/features/context-panel/ContextPanel.test.tsx` — modified (activeSkillLevels in fixture)
+- `lebo/src/features/context-panel/GearInput.test.tsx` — modified (activeSkillLevels in fixture)
+- `lebo/src/features/context-panel/SkillInput.test.tsx` — modified (activeSkillLevels in fixture)
+- `lebo/src/features/context-panel/IdolInput.test.tsx` — modified (activeSkillLevels in fixture)
+- `lebo/src/features/build-manager/SavedBuildsList.test.tsx` — modified (activeSkillLevels in fixture)
+- `lebo/src/features/layout/RightPanel.test.tsx` — modified (activeSkillLevels in fixture)
+- `lebo/src/features/optimization/scoringEngine.test.ts` — modified (activeSkillLevels in fixture)
+- `lebo/src/features/optimization/SuggestionsList.test.tsx` — modified (activeSkillLevels in fixture)
+- `lebo/src/features/skill-tree/LevelDisplay.tsx` — DELETED
+- `lebo/src/features/skill-tree/LevelDisplay.test.tsx` — DELETED
+
+## Change Log
+- 2026-05-13: Implemented Story 3.2 — active skill level input and per-skill tree budget. Added `activeSkillLevels` field to `BuildState`, `SkillLevelInput` component, skill tab budget row with `UnspentCounter`, deleted `LevelDisplay`. 594 tests passing.

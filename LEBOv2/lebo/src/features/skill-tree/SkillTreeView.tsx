@@ -19,7 +19,8 @@ import { TreeControls } from './TreeControls'
 import { useIconTextures } from '../icon-pipeline/useIconTextures'
 import { BudgetToggle } from './BudgetToggle'
 import { UnspentCounter } from './UnspentCounter'
-import { LevelDisplay } from './LevelDisplay'
+import { SkillLevelInput } from './SkillLevelInput'
+import { calculateSkillPoints } from '../../shared/utils/budgetCalculator'
 
 const EMPTY_ALLOCATED: Record<string, number> = {}
 const EMPTY_SKILL_ALLOC: Record<string, Record<string, number>> = {}
@@ -71,7 +72,6 @@ export function SkillTreeView() {
     (s) => s.activeBuild?.skillNodeAllocations ?? EMPTY_SKILL_ALLOC
   )
   const activeBuildId = useBuildStore((s) => s.activeBuild?.id ?? null)
-  const characterLevel = useBuildStore((s) => s.activeBuild?.characterLevel ?? 1)
   const budgetEnforced = useBuildStore((s) => s.activeBuild?.budgetEnforced ?? false)
   const availablePassivePoints = useBuildStore(selectAvailablePassivePoints)
   const highlightedNodeIds = useOptimizationStore((s) => s.highlightedNodeIds)
@@ -163,6 +163,9 @@ export function SkillTreeView() {
   const activeSkill = slotId ? activeSkills.find((s) => s.slotId === slotId) ?? null : null
   const skillNodes = activeSkill ? classData?.skillTrees[activeSkill.skillId] : undefined
   const slotAllocations = slotId ? (skillNodeAllocations[slotId] ?? EMPTY_ALLOCATED) : EMPTY_ALLOCATED
+  const skillLevel = useBuildStore(
+    (s) => slotId ? (s.activeBuild?.activeSkillLevels[slotId] ?? 1) : 1
+  )
 
   // Moved before early returns so search memos (hooks) can reference it unconditionally
   const activeGameNodes = useMemo<Record<string, GameNode>>(
@@ -354,6 +357,9 @@ export function SkillTreeView() {
   const allocatedPassivePoints = Object.values(baseAllocatedNodes).reduce((sum, v) => sum + v, 0)
   const unspentPassivePoints = availablePassivePoints - allocatedPassivePoints
 
+  const allocatedSkillPoints = Object.values(slotAllocations).reduce((sum, v) => sum + v, 0)
+  const unspentSkillPoints = calculateSkillPoints(skillLevel) - allocatedSkillPoints
+
   const hoveredGameNode = hoveredNodeId ? activeGameNodes[hoveredNodeId] : null
   const errorGameNode = nodeError ? activeGameNodes[nodeError.nodeId] : null
   const keyboardGameNode =
@@ -412,9 +418,10 @@ export function SkillTreeView() {
           <BudgetToggle />
           <UnspentCounter count={unspentPassivePoints} treeType="passive" budgetEnforced={budgetEnforced} />
         </div>
-      ) : !isPassiveTab && activeBuild ? (
-        <div style={{ display: 'flex', alignItems: 'center', padding: '4px 12px', height: 36, borderBottom: '1px solid var(--color-bg-elevated)' }}>
-          <LevelDisplay characterLevel={characterLevel} />
+      ) : !isPassiveTab && activeBuild && slotId && activeSkill ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px', height: 36, borderBottom: '1px solid var(--color-bg-elevated)' }}>
+          <SkillLevelInput slotId={slotId} />
+          <UnspentCounter count={unspentSkillPoints} treeType="skill" budgetEnforced={budgetEnforced} />
         </div>
       ) : null}
 

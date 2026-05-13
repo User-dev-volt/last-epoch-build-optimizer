@@ -9,7 +9,12 @@ export function calculatePassivePoints(level: number): number {
 
 export const MAX_PASSIVE_POINTS = calculatePassivePoints(MAX_CHARACTER_LEVEL)
 
-// Stub for Story 3.2 — skill points per skill level
+// Last Epoch skill point formula: 1 point per level, 1–20.
+// Source: https://lastepoch.fandom.com/wiki/Skills (confirmed 2026-05; 20 levels, 1 point each)
+export const MAX_SKILL_LEVEL = 20
+
 export function calculateSkillPoints(level: number): number {
   return level
 }
+
+export const MAX_SKILL_POINTS = calculateSkillPoints(MAX_SKILL_LEVEL)

@@ -36,6 +36,7 @@ const mockBuild: BuildState = {
   budgetEnforced: false,
   nodeAllocations: { 'node-a': 1 },
   skillNodeAllocations: {},
+  activeSkillLevels: {},
   contextData: { gear: [], skills: [], idols: [] },
   isPersisted: false,
   createdAt: '2026-01-01T00:00:00Z',
@@ -88,6 +89,18 @@ describe('migrateBuildState', () => {
     const raw = { ...mockBuild, isPersisted: false }
     const result = migrateBuildState(raw)
     expect(result.isPersisted).toBe(true)
+  })
+
+  it('defaults missing activeSkillLevels to {}', () => {
+    const { activeSkillLevels: _, ...rawWithout } = mockBuild
+    const result = migrateBuildState(rawWithout)
+    expect(result.activeSkillLevels).toEqual({})
+  })
+
+  it('passes through existing activeSkillLevels', () => {
+    const raw = { ...mockBuild, activeSkillLevels: { 'slot-0': 10 } }
+    const result = migrateBuildState(raw)
+    expect(result.activeSkillLevels).toEqual({ 'slot-0': 10 })
   })
 })
 

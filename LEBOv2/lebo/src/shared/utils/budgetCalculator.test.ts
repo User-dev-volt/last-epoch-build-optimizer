@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { calculatePassivePoints, calculateSkillPoints, MAX_PASSIVE_POINTS, MAX_CHARACTER_LEVEL } from './budgetCalculator'
+import {
+  calculatePassivePoints,
+  calculateSkillPoints,
+  MAX_PASSIVE_POINTS,
+  MAX_CHARACTER_LEVEL,
+  MAX_SKILL_LEVEL,
+  MAX_SKILL_POINTS,
+} from './budgetCalculator'
 
 describe('calculatePassivePoints', () => {
   it('level 1 → 0 (no points before level 3)', () => {
@@ -34,11 +41,31 @@ describe('MAX_PASSIVE_POINTS', () => {
 })
 
 describe('calculateSkillPoints', () => {
-  it('level 1 → 1', () => {
+  it('level 1 → 1 (minimum skill points)', () => {
     expect(calculateSkillPoints(1)).toBe(1)
   })
 
-  it('level 20 → 20', () => {
+  it('level 10 → 10 (mid-range)', () => {
+    expect(calculateSkillPoints(10)).toBe(10)
+  })
+
+  it('level 20 → 20 (maximum skill points)', () => {
     expect(calculateSkillPoints(20)).toBe(20)
+  })
+})
+
+describe('MAX_SKILL_LEVEL', () => {
+  it('is 20', () => {
+    expect(MAX_SKILL_LEVEL).toBe(20)
+  })
+})
+
+describe('MAX_SKILL_POINTS', () => {
+  it('equals calculateSkillPoints(MAX_SKILL_LEVEL)', () => {
+    expect(MAX_SKILL_POINTS).toBe(calculateSkillPoints(MAX_SKILL_LEVEL))
+  })
+
+  it('is 20', () => {
+    expect(MAX_SKILL_POINTS).toBe(20)
   })
 })

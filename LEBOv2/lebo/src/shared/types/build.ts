@@ -26,6 +26,7 @@ export interface BuildState {
   budgetEnforced: boolean
   nodeAllocations: Record<string, number>
   skillNodeAllocations: Record<string, Record<string, number>>
+  activeSkillLevels: Record<string, number>
   contextData: {
     gear: GearItem[]
     skills: ActiveSkill[]

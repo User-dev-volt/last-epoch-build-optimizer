@@ -24,6 +24,10 @@ export function migrateBuildState(raw: unknown): BuildState {
       typeof obj.skillNodeAllocations === 'object' && obj.skillNodeAllocations !== null
         ? (obj.skillNodeAllocations as Record<string, Record<string, number>>)
         : {},
+    activeSkillLevels:
+      typeof obj.activeSkillLevels === 'object' && obj.activeSkillLevels !== null
+        ? (obj.activeSkillLevels as Record<string, number>)
+        : {},
     contextData:
       typeof obj.contextData === 'object' && obj.contextData !== null
         ? (obj.contextData as BuildState['contextData'])
