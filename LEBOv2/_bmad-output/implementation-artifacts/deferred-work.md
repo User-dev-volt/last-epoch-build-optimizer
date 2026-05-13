@@ -1,3 +1,8 @@
+## Deferred from: code review of 2-3-typescript-icon-texture-loading-useicontextures-hook (2026-05-12)
+
+- **`loadedIdsRef` accumulates across class switches** — `useIconTextures.ts` — The loaded-IDs Set is never cleared on class change. Memory grows with each class visited per session. Harmless in practice because PixiJS Assets cache deduplication by URL means re-loading is free anyway, and Last Epoch skill IDs are globally unique. Revisit if per-class texture scoping is needed.
+- **`classData` not memoized in `SkillTreeView`** — `SkillTreeView.tsx:89` — `classData` is a plain property access (`gameData.classes[selectedClassId]`) not wrapped in `useMemo`. A new `gameData` object reference from Zustand on any unrelated update creates a new `skillIds` array, re-triggering Effect B. The `loadedIdsRef` guard prevents duplicate IPC calls but the filter loop still runs. Acceptable at current scale; add `useMemo(() => gameData?.classes[selectedClassId], [gameData, selectedClassId])` if profiling shows waste.
+
 ## Known Vitest baseline (as of story 2.2, 2026-05-12)
 
 6 pre-existing test failures exist in the suite that are **not regressions** introduced by any story work. The passing bar for all stories is 502/508 (not 508/508). These failures are:

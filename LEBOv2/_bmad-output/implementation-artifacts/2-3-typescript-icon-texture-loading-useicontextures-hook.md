@@ -270,3 +270,12 @@ claude-sonnet-4-6
 ### Change Log
 
 - 2026-05-12: Implemented story 2.3 — TypeScript icon texture loading via useIconTextures hook. All ACs satisfied, 6 new tests, no regressions.
+
+### Review Findings
+
+- [ ] [Review][Patch] `unlisten` race — Tauri listener leaks if component unmounts before `listen()` Promise resolves [`useIconTextures.ts:19-22`]
+- [ ] [Review][Patch] No `isMounted` guard in texture loading effect — `setIconTextures` may be called after unmount [`useIconTextures.ts:32-44`]
+- [ ] [Review][Patch] `loadedIdsRef.current.add(skillId)` called before `getIconCachePath` resolves — failed IDs permanently blocked from retry [`useIconTextures.ts:36`]
+- [ ] [Review][Patch] No `.catch()` on `Assets.load` — unhandled rejection silently drops texture with no retry path [`useIconTextures.ts:40`]
+- [x] [Review][Defer] `loadedIdsRef` accumulates across class switches — memory grows per session, spec-intended (PixiJS URL-cache dedup) [`useIconTextures.ts:11`] — deferred, pre-existing
+- [x] [Review][Defer] `classData` not memoized in `SkillTreeView` — `skillIds` gets new array reference on unrelated store updates; guarded by `loadedIdsRef`, perf only [`SkillTreeView.tsx:89`] — deferred, pre-existing
