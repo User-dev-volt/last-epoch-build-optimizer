@@ -22,6 +22,8 @@ export interface BuildState {
   name: string
   classId: string
   masteryId: string
+  characterLevel: number
+  budgetEnforced: boolean
   nodeAllocations: Record<string, number>
   skillNodeAllocations: Record<string, Record<string, number>>
   contextData: {

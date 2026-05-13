@@ -18,6 +18,8 @@ interface BuildStore {
   setSelectedClass: (classId: string | null) => void
   setSelectedMastery: (masteryId: string | null) => void
   createBuild: (masteryName: string) => void
+  setCharacterLevel: (level: number) => void
+  setBudgetEnforced: (v: boolean) => void
   setActiveBuildPersisted: () => void
   clearActiveBuild: () => void
   applyNodeChange: (
@@ -67,6 +69,8 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
         name: masteryName,
         classId: selectedClassId,
         masteryId: selectedMasteryId,
+        characterLevel: 1,
+        budgetEnforced: false,
         nodeAllocations: {},
         skillNodeAllocations: {},
         contextData: { gear: [], skills: [], idols: [] },
@@ -77,6 +81,20 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
       undoStack: [],
     })
   },
+
+  setCharacterLevel: (level) =>
+    set((s) =>
+      s.activeBuild
+        ? { activeBuild: { ...s.activeBuild, characterLevel: level, isPersisted: false, updatedAt: new Date().toISOString() } }
+        : {}
+    ),
+
+  setBudgetEnforced: (v) =>
+    set((s) =>
+      s.activeBuild
+        ? { activeBuild: { ...s.activeBuild, budgetEnforced: v, isPersisted: false, updatedAt: new Date().toISOString() } }
+        : {}
+    ),
 
   applyNodeChange: (nodeId, delta, treeData) => {
     const state = get()
@@ -93,6 +111,8 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
         name: state.selectedMasteryId,
         classId: state.selectedClassId,
         masteryId: state.selectedMasteryId,
+        characterLevel: 1,
+        budgetEnforced: false,
         nodeAllocations: {},
         skillNodeAllocations: {},
         contextData: { gear: [], skills: [], idols: [] },

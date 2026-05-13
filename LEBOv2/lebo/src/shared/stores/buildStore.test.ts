@@ -11,6 +11,8 @@ const mockBuild: BuildState = {
   name: 'Test Lich',
   classId: 'acolyte',
   masteryId: 'lich',
+  characterLevel: 1,
+  budgetEnforced: false,
   nodeAllocations: { 'node-a': 1, 'node-b': 2 },
   skillNodeAllocations: {},
   contextData: { gear: [], skills: [], idols: [] },
@@ -107,6 +109,15 @@ describe('buildStore', () => {
     expect(s.undoStack).toHaveLength(0)
   })
 
+  it('createBuild initializes characterLevel: 1 and budgetEnforced: false', () => {
+    useBuildStore.getState().setSelectedClass('sentinel')
+    useBuildStore.getState().setSelectedMastery('void_knight')
+    useBuildStore.getState().createBuild('Void Knight')
+    const s = useBuildStore.getState()
+    expect(s.activeBuild!.characterLevel).toBe(1)
+    expect(s.activeBuild!.budgetEnforced).toBe(false)
+  })
+
   it('createBuild is a no-op when class or mastery is not selected', () => {
     useBuildStore.getState().setSelectedClass('sentinel')
     // no mastery selected
@@ -159,6 +170,53 @@ describe('buildStore', () => {
     const s = useBuildStore.getState()
     expect(s.selectedClassId).toBe('sentinel')
     expect(s.selectedMasteryId).toBe('void_knight')
+  })
+})
+
+describe('buildStore — setCharacterLevel and setBudgetEnforced', () => {
+  beforeEach(() => {
+    useBuildStore.setState(initialState, true)
+    useBuildStore.getState().setActiveBuild(mockBuild)
+  })
+
+  it('setCharacterLevel updates activeBuild.characterLevel', () => {
+    useBuildStore.getState().setCharacterLevel(50)
+    expect(useBuildStore.getState().activeBuild!.characterLevel).toBe(50)
+  })
+
+  it('setCharacterLevel sets isPersisted: false and updates updatedAt', () => {
+    useBuildStore.getState().setActiveBuild({ ...mockBuild, isPersisted: true })
+    const before = useBuildStore.getState().activeBuild!.updatedAt
+    useBuildStore.getState().setCharacterLevel(42)
+    const s = useBuildStore.getState().activeBuild!
+    expect(s.isPersisted).toBe(false)
+    expect(s.updatedAt).not.toBe(before)
+  })
+
+  it('setCharacterLevel is a no-op when activeBuild is null', () => {
+    useBuildStore.getState().setActiveBuild(null)
+    useBuildStore.getState().setCharacterLevel(50)
+    expect(useBuildStore.getState().activeBuild).toBeNull()
+  })
+
+  it('setBudgetEnforced updates activeBuild.budgetEnforced', () => {
+    useBuildStore.getState().setBudgetEnforced(true)
+    expect(useBuildStore.getState().activeBuild!.budgetEnforced).toBe(true)
+  })
+
+  it('setBudgetEnforced sets isPersisted: false and updates updatedAt', () => {
+    useBuildStore.getState().setActiveBuild({ ...mockBuild, isPersisted: true })
+    const before = useBuildStore.getState().activeBuild!.updatedAt
+    useBuildStore.getState().setBudgetEnforced(true)
+    const s = useBuildStore.getState().activeBuild!
+    expect(s.isPersisted).toBe(false)
+    expect(s.updatedAt).not.toBe(before)
+  })
+
+  it('setBudgetEnforced is a no-op when activeBuild is null', () => {
+    useBuildStore.getState().setActiveBuild(null)
+    useBuildStore.getState().setBudgetEnforced(true)
+    expect(useBuildStore.getState().activeBuild).toBeNull()
   })
 })
 
@@ -274,6 +332,8 @@ describe('buildStore — updateContextGear', () => {
       name: 'Test',
       classId: 'sentinel',
       masteryId: 'void_knight',
+      characterLevel: 1,
+      budgetEnforced: false,
       nodeAllocations: {},
       skillNodeAllocations: {},
       contextData: { gear: [], skills: [], idols: [] },
@@ -300,6 +360,8 @@ describe('buildStore — updateContextSkills', () => {
     name: 'Test',
     classId: 'sentinel',
     masteryId: 'void_knight',
+    characterLevel: 1,
+    budgetEnforced: false,
     nodeAllocations: {},
     skillNodeAllocations: {},
     contextData: { gear: [], skills: [], idols: [] },
@@ -343,6 +405,8 @@ describe('buildStore — updateContextIdols', () => {
     name: 'Test',
     classId: 'sentinel',
     masteryId: 'void_knight',
+    characterLevel: 1,
+    budgetEnforced: false,
     nodeAllocations: {},
     skillNodeAllocations: {},
     contextData: { gear: [], skills: [], idols: [] },
@@ -385,6 +449,8 @@ const buildWithSkill: BuildState = {
   name: 'Test Void Knight',
   classId: 'sentinel',
   masteryId: 'void_knight',
+  characterLevel: 1,
+  budgetEnforced: false,
   nodeAllocations: {},
   skillNodeAllocations: {},
   contextData: { gear: [], skills: [], idols: [] },
@@ -468,6 +534,8 @@ describe('buildStore — resetActiveTree', () => {
       name: 'Test',
       classId: 'sentinel',
       masteryId: 'void_knight',
+      characterLevel: 1,
+      budgetEnforced: false,
       nodeAllocations: {},
       skillNodeAllocations: { 'slot-0': { 'skill-root': 2 }, 'slot-1': { 'other-node': 1 } },
       contextData: { gear: [], skills: [], idols: [] },

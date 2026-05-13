@@ -61,7 +61,7 @@ development_status:
 
   # Epic 3: Character Level & Point Budget System
   epic-3: in-progress
-  3-1-character-level-input-and-passive-point-budget-calculation: ready-for-dev
+  3-1-character-level-input-and-passive-point-budget-calculation: review
   3-2-active-skill-level-input-and-per-skill-tree-budget: backlog
   3-3-enforce-level-budget-toggle-and-allocation-enforcement: backlog
   epic-3-retrospective: optional

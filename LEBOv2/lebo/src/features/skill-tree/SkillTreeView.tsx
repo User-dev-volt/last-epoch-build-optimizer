@@ -17,6 +17,9 @@ import { useSkillTree } from './useSkillTree'
 import { SkillPickerGrid } from '../skill-picker/SkillPickerGrid'
 import { TreeControls } from './TreeControls'
 import { useIconTextures } from '../icon-pipeline/useIconTextures'
+import { BudgetToggle } from './BudgetToggle'
+import { UnspentCounter } from './UnspentCounter'
+import { calculatePassivePoints } from '../../shared/utils/budgetCalculator'
 
 const EMPTY_ALLOCATED: Record<string, number> = {}
 const EMPTY_SKILL_ALLOC: Record<string, Record<string, number>> = {}
@@ -68,6 +71,8 @@ export function SkillTreeView() {
     (s) => s.activeBuild?.skillNodeAllocations ?? EMPTY_SKILL_ALLOC
   )
   const activeBuildId = useBuildStore((s) => s.activeBuild?.id ?? null)
+  const characterLevel = useBuildStore((s) => s.activeBuild?.characterLevel ?? 1)
+  const budgetEnforced = useBuildStore((s) => s.activeBuild?.budgetEnforced ?? false)
   const highlightedNodeIds = useOptimizationStore((s) => s.highlightedNodeIds)
   const previewSuggestionRank = useOptimizationStore((s) => s.previewSuggestionRank)
   const suggestions = useOptimizationStore((s) => s.suggestions)
@@ -397,6 +402,17 @@ export function SkillTreeView() {
           </span>
         </div>
       )}
+
+      {isPassiveTab && activeBuild && (() => {
+        const allocatedPassivePoints = Object.values(baseAllocatedNodes).reduce((sum, v) => sum + v, 0)
+        const unspentPassivePoints = calculatePassivePoints(characterLevel) - allocatedPassivePoints
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px', height: 36, borderBottom: '1px solid var(--color-bg-elevated)' }}>
+            <BudgetToggle />
+            <UnspentCounter count={unspentPassivePoints} treeType="passive" budgetEnforced={budgetEnforced} />
+          </div>
+        )
+      })()}
 
       {showControls && (
         <TreeControls

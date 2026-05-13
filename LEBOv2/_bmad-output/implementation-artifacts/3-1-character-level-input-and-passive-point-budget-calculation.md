@@ -1,6 +1,6 @@
 # Story 3.1: Character Level Input and Passive Point Budget Calculation
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -36,55 +36,55 @@ so that I can plan builds within my actual character's limitations.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `characterLevel` and `budgetEnforced` to `BuildState` and `useBuildStore` (AC: #4, #5)
-  - [ ] In `src/shared/types/build.ts`: add `characterLevel: number` and `budgetEnforced: boolean` to `BuildState` interface
-  - [ ] In `src/shared/stores/buildStore.ts`: add `setCharacterLevel(level: number): void` and `setBudgetEnforced(v: boolean): void` actions to the `BuildStore` interface
-  - [ ] In `buildStore.ts`: implement both setters using `set()`; initialize both in `createBuild()`: `characterLevel: 1`, `budgetEnforced: false`
-  - [ ] In the `applyNodeChange` auto-create path (lines 86-103): also set `characterLevel: 1` and `budgetEnforced: false` in the newly created build
-  - [ ] In `src/features/build-manager/buildPersistence.ts` → `migrateBuildState`: add `characterLevel: typeof obj.characterLevel === 'number' ? obj.characterLevel : 1` and `budgetEnforced: typeof obj.budgetEnforced === 'boolean' ? obj.budgetEnforced : false` to the returned object
+- [x] Task 1: Add `characterLevel` and `budgetEnforced` to `BuildState` and `useBuildStore` (AC: #4, #5)
+  - [x] In `src/shared/types/build.ts`: add `characterLevel: number` and `budgetEnforced: boolean` to `BuildState` interface
+  - [x] In `src/shared/stores/buildStore.ts`: add `setCharacterLevel(level: number): void` and `setBudgetEnforced(v: boolean): void` actions to the `BuildStore` interface
+  - [x] In `buildStore.ts`: implement both setters using `set()`; initialize both in `createBuild()`: `characterLevel: 1`, `budgetEnforced: false`
+  - [x] In the `applyNodeChange` auto-create path (lines 86-103): also set `characterLevel: 1` and `budgetEnforced: false` in the newly created build
+  - [x] In `src/features/build-manager/buildPersistence.ts` → `migrateBuildState`: add `characterLevel: typeof obj.characterLevel === 'number' ? obj.characterLevel : 1` and `budgetEnforced: typeof obj.budgetEnforced === 'boolean' ? obj.budgetEnforced : false` to the returned object
 
-- [ ] Task 2: Create `budgetCalculator.ts` (AC: #6)
-  - [ ] Create `src/shared/utils/budgetCalculator.ts`
-  - [ ] Export `calculatePassivePoints(level: number): number` — returns `level + 20` as approximation; add a single-line comment with the Last Epoch source if confirmed otherwise during implementation
-  - [ ] Export `calculateSkillPoints(level: number): number` — stub returning `level` (used by Story 3.2; export it now to avoid Story 3.2 needing to re-edit the file)
+- [x] Task 2: Create `budgetCalculator.ts` (AC: #6)
+  - [x] Create `src/shared/utils/budgetCalculator.ts`
+  - [x] Export `calculatePassivePoints(level: number): number` — returns `level + 20` as approximation; add a single-line comment with the Last Epoch source if confirmed otherwise during implementation
+  - [x] Export `calculateSkillPoints(level: number): number` — stub returning `level` (used by Story 3.2; export it now to avoid Story 3.2 needing to re-edit the file)
 
-- [ ] Task 3: Create `UnspentCounter.tsx` (AC: #2, #7, #9)
-  - [ ] Create `src/features/skill-tree/UnspentCounter.tsx`
-  - [ ] Props: `count: number`, `treeType: 'passive' | 'skill'`, `budgetEnforced: boolean`
-  - [ ] Render as a `<span>` (or `<div>`) with `aria-live="polite"` and `aria-label={\`Unspent \${treeType} points: \${count}\`}`
-  - [ ] Color: `var(--color-accent-gold)` when `count > 0`, `var(--color-text-secondary)` when `count === 0`
-  - [ ] When `budgetEnforced === false`: append `" (Budget off)"` in a `<span>` styled with `color: var(--color-text-muted)` at smaller size
-  - [ ] Create `src/features/skill-tree/UnspentCounter.test.tsx` — test: renders count in gold, renders "(Budget off)" label, aria-live attribute present, axe check
+- [x] Task 3: Create `UnspentCounter.tsx` (AC: #2, #7, #9)
+  - [x] Create `src/features/skill-tree/UnspentCounter.tsx`
+  - [x] Props: `count: number`, `treeType: 'passive' | 'skill'`, `budgetEnforced: boolean`
+  - [x] Render as a `<span>` (or `<div>`) with `aria-live="polite"` and `aria-label={\`Unspent \${treeType} points: \${count}\`}`
+  - [x] Color: `var(--color-accent-gold)` when `count > 0`, `var(--color-text-secondary)` when `count === 0`
+  - [x] When `budgetEnforced === false`: append `" (Budget off)"` in a `<span>` styled with `color: var(--color-text-muted)` at smaller size
+  - [x] Create `src/features/skill-tree/UnspentCounter.test.tsx` — test: renders count in gold, renders "(Budget off)" label, aria-live attribute present, axe check
 
-- [ ] Task 4: Create `BudgetToggle.tsx` (AC: #3, #5, #8)
-  - [ ] Create `src/features/skill-tree/BudgetToggle.tsx`
-  - [ ] Use **Headless UI `Switch`** (already installed: `@headlessui/react 2.2.10`)
-  - [ ] Layout: single row `flex items-center gap-3` containing:
+- [x] Task 4: Create `BudgetToggle.tsx` (AC: #3, #5, #8)
+  - [x] Create `src/features/skill-tree/BudgetToggle.tsx`
+  - [x] Use **Headless UI `Switch`** (already installed: `@headlessui/react 2.2.10`)
+  - [x] Layout: single row `flex items-center gap-3` containing:
     - Left: `<label>` "Level" + `<input type="number" min={1} max={100}>` (28px height, 56px wide, same styling as existing inputs: bg `var(--color-bg-elevated)`, border `var(--color-bg-elevated)` → `var(--color-accent-gold)` on focus, text `var(--color-text-primary)`)
     - Right: `<Switch>` from Headless UI with label "Enforce Level Budget"
-  - [ ] Reads from `useBuildStore`: `activeBuild?.characterLevel ?? 1` and `activeBuild?.budgetEnforced ?? false`
-  - [ ] Writes via: `setCharacterLevel(value)` on level input change (clamp to 1–100), `setBudgetEnforced(v)` on switch toggle
-  - [ ] Guard: only renders when `activeBuild !== null`
-  - [ ] Switch styling: gold background when `checked=true` (`var(--color-accent-gold)`), muted when `false` (`var(--color-bg-elevated)`); 2px gold focus ring on the switch thumb per NFR12
-  - [ ] Create `src/features/skill-tree/BudgetToggle.test.tsx` — test: renders level input and switch, level change calls `setCharacterLevel`, switch toggle calls `setBudgetEnforced`, axe check
+  - [x] Reads from `useBuildStore`: `activeBuild?.characterLevel ?? 1` and `activeBuild?.budgetEnforced ?? false`
+  - [x] Writes via: `setCharacterLevel(value)` on level input change (clamp to 1–100), `setBudgetEnforced(v)` on switch toggle
+  - [x] Guard: only renders when `activeBuild !== null`
+  - [x] Switch styling: gold background when `checked=true` (`var(--color-accent-gold)`), muted when `false` (`var(--color-bg-elevated)`); 2px gold focus ring on the switch thumb per NFR12
+  - [x] Create `src/features/skill-tree/BudgetToggle.test.tsx` — test: renders level input and switch, level change calls `setCharacterLevel`, switch toggle calls `setBudgetEnforced`, axe check
 
-- [ ] Task 5: Integrate into `SkillTreeView.tsx` (AC: #1, #2, #3)
-  - [ ] Import `BudgetToggle`, `UnspentCounter`, `calculatePassivePoints` from their paths
-  - [ ] Read from store: `const characterLevel = useBuildStore(s => s.activeBuild?.characterLevel ?? 1)` and `const budgetEnforced = useBuildStore(s => s.activeBuild?.budgetEnforced ?? false)`
-  - [ ] Compute `allocatedPassivePoints`: `Object.values(baseAllocatedNodes).reduce((sum, v) => sum + v, 0)` — use `baseAllocatedNodes` (not preview) so the counter reflects actual allocation, not preview
-  - [ ] Compute `unspentPassivePoints = calculatePassivePoints(characterLevel) - allocatedPassivePoints`
-  - [ ] In the passive tab render path, **before `{showControls && <TreeControls .../>}`**, add a conditional row: `{isPassiveTab && activeBuild && (<div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'4px 12px', height:36, borderBottom:'1px solid var(--color-bg-elevated)'}}><BudgetToggle /><UnspentCounter count={unspentPassivePoints} treeType="passive" budgetEnforced={budgetEnforced} /></div>)}`
-  - [ ] Do NOT modify `TreeControls.tsx` — add the new row as a sibling above it
+- [x] Task 5: Integrate into `SkillTreeView.tsx` (AC: #1, #2, #3)
+  - [x] Import `BudgetToggle`, `UnspentCounter`, `calculatePassivePoints` from their paths
+  - [x] Read from store: `const characterLevel = useBuildStore(s => s.activeBuild?.characterLevel ?? 1)` and `const budgetEnforced = useBuildStore(s => s.activeBuild?.budgetEnforced ?? false)`
+  - [x] Compute `allocatedPassivePoints`: `Object.values(baseAllocatedNodes).reduce((sum, v) => sum + v, 0)` — use `baseAllocatedNodes` (not preview) so the counter reflects actual allocation, not preview
+  - [x] Compute `unspentPassivePoints = calculatePassivePoints(characterLevel) - allocatedPassivePoints`
+  - [x] In the passive tab render path, **before `{showControls && <TreeControls .../>}`**, add a conditional row
+  - [x] Do NOT modify `TreeControls.tsx` — add the new row as a sibling above it
 
-- [ ] Task 6: Create `budgetCalculator.test.ts` (AC: #6)
-  - [ ] Create `src/shared/utils/budgetCalculator.test.ts`
-  - [ ] Test `calculatePassivePoints`: level 1 → 21, level 50 → 70, level 100 → 120
-  - [ ] Test `calculateSkillPoints`: level 1 → 1, level 20 → 20
+- [x] Task 6: Create `budgetCalculator.test.ts` (AC: #6)
+  - [x] Create `src/shared/utils/budgetCalculator.test.ts`
+  - [x] Test `calculatePassivePoints`: level 1 → 21, level 50 → 70, level 100 → 120
+  - [x] Test `calculateSkillPoints`: level 1 → 1, level 20 → 20
 
-- [ ] Task 7: Update `buildStore.test.ts` (AC: #4, #5)
-  - [ ] Verify `createBuild` initializes `characterLevel: 1` and `budgetEnforced: false`
-  - [ ] Verify `setCharacterLevel` updates `activeBuild.characterLevel`
-  - [ ] Verify `setBudgetEnforced` updates `activeBuild.budgetEnforced`
+- [x] Task 7: Update `buildStore.test.ts` (AC: #4, #5)
+  - [x] Verify `createBuild` initializes `characterLevel: 1` and `budgetEnforced: false`
+  - [x] Verify `setCharacterLevel` updates `activeBuild.characterLevel`
+  - [x] Verify `setBudgetEnforced` updates `activeBuild.budgetEnforced`
 
 ## Dev Notes
 
@@ -224,6 +224,28 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+None.
+
 ### Completion Notes List
 
+- All 7 tasks complete. 76 new/modified tests pass (4 test files).
+- `characterLevel` and `budgetEnforced` added to `BuildState` interface, `createBuild`, `applyNodeChange` auto-create path, and `migrateBuildState` migration with `typeof` guards for backward compatibility.
+- `budgetCalculator.ts` exports `calculatePassivePoints` (level + 20 approximation) and `calculateSkillPoints` stub for Story 3.2.
+- `UnspentCounter` is tree-type agnostic — renders gold/secondary based on count, shows "(Budget off)" label when enforcement is off, `aria-live="polite"` for screen reader support.
+- `BudgetToggle` uses Headless UI `Switch` with inline CSS variable styles; level input clamps to 1–100; guard prevents render when `activeBuild` is null.
+- Budget row inserted in `SkillTreeView` using an IIFE pattern to compute `unspentPassivePoints` inline — only renders on passive tab when `activeBuild` is non-null.
+- Pre-existing test failures in `ProviderSelector.test.tsx` and `Settings.test.tsx` (6 tests) confirmed pre-existing via git stash verification; not caused by this story.
+
 ### File List
+
+- `lebo/src/shared/types/build.ts` — modified (added `characterLevel`, `budgetEnforced` to `BuildState`)
+- `lebo/src/shared/stores/buildStore.ts` — modified (added fields, setters, init in `createBuild` + `applyNodeChange` auto-create)
+- `lebo/src/features/build-manager/buildPersistence.ts` — modified (`migrateBuildState` handles new fields)
+- `lebo/src/shared/utils/budgetCalculator.ts` — NEW
+- `lebo/src/shared/utils/budgetCalculator.test.ts` — NEW
+- `lebo/src/features/skill-tree/UnspentCounter.tsx` — NEW
+- `lebo/src/features/skill-tree/UnspentCounter.test.tsx` — NEW
+- `lebo/src/features/skill-tree/BudgetToggle.tsx` — NEW
+- `lebo/src/features/skill-tree/BudgetToggle.test.tsx` — NEW
+- `lebo/src/features/skill-tree/SkillTreeView.tsx` — modified (imports + selectors + budget row above TreeControls)
+- `lebo/src/shared/stores/buildStore.test.ts` — modified (updated fixtures + new tests for `createBuild`, `setCharacterLevel`, `setBudgetEnforced`)

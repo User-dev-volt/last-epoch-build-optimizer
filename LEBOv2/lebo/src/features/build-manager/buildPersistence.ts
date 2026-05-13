@@ -14,6 +14,8 @@ export function migrateBuildState(raw: unknown): BuildState {
     name: String(obj.name ?? ''),
     classId: String(obj.classId ?? ''),
     masteryId: String(obj.masteryId ?? ''),
+    characterLevel: typeof obj.characterLevel === 'number' ? obj.characterLevel : 1,
+    budgetEnforced: typeof obj.budgetEnforced === 'boolean' ? obj.budgetEnforced : false,
     nodeAllocations:
       typeof obj.nodeAllocations === 'object' && obj.nodeAllocations !== null
         ? (obj.nodeAllocations as Record<string, number>)
