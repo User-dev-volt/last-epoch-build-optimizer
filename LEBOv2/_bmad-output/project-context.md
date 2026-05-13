@@ -160,6 +160,7 @@ All `BuildState` objects have `schemaVersion: 1`. The `migrateBuildState` functi
 - Follow ALL rules exactly — especially: no barrel files, no raw `invoke()`, WebGL patch is already present, props-only SkillTreeCanvas.
 - When adding a Tauri command: implement in Rust → register in `lib.rs` invoke_handler → call via `invokeCommand<T>()` in TypeScript.
 - When adding a new view: add it to `appStore.currentView` union type and route in `App.tsx`. Never add React Router.
+- **PHASE BOUNDARY — NEVER MODIFY Phase 1 files.** This is Phase 2 (LEBOv2). Files outside the `LEBOv2/` directory (e.g., `../_bmad-output/`, `../lebo/`) are Phase 1 artifacts. Read them for context only — never write, edit, or commit changes to them.
 
 **For Humans:**
 - Update the Technology Stack section when upgrading major dependencies.

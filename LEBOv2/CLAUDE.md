@@ -2,6 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Phase Boundary — CRITICAL
+
+This is **Phase 2 (LEBOv2)**. The git repo root contains Phase 1 artifacts at `../_bmad-output/` (one level above this directory). Those files are **READ-ONLY historical context** — never modify them.
+
+| Path | Status |
+|------|--------|
+| `LEBOv2/` (this directory and everything inside) | ✅ Active — read and write freely |
+| `../_bmad-output/` (Phase 1 planning artifacts) | 🚫 Read-only context — never modify |
+| `../lebo/` (Phase 1 source code, if present) | 🚫 Read-only context — never modify |
+
+**Rule:** If you find yourself about to edit any file outside `LEBOv2/`, stop and ask the user. Phase 1 files can be read for context (e.g., to understand existing architecture, game data format, prior decisions) but must never be written, updated, or committed as part of Phase 2 work.
+
 ## Commands
 
 All commands run from `lebo/` (the Vite project root). Package manager is **pnpm**.
