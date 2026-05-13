@@ -253,6 +253,8 @@ export async function initRenderer(
     if (currentTreeId !== lastTreeId) {
       lastRenderedIconIds = new Set()
       lastTreeId = currentTreeId
+      lastClickedId = null
+      lastClickTime = 0
       fitToTree(data.nodes)
     }
     const prevIconIds = lastRenderedIconIds
@@ -393,22 +395,34 @@ export async function initRenderer(
       hit.on('pointerout', () => callbacksRef.current.onNodeHover(null))
       hit.on('pointerdown', (e) => {
         e.stopPropagation()
+        // stopPropagation prevents the stage pointerdown from updating dragOrigin/panOrigin.
+        // Update them here so a drag starting from a node uses the correct origin.
+        dragOrigin = { x: e.global.x, y: e.global.y }
+        panOrigin = { x: worldContainer.x, y: worldContainer.y }
         if (e.button === 2) {
-          // Right-click → context menu (not direct deallocate)
+          // Right-click → context menu; reset double-click state so RMB doesn't prime the LMB detector
+          lastClickedId = null
+          lastClickTime = 0
           const rect = canvas.getBoundingClientRect()
           callbacksRef.current.onNodeContextMenu?.(node.id, rect.left + e.global.x, rect.top + e.global.y)
           return
         }
         const now = performance.now()
         if (lastClickedId === node.id && now - lastClickTime < DOUBLE_CLICK_DELAY) {
-          // Double-click → allocate
+          // Double-click → allocate immediately on second pointerdown
           lastClickedId = null
           lastClickTime = 0
           callbacksRef.current.onNodeClick(node.id, 0)
         } else {
-          // Single-click → select only
+          // Record first click; select fires on pointerup only if no drag occurred
           lastClickedId = node.id
           lastClickTime = now
+        }
+      })
+      hit.on('pointerup', (e) => {
+        if (e.button !== 0) return
+        // Only select if this was a clean click (no drag exceeded threshold)
+        if (!dragging && lastClickedId === node.id) {
           callbacksRef.current.onNodeSelect?.(node.id)
         }
       })

@@ -297,8 +297,6 @@ export function SkillTreeView() {
   // Context menu actions — allocate/remove delegate to handleNodeClick
   const handleContextMenuAllocate = useCallback((nodeId: string) => handleNodeClick(nodeId, 0), [handleNodeClick])
   const handleContextMenuRemove = useCallback((nodeId: string) => handleNodeClick(nodeId, 2), [handleNodeClick])
-  // "View in panel" is a future feature stub — node is already shown in tooltip on hover
-  const handleContextMenuViewInPanel = useCallback((_nodeId: string) => {}, [])
 
   if (isLoading) {
     return (
@@ -532,7 +530,6 @@ export function SkillTreeView() {
           position={{ x: contextMenu.x, y: contextMenu.y }}
           onAllocate={handleContextMenuAllocate}
           onRemove={handleContextMenuRemove}
-          onViewInPanel={handleContextMenuViewInPanel}
           onClose={handleContextMenuClose}
         />
       )}

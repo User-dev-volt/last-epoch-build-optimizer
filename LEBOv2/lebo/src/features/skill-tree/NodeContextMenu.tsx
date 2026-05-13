@@ -5,7 +5,6 @@ interface NodeContextMenuProps {
   position: { x: number; y: number }
   onAllocate: (nodeId: string) => void
   onRemove: (nodeId: string) => void
-  onViewInPanel: (nodeId: string) => void
   onClose: () => void
 }
 
@@ -16,7 +15,6 @@ export function NodeContextMenu({
   position,
   onAllocate,
   onRemove,
-  onViewInPanel,
   onClose,
 }: NodeContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null)
@@ -39,9 +37,11 @@ export function NodeContextMenu({
     }
   }, [onClose])
 
-  // Flip left if menu would overflow viewport right edge
+  const MENU_HEIGHT = 80 // two items × ~40px each
   const viewportWidth = window.innerWidth || 10000
+  const viewportHeight = window.innerHeight || 10000
   const left = position.x + MENU_WIDTH > viewportWidth ? position.x - MENU_WIDTH : position.x
+  const top = position.y + MENU_HEIGHT > viewportHeight ? position.y - MENU_HEIGHT : position.y
 
   const itemStyle: React.CSSProperties = {
     display: 'block',
@@ -62,7 +62,7 @@ export function NodeContextMenu({
       aria-label="Node actions"
       style={{
         position: 'fixed',
-        top: position.y,
+        top,
         left,
         zIndex: 200,
         width: MENU_WIDTH,
@@ -92,16 +92,6 @@ export function NodeContextMenu({
         onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
       >
         Remove
-      </button>
-      <button
-        type="button"
-        role="menuitem"
-        style={itemStyle}
-        onClick={() => { onViewInPanel(nodeId); onClose() }}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-surface)' }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
-      >
-        View in panel
       </button>
     </div>
   )

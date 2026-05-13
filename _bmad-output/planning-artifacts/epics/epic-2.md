@@ -167,21 +167,21 @@ Three-layer review (Blind Hunter / Edge Case Hunter / Acceptance Auditor) agains
 
 ### Decision Needed
 
-- [ ] [Review][Decision] **"View in panel" is a no-op stub** — `NodeContextMenu.tsx` has the menu item; `SkillTreeView.tsx:301` wires it to an empty callback. Code comment says "future feature stub — node already shown in tooltip." AC says the option must exist in the context menu; it does not specify behavior. **Choose:** (a) keep stub as-is (AC satisfied by presence), (b) remove the item until implemented, or (c) implement panel navigation now.
+- [x] [Review][Decision] **"View in panel" is a no-op stub** — resolved 2026-05-12: removed the menu item entirely. Context menu now has Allocate and Remove only.
 
-- [ ] [Review][Decision] **Two Fit buttons rendered simultaneously** — `SkillTreeCanvas.tsx:388` renders a Fit button in the canvas overlay (bottom-right, always visible). `TreeControls.tsx:42` renders a second Fit button in the toolbar above. When `showControls` is true (normal state) both appear at once. Both work. **Choose:** (a) keep both (convenient dual placement), (b) remove the canvas-overlay Fit and keep only TreeControls', (c) remove TreeControls' Fit and keep only the canvas overlay.
+- [x] [Review][Decision] **Two Fit buttons rendered simultaneously** — resolved 2026-05-12: kept both (canvas overlay + TreeControls toolbar). Intentional dual placement.
 
 ### Patch Items
 
-- [ ] [Review][Patch] **`lastClickedId`/`lastClickTime` not reset on tree switch — ghost double-click across mastery changes** [`pixiRenderer.ts:252-257`] — `lastClickedId` is closure state that survives `renderTree` calls. If the user clicks a node then switches mastery within 300ms, clicking any node in the new tree fires `onNodeClick` (allocate) as a double-click. Fix: reset both vars in the `if (currentTreeId !== lastTreeId)` branch.
+- [x] [Review][Patch] **`lastClickedId`/`lastClickTime` not reset on tree switch** [`pixiRenderer.ts`] — fixed 2026-05-12: reset both vars in the `currentTreeId !== lastTreeId` branch of `renderTree`.
 
-- [ ] [Review][Patch] **Right-click primes double-click detector — RMB context menu open followed by LMB allocates unexpectedly** [`pixiRenderer.ts:394-400`] — `e.button === 2` branch returns early without clearing `lastClickedId`/`lastClickTime`. A right-click then left-click within 300ms on the same node fires the double-click allocate path. Fix: add `lastClickedId = null; lastClickTime = 0` in the right-click branch.
+- [x] [Review][Patch] **Right-click primes double-click detector** [`pixiRenderer.ts`] — fixed 2026-05-12: reset `lastClickedId`/`lastClickTime` in the `e.button === 2` branch before returning.
 
-- [ ] [Review][Patch] **Context menu no bottom-overflow clamp — items unreachable near bottom of viewport** [`NodeContextMenu.tsx:43-44`] — Horizontal flip exists but no vertical flip. In Tauri (no page scroll), nodes in the lower third of the canvas produce a menu that overflows below the fold. Fix: mirror the horizontal logic for vertical using `window.innerHeight`.
+- [x] [Review][Patch] **Context menu no bottom-overflow clamp** [`NodeContextMenu.tsx`] — fixed 2026-05-12: added vertical flip using `window.innerHeight`, matching existing horizontal flip logic.
 
-- [ ] [Review][Patch] **Stale `dragOrigin`/`panOrigin` after node `pointerdown` + `stopPropagation` — pan jump on first drag from a node** [`pixiRenderer.ts:163-165,394`] — The hit container's `pointerdown` calls `e.stopPropagation()`, preventing the stage's `pointerdown` from updating `dragOrigin` and `panOrigin`. Subsequent `pointermove` on the stage uses the old origin, immediately exceeding DRAG_THRESHOLD and snapping to an incorrect pan position. Fix: also set `dragOrigin`/`panOrigin` inside the hit's `pointerdown` handler before calling `stopPropagation`.
+- [x] [Review][Patch] **Stale `dragOrigin`/`panOrigin` after node `pointerdown` + `stopPropagation`** [`pixiRenderer.ts`] — fixed 2026-05-12: set `dragOrigin`/`panOrigin` inside the hit's `pointerdown` handler before `stopPropagation`.
 
-- [ ] [Review][Patch] **`onNodeSelect` fires on every `pointerdown` regardless of whether a drag follows — panning from a node spuriously changes `selectedNodeId`** [`pixiRenderer.ts:409-412`] — Single-click select fires on `pointerdown`. If the user presses on a node and drags, `onNodeSelect` fires before the drag threshold is reached, changing the selected node unexpectedly. Fix: defer `onNodeSelect` to a `pointerup` handler that only fires when `dragging` was never set to true (requires adding a per-node `pointerup` that checks the drag flag).
+- [x] [Review][Patch] **`onNodeSelect` fires on `pointerdown` regardless of subsequent drag** [`pixiRenderer.ts`] — fixed 2026-05-12: moved `onNodeSelect` to a `pointerup` handler; fires only when `dragging` is still false at release time.
 
 ### Deferred
 
