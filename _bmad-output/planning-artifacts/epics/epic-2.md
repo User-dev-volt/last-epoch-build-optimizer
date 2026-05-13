@@ -102,6 +102,42 @@
 
 ---
 
+## Story 2.4 — Review Findings (adversarial review, 2026-05-12)
+
+The previous implementation diverges from the AC in several blocking ways. All items below must be resolved before this story closes.
+
+### Blocking (AC deviations)
+
+1. **MAX_ZOOM is 1.5x, not 2.5x.** `pixiRenderer.ts` hard-codes `MAX_ZOOM = 1.5`. AC requires the range `0.3x – 2.5x`.
+
+2. **Single-click allocates; double-click is never implemented.** AC says single-click → select (highlight ring + `uiStore.selectedNodeId`); double-click → allocate. The implementation routes left-click directly to `applyNodeChange`. No double-click handler exists anywhere.
+
+3. **No selection ring, no `uiStore.selectedNodeId`.** The selection state (ring highlight + store update) is completely absent. No `uiStore` is imported in `useSkillTree.ts` or `SkillTreeCanvas.tsx`, and the renderer has no selected-node drawing path.
+
+4. **Right-click deallocates directly instead of opening a context menu.** AC requires a context menu with "Allocate / Remove / View in panel". The implementation maps `button === 2 → delta: -1`. Browser context menu is suppressed but no React context menu is rendered. "View in panel" is entirely missing.
+
+5. **No [Fit] button.** `TreeControls.tsx` has a "Reset" that only clears search. No zoom-reset / re-center function is exposed from the renderer (`RendererInstance` return object has no `resetViewport` or `fitToTree`). This function must be implemented before the button can be wired up — it needs to compute the bounding box of all nodes and set `worldContainer` scale + position accordingly.
+
+6. **No ± zoom buttons.** AC explicitly requires zoom in/out buttons in the graph corner. `TreeControls.tsx` has none.
+
+7. **`nodeAllocations[node.id] !== undefined` is wrong.** In `pixiRenderer.ts`, a node counts as allocated if its key exists even with value `0`. A 0/3 node renders gold. Correct guard: `(nodeAllocations[node.id] ?? 0) > 0`.
+
+### Quality / reliability issues
+
+8. **No drag-distance threshold.** Any mouse movement during a click triggers both a pan and a node action. Add a minimum drag distance (e.g. 4px) before switching `dragging = true` so short mouse-drift clicks don't pan.
+
+9. **Tooltip lags the cursor.** `useSkillTree.ts` reads `e.clientX/Y` from React's `mousemove` on the outer div, not from PixiJS pointer events. Under frame-rate pressure the tooltip visibly trails.
+
+10. **`syncButtonPositions` runs every ticker tick at 60fps, calling `setNodeButtons` and scheduling a React re-render on any float drift in viewport coords.** The strict-equality early-return (`vp.x === last.x`) is not reliable for sub-pixel PixiJS values. During idle this can fire constantly. Use a small epsilon tolerance or only sync on explicit pan/zoom events.
+
+11. **Initial centering silently skips if canvas size is 0 on first `resize` call.** `initialCentered` flag is set on first `w > 0 && h > 0` resize — if the layout hasn't stabilized yet the flag stays false and the tree renders at world origin. Flag also never resets on mastery switch, so switching masteries doesn't re-center.
+
+12. **Keyboard navigation (Tab, arrow keys, sr-only focus buttons) is not in Story 2.4's AC.** It's already implemented — either explicitly track which story owns this so it isn't double-counted, or add AC rows here to make it testable.
+
+13. **Tooltip height constant (`TOOLTIP_HEIGHT_APPROX = 180`) will clip long keystones.** The flip-detection uses a fixed estimate for variable-length content. Keystones with multi-line effects or many prerequisites will clip off the bottom of the screen.
+
+---
+
 ## Story 2.5 — Node Allocation Logic & Validation
 
 **As a** user  
