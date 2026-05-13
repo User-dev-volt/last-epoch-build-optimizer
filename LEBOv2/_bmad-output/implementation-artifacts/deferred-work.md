@@ -1,3 +1,9 @@
+## Deferred from: code review of 3-1-character-level-input (2026-05-13)
+
+- **Scoring weight formula `allocatedPoints * node.maxPoints`** — `scoringEngine.ts:61` — Blind Hunter flagged as potentially inverted (fill-ratio intent vs. multiply). Pre-existing scoring logic not touched by this story. Revisit when scoring model is formally reviewed.
+- **Focus ring via React `isFocused` state instead of CSS `:focus-visible`** — `BudgetToggle.tsx:60` — Shows ring on mouse click too (not just keyboard focus). Pre-existing inline-style pattern across the codebase; CSS approach blocked by Tailwind v4 no-`@apply` rule. Address if accessibility audit flags it.
+- **`MAX_PASSIVE_POINTS` evaluated at module load time** — `budgetCalculator.ts:10` — Future footgun if formula becomes per-season configurable. Not a current bug.
+
 ## Deferred from: code review of epic-2 story 2.4 graph-interaction (2026-05-12)
 
 - **`pendingIconAnimations` not flushed on `renderTree`** — `pixiRenderer.ts:227-238` — On rapid re-renders (e.g. repeated node allocations), orphaned sprite references accumulate in `pendingIconAnimations`. Self-heal within ~100ms; bounded by animation duration. No visual impact. Revisit if profiling reveals wasted ticker work.
