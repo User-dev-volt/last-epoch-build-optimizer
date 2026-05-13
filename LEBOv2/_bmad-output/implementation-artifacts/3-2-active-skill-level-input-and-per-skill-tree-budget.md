@@ -1,6 +1,6 @@
 # Story 3.2: Active Skill Level Input and Per-Skill Tree Budget
 
-Status: review
+Status: done
 
 ## Story
 
@@ -254,7 +254,7 @@ Follow patterns from `BudgetToggle.test.tsx` (for `SkillLevelInput`):
 
 ## Review Findings
 
-- [ ] [Review][Patch] SkillLevelInput subscribes to `s.activeBuild` (whole-object reference), causing re-renders on any build mutation — narrow to `s.activeBuild !== null` or fold null check into `storedLevel` selector [SkillLevelInput.tsx:15]
+- [x] [Review][Patch] SkillLevelInput subscribes to `s.activeBuild` (whole-object reference), causing re-renders on any build mutation — narrow to `s.activeBuild !== null` or fold null check into `storedLevel` selector [SkillLevelInput.tsx:15]
 - [x] [Review][Defer] Scoring weight formula `allocatedPoints * node.maxPoints` in scoringEngine — pre-existing, not introduced by this story [scoringEngine.ts:56] — deferred, pre-existing
 - [x] [Review][Defer] `type: 'unknown'` hardcoded in gameDataLoader — SkillEntry.type always 'unknown'; meaningful values never populated [gameDataLoader.ts:112] — deferred, scope creep
 - [x] [Review][Defer] Quest-reward passive points excluded from budget — documented in code comment; up to 15 additional points vary by playthrough completion [budgetCalculator.ts:2] — deferred, pre-existing

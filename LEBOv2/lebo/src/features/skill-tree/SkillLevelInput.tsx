@@ -7,21 +7,22 @@ interface SkillLevelInputProps {
 }
 
 export function SkillLevelInput({ slotId }: SkillLevelInputProps) {
-  const activeBuild = useBuildStore((s) => s.activeBuild)
-  const storedLevel = useBuildStore((s) => s.activeBuild?.activeSkillLevels[slotId] ?? 1)
+  const storedLevel = useBuildStore(
+    (s) => s.activeBuild !== null ? (s.activeBuild.activeSkillLevels[slotId] ?? 1) : null
+  )
   const setSkillLevel = useBuildStore((s) => s.setSkillLevel)
 
-  const [inputValue, setInputValue] = useState(String(storedLevel))
+  const [inputValue, setInputValue] = useState(String(storedLevel ?? 1))
   const [isFocused, setIsFocused] = useState(false)
   const justCommittedRef = useRef(false)
 
   useEffect(() => {
-    if (!isFocused) {
+    if (!isFocused && storedLevel !== null) {
       setInputValue(String(storedLevel))
     }
   }, [storedLevel, isFocused])
 
-  if (!activeBuild) return null
+  if (storedLevel === null) return null
 
   function commitLevelChange() {
     const raw = parseInt(inputValue, 10)
