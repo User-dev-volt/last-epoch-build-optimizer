@@ -627,6 +627,116 @@ describe('buildStore — resetActiveTree', () => {
   })
 })
 
+describe('buildStore — budget enforcement in applyNodeChange', () => {
+  beforeEach(() => {
+    useBuildStore.setState(initialState, true)
+    useBuildStore.getState().setSelectedClass('sentinel')
+    useBuildStore.getState().setSelectedMastery('void_knight')
+  })
+
+  it('budgetEnforced: false allows allocation even when unspent = 0 (AC #1)', () => {
+    // level 3 → calculatePassivePoints(3) = 1; root already allocated → budget exhausted
+    useBuildStore.getState().setActiveBuild({
+      ...mockBuild,
+      characterLevel: 3,
+      budgetEnforced: false,
+      nodeAllocations: { root: 1 },
+    })
+    // child prereq (root) is met; budget OFF → should succeed
+    const result = useBuildStore.getState().applyNodeChange('child', 1, mockTreeData)
+    expect(result.success).toBe(true)
+  })
+
+  it('budgetEnforced: true blocks allocation when unspent = 0 (AC #2)', () => {
+    useBuildStore.getState().setActiveBuild({
+      ...mockBuild,
+      characterLevel: 3,
+      budgetEnforced: true,
+      nodeAllocations: { root: 1 },
+    })
+    const result = useBuildStore.getState().applyNodeChange('child', 1, mockTreeData)
+    expect(result.success).toBe(false)
+    expect(result.error).toBeUndefined()
+  })
+
+  it('budgetEnforced: true allows allocation when unspent > 0', () => {
+    useBuildStore.getState().setActiveBuild({
+      ...mockBuild,
+      characterLevel: 5,
+      budgetEnforced: true,
+      nodeAllocations: {},
+    })
+    // calculatePassivePoints(5) = 3; 0 allocated → 3 unspent → should succeed
+    const result = useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
+    expect(result.success).toBe(true)
+  })
+
+  it('budget guard does not block deallocation (delta = -1) when enforced', () => {
+    useBuildStore.getState().setActiveBuild({
+      ...mockBuild,
+      characterLevel: 3,
+      budgetEnforced: true,
+      nodeAllocations: { root: 1 },
+    })
+    const result = useBuildStore.getState().applyNodeChange('root', -1, mockTreeData)
+    expect(result.success).toBe(true)
+  })
+})
+
+describe('buildStore — budget enforcement in applySkillNodeChange', () => {
+  beforeEach(() => {
+    useBuildStore.setState(initialState, true)
+  })
+
+  it('budgetEnforced: true blocks allocation when skill unspent = 0 (AC #3)', () => {
+    // activeSkillLevels['slot-0'] = 1 → calculateSkillPoints(1) = 1; root allocated → exhausted
+    useBuildStore.getState().setActiveBuild({
+      ...buildWithSkill,
+      budgetEnforced: true,
+      activeSkillLevels: { 'slot-0': 1 },
+      skillNodeAllocations: { 'slot-0': { 'skill-root': 1 } },
+    })
+    const result = useBuildStore.getState().applySkillNodeChange('slot-0', 'skill-child', 1, mockSkillTreeData)
+    expect(result.success).toBe(false)
+    expect(result.error).toBeUndefined()
+  })
+
+  it('budgetEnforced: false allows allocation when skill unspent = 0 (AC #1)', () => {
+    useBuildStore.getState().setActiveBuild({
+      ...buildWithSkill,
+      budgetEnforced: false,
+      activeSkillLevels: { 'slot-0': 1 },
+      skillNodeAllocations: { 'slot-0': { 'skill-root': 1 } },
+    })
+    // prereq met (skill-root allocated), budget OFF → should succeed
+    const result = useBuildStore.getState().applySkillNodeChange('slot-0', 'skill-child', 1, mockSkillTreeData)
+    expect(result.success).toBe(true)
+  })
+
+  it('budgetEnforced: true allows allocation when skill unspent > 0', () => {
+    useBuildStore.getState().setActiveBuild({
+      ...buildWithSkill,
+      budgetEnforced: true,
+      activeSkillLevels: { 'slot-0': 3 },
+      skillNodeAllocations: {},
+    })
+    // calculateSkillPoints(3) = 3; 0 allocated → 3 unspent → should succeed
+    const result = useBuildStore.getState().applySkillNodeChange('slot-0', 'skill-root', 1, mockSkillTreeData)
+    expect(result.success).toBe(true)
+  })
+
+  it('budget guard does not block deallocation (delta = -1) when enforced', () => {
+    useBuildStore.getState().setActiveBuild({
+      ...buildWithSkill,
+      budgetEnforced: true,
+      activeSkillLevels: { 'slot-0': 1 },
+      skillNodeAllocations: { 'slot-0': { 'skill-root': 1 } },
+    })
+    const result = useBuildStore.getState().applySkillNodeChange('slot-0', 'skill-root', -1, mockSkillTreeData)
+    expect(result.success).toBe(true)
+  })
+})
+
 const mockSkillTreeData: TreeData = {
   nodes: [
     { id: 'skill-root', x: 0, y: 0, size: 'large', maxPoints: 1, connections: ['skill-child'], state: 'available' },

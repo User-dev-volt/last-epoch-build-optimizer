@@ -63,7 +63,7 @@ development_status:
   epic-3: in-progress
   3-1-character-level-input-and-passive-point-budget-calculation: done
   3-2-active-skill-level-input-and-per-skill-tree-budget: done
-  3-3-enforce-level-budget-toggle-and-allocation-enforcement: ready-for-dev
+  3-3-enforce-level-budget-toggle-and-allocation-enforcement: review
   epic-3-retrospective: optional
 
   # Epic 4: Weaver Tree (Research-Gated)

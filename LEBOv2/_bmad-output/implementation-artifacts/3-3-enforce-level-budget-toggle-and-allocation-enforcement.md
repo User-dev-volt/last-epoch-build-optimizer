@@ -1,6 +1,6 @@
 # Story 3.3: Enforce Level Budget Toggle and Allocation Enforcement
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -36,9 +36,9 @@ so that I can switch between realistic build planning and unconstrained explorat
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add budget enforcement to `applyNodeChange` in `buildStore.ts` (AC: #1, #2, #4)
-  - [ ] Add `calculateSkillPoints` to the import from `'../utils/budgetCalculator'` (line 5 of `buildStore.ts`)
-  - [ ] In `applyNodeChange`, inside the `if (delta > 0)` block (line 157), AFTER the prerequisite check block, add the budget guard:
+- [x] Task 1: Add budget enforcement to `applyNodeChange` in `buildStore.ts` (AC: #1, #2, #4)
+  - [x] Add `calculateSkillPoints` to the import from `'../utils/budgetCalculator'` (line 5 of `buildStore.ts`)
+  - [x] In `applyNodeChange`, inside the `if (delta > 0)` block (line 157), AFTER the prerequisite check block, add the budget guard:
     ```typescript
     if (activeBuild.budgetEnforced) {
       const available = calculatePassivePoints(activeBuild.characterLevel)
@@ -48,10 +48,10 @@ so that I can switch between realistic build planning and unconstrained explorat
       }
     }
     ```
-  - [ ] Return `{ success: false }` with NO `error` field — this keeps the block silent (no flash, no tooltip); the 0-count counter is the visual signal
+  - [x] Return `{ success: false }` with NO `error` field — this keeps the block silent (no flash, no tooltip); the 0-count counter is the visual signal
 
-- [ ] Task 2: Add budget enforcement to `applySkillNodeChange` in `buildStore.ts` (AC: #1, #3)
-  - [ ] In `applySkillNodeChange`, inside the `if (delta > 0)` block (line 273), AFTER the prerequisite check block, add the budget guard:
+- [x] Task 2: Add budget enforcement to `applySkillNodeChange` in `buildStore.ts` (AC: #1, #3)
+  - [x] In `applySkillNodeChange`, inside the `if (delta > 0)` block (line 273), AFTER the prerequisite check block, add the budget guard:
     ```typescript
     if (activeBuild.budgetEnforced) {
       const skillBudget = calculateSkillPoints(activeBuild.activeSkillLevels[slotId] ?? 1)
@@ -61,26 +61,26 @@ so that I can switch between realistic build planning and unconstrained explorat
       }
     }
     ```
-  - [ ] `slotAllocations` is already computed at line 267: `const slotAllocations = activeBuild.skillNodeAllocations[slotId] ?? {}` — use it directly; no new variable needed
+  - [x] `slotAllocations` is already computed at line 267: `const slotAllocations = activeBuild.skillNodeAllocations[slotId] ?? {}` — use it directly; no new variable needed
 
-- [ ] Task 3: Add enforcement tests to `buildStore.test.ts` (AC: #1, #2, #3)
-  - [ ] Add a `describe('buildStore — budget enforcement in applyNodeChange')` block:
-    - [ ] Test: `budgetEnforced: false` allows allocation when unspent = 0 (AC #1)
+- [x] Task 3: Add enforcement tests to `buildStore.test.ts` (AC: #1, #2, #3)
+  - [x] Add a `describe('buildStore — budget enforcement in applyNodeChange')` block:
+    - [x] Test: `budgetEnforced: false` allows allocation when unspent = 0 (AC #1)
       - Set `characterLevel: 3` → `calculatePassivePoints(3) = 1`; allocate 1 node to exhaust budget; set `budgetEnforced: false`; attempt another allocation → should succeed
-    - [ ] Test: `budgetEnforced: true` blocks allocation when unspent = 0 (AC #2)
+    - [x] Test: `budgetEnforced: true` blocks allocation when unspent = 0 (AC #2)
       - Set `characterLevel: 3` → `calculatePassivePoints(3) = 1`; allocate 1 node; set `budgetEnforced: true`; attempt to allocate another → `result.success === false` and `result.error === undefined`
-    - [ ] Test: `budgetEnforced: true` allows allocation when unspent > 0
+    - [x] Test: `budgetEnforced: true` allows allocation when unspent > 0
       - Set `characterLevel: 5` → `calculatePassivePoints(5) = 3`; no allocations yet; `budgetEnforced: true`; allocate → should succeed
-    - [ ] Test: budget check is a no-op for deallocation (`delta = -1`) when enforced
+    - [x] Test: budget check is a no-op for deallocation (`delta = -1`) when enforced
       - Set `budgetEnforced: true`, allocate 1 node, then deallocate → should succeed
-  - [ ] Add a `describe('buildStore — budget enforcement in applySkillNodeChange')` block:
-    - [ ] Test: `budgetEnforced: true` blocks when skill unspent = 0 (AC #3)
+  - [x] Add a `describe('buildStore — budget enforcement in applySkillNodeChange')` block:
+    - [x] Test: `budgetEnforced: true` blocks when skill unspent = 0 (AC #3)
       - Set `activeSkillLevels: { 'slot-0': 1 }` → budget = 1; allocate 1 node in slot-0 to exhaust; try another → `result.success === false`, `result.error === undefined`
-    - [ ] Test: `budgetEnforced: false` allows allocation when skill unspent = 0 (AC #1)
+    - [x] Test: `budgetEnforced: false` allows allocation when skill unspent = 0 (AC #1)
       - Same setup but `budgetEnforced: false`; next allocation → should succeed
-    - [ ] Test: `budgetEnforced: true` allows allocation when skill unspent > 0
+    - [x] Test: `budgetEnforced: true` allows allocation when skill unspent > 0
       - `activeSkillLevels: { 'slot-0': 3 }` → budget = 3; 0 allocated; allocate → success
-    - [ ] Test: deallocation (`delta = -1`) is not blocked by budget enforcement
+    - [x] Test: deallocation (`delta = -1`) is not blocked by budget enforcement
       - Set `budgetEnforced: true`, allocate, deallocate → should succeed
 
 ## Dev Notes
@@ -309,4 +309,16 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Added `calculateSkillPoints` to the import in `buildStore.ts` (line 5). The function was already exported from `budgetCalculator.ts` — only the import was missing.
+- Inserted budget guard in `applyNodeChange` inside `if (delta > 0)`, after the prerequisite check. Returns `{ success: false }` with no `error` field so `handleNodeClick` stays silent (no flash, no tooltip). Counter at 0 in `--color-text-secondary` is the intended UX signal.
+- Inserted budget guard in `applySkillNodeChange` identically — uses `slotAllocations` already computed at line 267; no new variable needed.
+- Added 8 new tests across two describe blocks (4 passive, 4 skill). All 71 `buildStore.test.ts` tests pass. Pre-existing failures in `ProviderSelector.test.tsx` / `Settings.test.tsx` (missing `data-testid="provider-selector"`) confirmed pre-existing on main before this story.
+
 ### File List
+
+- `lebo/src/shared/stores/buildStore.ts`
+- `lebo/src/shared/stores/buildStore.test.ts`
+
+## Change Log
+
+- 2026-05-13: Story 3-3 implemented — added budget enforcement guards to `applyNodeChange` and `applySkillNodeChange` in `buildStore.ts`; extended `buildStore.test.ts` with 8 enforcement tests covering both passive and skill budget paths (AC #1, #2, #3). No UI changes required.

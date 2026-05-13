@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { BuildState, BuildMeta, ApplyNodeResult, GearItem, ActiveSkill, IdolItem } from '../types/build'
 import type { SkillEntry } from '../types/gameData'
 import type { TreeData } from '../types/treeData'
-import { calculatePassivePoints } from '../utils/budgetCalculator'
+import { calculatePassivePoints, calculateSkillPoints } from '../utils/budgetCalculator'
 
 const MAX_UNDO_STACK = 10
 
@@ -162,6 +162,13 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
       if (!prereqsMet) {
         return { success: false, error: 'Prerequisite not met' }
       }
+      if (activeBuild.budgetEnforced) {
+        const available = calculatePassivePoints(activeBuild.characterLevel)
+        const allocated = Object.values(activeBuild.nodeAllocations).reduce((sum, v) => sum + v, 0)
+        if (available - allocated <= 0) {
+          return { success: false }
+        }
+      }
     }
 
     if (delta < 0 && newPoints === 0) {
@@ -274,6 +281,13 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
       const prerequisites = treeData.edges.filter((e) => e.toId === nodeId).map((e) => e.fromId)
       const prereqsMet = prerequisites.every((prereqId) => (slotAllocations[prereqId] ?? 0) > 0)
       if (!prereqsMet) return { success: false, error: 'Prerequisite not met' }
+      if (activeBuild.budgetEnforced) {
+        const skillBudget = calculateSkillPoints(activeBuild.activeSkillLevels[slotId] ?? 1)
+        const allocatedSkillPoints = Object.values(slotAllocations).reduce((sum, v) => sum + v, 0)
+        if (skillBudget - allocatedSkillPoints <= 0) {
+          return { success: false }
+        }
+      }
     }
 
     if (delta < 0 && newPoints === 0) {
