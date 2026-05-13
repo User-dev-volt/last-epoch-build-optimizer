@@ -1,6 +1,6 @@
 # Story 3.1: Character Level Input and Passive Point Budget Calculation
 
-Status: review
+Status: done
 
 ## Story
 
@@ -334,9 +334,9 @@ None.
 
 ### Review Findings
 
-- [ ] [Review][Decision] AC1 vs Task 5 contradiction: AC1 says "the result is accessible as a derived value in useBuildStore" but Task 5 explicitly places the computation (`calculatePassivePoints(characterLevel) - allocatedPassivePoints`) in `SkillTreeView.tsx`. Currently computed in the view, not exposed from the store. Decide: (a) accept view-layer computation as satisfying AC1, or (b) add a computed selector to `useBuildStore`.
-- [ ] [Review][Patch] Double `commitLevelChange` on Enter→blur — pressing Enter calls `commitLevelChange()` via `handleKeyDown`, then `onBlur` fires immediately and calls it again. Produces two store writes with two `updatedAt` stamps and potentially two auto-save flushes. Fix: add `if (parseInt(inputValue, 10) === characterLevel) return` guard at the top of `commitLevelChange`, or track that Enter already committed. [`BudgetToggle.tsx:26-31`]
-- [ ] [Review][Patch] Escape key commits in-progress edit instead of reverting — pressing Escape triggers browser-default blur → `onBlur → commitLevelChange()` commits whatever partial value is in the input. Expected UX: Escape reverts to the stored level. Fix: add `if (e.key === 'Escape') { setInputValue(String(characterLevel)); e.currentTarget.blur() }` to `handleKeyDown`. [`BudgetToggle.tsx:33-35`]
+- [x] [Review][Decision] AC1 vs Task 5 contradiction: resolved by adding `selectAvailablePassivePoints` selector exported from `buildStore.ts`; `SkillTreeView` now uses `useBuildStore(selectAvailablePassivePoints)`. AC1 satisfied.
+- [x] [Review][Patch] Double `commitLevelChange` on Enter→blur — fixed via `justCommittedRef`: Enter sets the ref before committing; `onBlur` skips commit when ref is set, then resets it. [`BudgetToggle.tsx`]
+- [x] [Review][Patch] Escape key commits in-progress edit instead of reverting — fixed: Escape handler restores `inputValue` to stored `characterLevel` then blurs; blur skips commit via ref. [`BudgetToggle.tsx`]
 - [x] [Review][Defer] Scoring weight formula `allocatedPoints * node.maxPoints` — Blind Hunter flagged this as potentially inverted (fill-ratio vs. multiply). Pre-existing scoring logic; not introduced by this story. [`scoringEngine.ts:61`] — deferred, pre-existing
 - [x] [Review][Defer] Focus ring via React `isFocused` state shows on mouse click — `outline` toggled by `onFocus`/`onBlur` fires for pointer users too, not just keyboard users; CSS `:focus-visible` would be more correct. Pre-existing inline-style pattern across the codebase. [`BudgetToggle.tsx:60`] — deferred, pre-existing pattern
 - [x] [Review][Defer] `MAX_PASSIVE_POINTS` evaluated at module load time — future footgun if formula becomes configurable per season. Not a current bug. [`budgetCalculator.ts:10`] — deferred, pre-existing

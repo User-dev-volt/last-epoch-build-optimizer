@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useBuildStore } from './buildStore'
+import { useBuildStore, selectAvailablePassivePoints } from './buildStore'
 import type { BuildState, BuildMeta } from '../types/build'
 import type { TreeData } from '../types/treeData'
 
@@ -217,6 +217,29 @@ describe('buildStore — setCharacterLevel and setBudgetEnforced', () => {
     useBuildStore.getState().setActiveBuild(null)
     useBuildStore.getState().setBudgetEnforced(true)
     expect(useBuildStore.getState().activeBuild).toBeNull()
+  })
+})
+
+describe('selectAvailablePassivePoints', () => {
+  beforeEach(() => {
+    useBuildStore.setState(initialState, true)
+  })
+
+  it('returns 0 when activeBuild is null', () => {
+    const s = useBuildStore.getState()
+    expect(selectAvailablePassivePoints(s)).toBe(0)
+  })
+
+  it('returns calculatePassivePoints(characterLevel) for the active build', () => {
+    useBuildStore.getState().setActiveBuild({ ...mockBuild, characterLevel: 50 })
+    const s = useBuildStore.getState()
+    expect(selectAvailablePassivePoints(s)).toBe(48)
+  })
+
+  it('updates when setCharacterLevel is called', () => {
+    useBuildStore.getState().setActiveBuild(mockBuild)
+    useBuildStore.getState().setCharacterLevel(100)
+    expect(selectAvailablePassivePoints(useBuildStore.getState())).toBe(98)
   })
 })
 

@@ -2,10 +2,11 @@ import { create } from 'zustand'
 import type { BuildState, BuildMeta, ApplyNodeResult, GearItem, ActiveSkill, IdolItem } from '../types/build'
 import type { SkillEntry } from '../types/gameData'
 import type { TreeData } from '../types/treeData'
+import { calculatePassivePoints } from '../utils/budgetCalculator'
 
 const MAX_UNDO_STACK = 10
 
-interface BuildStore {
+export interface BuildStore {
   activeBuild: BuildState | null
   savedBuilds: BuildMeta[]
   isImporting: boolean
@@ -40,6 +41,9 @@ interface BuildStore {
   updateContextSkills: (skills: ActiveSkill[]) => void
   updateContextIdols: (idols: IdolItem[]) => void
 }
+
+export const selectAvailablePassivePoints = (s: BuildStore): number =>
+  calculatePassivePoints(s.activeBuild?.characterLevel ?? 1)
 
 export const useBuildStore = create<BuildStore>()((set, get) => ({
   activeBuild: null,

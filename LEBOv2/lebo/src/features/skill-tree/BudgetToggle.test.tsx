@@ -99,6 +99,25 @@ describe('BudgetToggle', () => {
     expect(mockSetCharacterLevel).toHaveBeenCalledWith(75)
   })
 
+  it('does not double-write to store when Enter is followed by blur with same value', () => {
+    render(<BudgetToggle />)
+    const input = screen.getByRole('spinbutton', { name: /character level/i })
+    fireEvent.change(input, { target: { value: '75' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    fireEvent.blur(input)
+    expect(mockSetCharacterLevel).toHaveBeenCalledTimes(1)
+    expect(mockSetCharacterLevel).toHaveBeenCalledWith(75)
+  })
+
+  it('reverts to stored level on Escape and does not write to store', () => {
+    render(<BudgetToggle />)
+    const input = screen.getByRole('spinbutton', { name: /character level/i })
+    fireEvent.change(input, { target: { value: '77' } })
+    fireEvent.keyDown(input, { key: 'Escape' })
+    expect(mockSetCharacterLevel).not.toHaveBeenCalled()
+    expect((input as HTMLInputElement).value).toBe('10')
+  })
+
   it('calls setBudgetEnforced exactly once when switch is clicked', () => {
     render(<BudgetToggle />)
     const toggle = screen.getByRole('switch', { name: /enforce level budget/i })

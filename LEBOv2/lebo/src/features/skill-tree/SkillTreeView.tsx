@@ -4,7 +4,7 @@ import type { ActiveSkill } from '../../shared/types/build'
 import type { NodeChange } from '../../shared/types/optimization'
 import type { HighlightedNodes, SkillTreeCanvasHandle } from './types'
 import { useGameDataStore } from '../../shared/stores/gameDataStore'
-import { useBuildStore } from '../../shared/stores/buildStore'
+import { useBuildStore, selectAvailablePassivePoints } from '../../shared/stores/buildStore'
 import { useOptimizationStore } from '../../shared/stores/optimizationStore'
 import { useAppStore } from '../../shared/stores/appStore'
 import { buildTreeData, buildSkillTreeData } from './treeDataTransformer'
@@ -20,7 +20,6 @@ import { useIconTextures } from '../icon-pipeline/useIconTextures'
 import { BudgetToggle } from './BudgetToggle'
 import { UnspentCounter } from './UnspentCounter'
 import { LevelDisplay } from './LevelDisplay'
-import { calculatePassivePoints } from '../../shared/utils/budgetCalculator'
 
 const EMPTY_ALLOCATED: Record<string, number> = {}
 const EMPTY_SKILL_ALLOC: Record<string, Record<string, number>> = {}
@@ -74,6 +73,7 @@ export function SkillTreeView() {
   const activeBuildId = useBuildStore((s) => s.activeBuild?.id ?? null)
   const characterLevel = useBuildStore((s) => s.activeBuild?.characterLevel ?? 1)
   const budgetEnforced = useBuildStore((s) => s.activeBuild?.budgetEnforced ?? false)
+  const availablePassivePoints = useBuildStore(selectAvailablePassivePoints)
   const highlightedNodeIds = useOptimizationStore((s) => s.highlightedNodeIds)
   const previewSuggestionRank = useOptimizationStore((s) => s.previewSuggestionRank)
   const suggestions = useOptimizationStore((s) => s.suggestions)
@@ -352,7 +352,7 @@ export function SkillTreeView() {
   const activeAllocations = isPassiveTab ? nodeAllocations : slotAllocations
 
   const allocatedPassivePoints = Object.values(baseAllocatedNodes).reduce((sum, v) => sum + v, 0)
-  const unspentPassivePoints = calculatePassivePoints(characterLevel) - allocatedPassivePoints
+  const unspentPassivePoints = availablePassivePoints - allocatedPassivePoints
 
   const hoveredGameNode = hoveredNodeId ? activeGameNodes[hoveredNodeId] : null
   const errorGameNode = nodeError ? activeGameNodes[nodeError.nodeId] : null

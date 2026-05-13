@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Field, Label, Switch } from '@headlessui/react'
 import { useBuildStore } from '../../shared/stores/buildStore'
 import { MAX_CHARACTER_LEVEL } from '../../shared/utils/budgetCalculator'
@@ -12,6 +12,7 @@ export function BudgetToggle() {
 
   const [inputValue, setInputValue] = useState(String(characterLevel))
   const [isFocused, setIsFocused] = useState(false)
+  const justCommittedRef = useRef(false)
 
   // Sync local input string from store when level changes externally (build switch, undo)
   // and the input is not currently being edited.
@@ -31,7 +32,11 @@ export function BudgetToggle() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter') commitLevelChange()
+    if (e.key === 'Enter') {
+      justCommittedRef.current = true
+      commitLevelChange()
+    }
+    if (e.key === 'Escape') { setInputValue(String(characterLevel)); e.currentTarget.blur() }
   }
 
   return (
@@ -45,7 +50,11 @@ export function BudgetToggle() {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onFocus={() => setIsFocused(true)}
-          onBlur={() => { commitLevelChange(); setIsFocused(false) }}
+          onBlur={() => {
+            if (!justCommittedRef.current) commitLevelChange()
+            justCommittedRef.current = false
+            setIsFocused(false)
+          }}
           onKeyDown={handleKeyDown}
           aria-label="Character level"
           style={{
