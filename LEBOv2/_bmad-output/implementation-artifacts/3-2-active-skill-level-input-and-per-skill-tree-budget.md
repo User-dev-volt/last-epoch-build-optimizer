@@ -252,6 +252,19 @@ Follow patterns from `BudgetToggle.test.tsx` (for `SkillLevelInput`):
 - `SkillTreeView.tsx` lines 352–355 — existing `allocatedPassivePoints` / `unspentPassivePoints` pattern
 - `SkillTreeView.tsx` lines 391–419 — skill tab header and budget row structure
 
+## Review Findings
+
+- [ ] [Review][Patch] SkillLevelInput subscribes to `s.activeBuild` (whole-object reference), causing re-renders on any build mutation — narrow to `s.activeBuild !== null` or fold null check into `storedLevel` selector [SkillLevelInput.tsx:15]
+- [x] [Review][Defer] Scoring weight formula `allocatedPoints * node.maxPoints` in scoringEngine — pre-existing, not introduced by this story [scoringEngine.ts:56] — deferred, pre-existing
+- [x] [Review][Defer] `type: 'unknown'` hardcoded in gameDataLoader — SkillEntry.type always 'unknown'; meaningful values never populated [gameDataLoader.ts:112] — deferred, scope creep
+- [x] [Review][Defer] Quest-reward passive points excluded from budget — documented in code comment; up to 15 additional points vary by playthrough completion [budgetCalculator.ts:2] — deferred, pre-existing
+- [x] [Review][Defer] calculatePassivePoints formula correction (level+20 → level-2) shows negative counters for brownfield builds — covered by spec AC8; Story 3.3 handles enforcement — deferred, pre-existing
+- [x] [Review][Defer] calculateSkillPoints is a pure identity function `return level` — intentional per spec; abstraction point for future formula changes [budgetCalculator.ts:17] — deferred, pre-existing
+- [x] [Review][Defer] migrateBuildState doesn't guard array or non-number values in activeSkillLevels — follows established project pattern (skillNodeAllocations uses identical approach) [buildPersistence.ts:27] — deferred, pre-existing
+- [x] [Review][Defer] setSkillLevel no range validation in store — intentional; consistent with setCharacterLevel pattern; UI layer guarantees valid values [buildStore.ts:98] — deferred, pre-existing
+- [x] [Review][Defer] BudgetToggle controlled-input refactor not documented in story 3.2 log — correct implementation but scope creep from Story 3.1; works and is tested [BudgetToggle.tsx] — deferred, pre-existing
+- [x] [Review][Defer] Corrupted data edge cases (negative allocations, float values in slotAllocations/scoringEngine) — pre-existing concern across multiple files; not in scope [scoringEngine.ts, SkillTreeView.tsx] — deferred, pre-existing
+
 ## Dev Agent Record
 
 ### Implementation Plan

@@ -1,3 +1,13 @@
+## Deferred from: code review of 3-2-active-skill-level-input-and-per-skill-tree-budget (2026-05-13)
+
+- **SkillLevelInput subscribes to `s.activeBuild` (whole-object reference)** — `SkillLevelInput.tsx:15` — Causes re-renders on any build mutation (gear, allocations, etc.). Should narrow to `s.activeBuild !== null` or fold null check into `storedLevel` selector (left as patch action item in story).
+- **`type: 'unknown'` always hardcoded in gameDataLoader** — `gameDataLoader.ts:112` — SkillEntry.type field added with union `'spell'|'melee'|'ranged'|'unknown'` but transformer always emits `'unknown'`; scope creep beyond Story 3.2; meaningful values never populated.
+- **Quest-reward passive points excluded from budget** — `budgetCalculator.ts:2` — Up to 15 additional passive points from quest rewards vary by playthrough; excluded by design with code comment. No story currently scoped to address this.
+- **calculatePassivePoints formula correction shows negative counters for brownfield builds** — Formula changed from `level+20` to `level-2` (wiki-verified). Brownfield saves with 100+ allocated passive points at high level will display negative unspent counters. Covered by AC8 (render as-is); Story 3.3 adds enforcement.
+- **BudgetToggle controlled-input refactor undocumented in story 3.2** — `BudgetToggle.tsx` — Full controlled-input pattern (blur/Enter/Escape/useEffect sync) applied to BudgetToggle; scope from Story 3.1 that was completed in 3.2. Correct and tested; story log doesn't account for this work.
+- **migrateBuildState doesn't validate array or non-number values in activeSkillLevels** — `buildPersistence.ts:27` — Follows established project pattern (skillNodeAllocations uses identical object-cast approach). Arrays would pass the typeof object check; values not validated as numbers. Consistent with existing migration design.
+- **Corrupted data edge cases in slotAllocations/scoringEngine** — Negative allocation values or float values from corrupted persistence are not guarded. Pre-existing pattern across multiple files. No story currently scoped.
+
 ## Deferred from: code review of 3-1-character-level-input (2026-05-13)
 
 - **Scoring weight formula `allocatedPoints * node.maxPoints`** — `scoringEngine.ts:61` — Blind Hunter flagged as potentially inverted (fill-ratio intent vs. multiply). Pre-existing scoring logic not touched by this story. Revisit when scoring model is formally reviewed.
