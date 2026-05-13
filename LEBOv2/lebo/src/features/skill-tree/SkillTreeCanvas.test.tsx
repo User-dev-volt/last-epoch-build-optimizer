@@ -17,6 +17,10 @@ const mockDestroy = vi.fn()
 const mockSetReducedMotion = vi.fn()
 const mockTriggerFlash = vi.fn()
 
+const mockFitToTree = vi.fn()
+const mockZoomIn = vi.fn()
+const mockZoomOut = vi.fn()
+
 const mockRenderer: RendererInstance = {
   renderTree: mockRenderTree,
   resize: mockResize,
@@ -25,6 +29,9 @@ const mockRenderer: RendererInstance = {
   addTickerListener: mockAddTickerListener,
   setReducedMotion: mockSetReducedMotion,
   triggerFlash: mockTriggerFlash,
+  fitToTree: mockFitToTree,
+  zoomIn: mockZoomIn,
+  zoomOut: mockZoomOut,
 }
 
 vi.mock('./pixiRenderer', () => ({
@@ -48,6 +55,7 @@ const DEFAULT_PROPS = {
   iconTextures: new Map<string, import('pixi.js').Texture>(),
   onNodeClick: vi.fn(),
   onNodeHover: vi.fn(),
+  onNodeContextMenu: vi.fn(),
   onKeyboardNavigate: vi.fn(),
 }
 
@@ -106,13 +114,16 @@ describe('SkillTreeCanvas keyboard overlay', () => {
     expect(onNodeClick).toHaveBeenCalledWith(expect.any(String), 0)
   })
 
-  it('onContextMenu on focused button fires onNodeClick with (nodeId, 2)', async () => {
+  it('onContextMenu on focused button fires onNodeContextMenu (not onNodeClick)', async () => {
     const onNodeClick = vi.fn()
-    await renderCanvas({ ...DEFAULT_PROPS, onNodeClick })
+    const onNodeContextMenu = vi.fn()
+    await renderCanvas({ ...DEFAULT_PROPS, onNodeClick, onNodeContextMenu })
     const buttons = screen.getAllByRole('button')
     fireEvent.contextMenu(buttons[0])
-    expect(onNodeClick).toHaveBeenCalledTimes(1)
-    expect(onNodeClick).toHaveBeenCalledWith(expect.any(String), 2)
+    // Right-click opens context menu — onNodeClick must NOT be called
+    expect(onNodeClick).not.toHaveBeenCalled()
+    expect(onNodeContextMenu).toHaveBeenCalledTimes(1)
+    expect(onNodeContextMenu).toHaveBeenCalledWith(expect.any(String), expect.any(Number), expect.any(Number))
   })
 
   it('Escape on focused button fires onKeyboardNavigate(null, 0, 0)', async () => {

@@ -2,14 +2,16 @@ import { useMemo, useEffect, useState, useCallback, useRef } from 'react'
 import type { GameNode } from '../../shared/types/gameData'
 import type { ActiveSkill } from '../../shared/types/build'
 import type { NodeChange } from '../../shared/types/optimization'
-import type { HighlightedNodes } from './types'
+import type { HighlightedNodes, SkillTreeCanvasHandle } from './types'
 import { useGameDataStore } from '../../shared/stores/gameDataStore'
 import { useBuildStore } from '../../shared/stores/buildStore'
 import { useOptimizationStore } from '../../shared/stores/optimizationStore'
+import { useAppStore } from '../../shared/stores/appStore'
 import { buildTreeData, buildSkillTreeData } from './treeDataTransformer'
 import { SkillTreeCanvas } from './SkillTreeCanvas'
 import { EmptyTreeState } from './EmptyTreeState'
 import { NodeTooltip } from './NodeTooltip'
+import { NodeContextMenu } from './NodeContextMenu'
 import { SkillTreeTabBar } from './SkillTreeTabBar'
 import { useSkillTree } from './useSkillTree'
 import { SkillPickerGrid } from '../skill-picker/SkillPickerGrid'
@@ -69,16 +71,23 @@ export function SkillTreeView() {
   const highlightedNodeIds = useOptimizationStore((s) => s.highlightedNodeIds)
   const previewSuggestionRank = useOptimizationStore((s) => s.previewSuggestionRank)
   const suggestions = useOptimizationStore((s) => s.suggestions)
+  const selectedNodeId = useAppStore((s) => s.selectedNodeId)
+  const setSelectedNodeId = useAppStore((s) => s.setSelectedNodeId)
 
   const [activeTabIndex, setActiveTabIndex] = useState(0)
   const [pickerState, setPickerState] = useState<PickerState | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const emptySlotButtonRef = useRef<HTMLButtonElement>(null)
 
+  // Canvas refs for imperative viewport control (fit, zoom)
+  const passiveCanvasRef = useRef<SkillTreeCanvasHandle>(null)
+  const skillCanvasRef = useRef<SkillTreeCanvasHandle>(null)
+
   useEffect(() => {
     setActiveTabIndex(0)
     setPickerState(null)
-  }, [activeBuildId])
+    setSelectedNodeId(null)
+  }, [activeBuildId, setSelectedNodeId])
 
   useEffect(() => {
     if (activeTabIndex > 5) {
@@ -213,9 +222,13 @@ export function SkillTreeView() {
     keyboardFocusedNodeId,
     keyboardPosition,
     flashNodeIds,
+    contextMenu,
     handleNodeClick,
+    handleNodeSelect,
     handleNodeHover,
-    handleMouseMove,
+    handleNodeContextMenu,
+    handleContextMenuClose,
+    handlePointerMove,
     handleKeyboardNavigate,
   } = isPassiveTab ? passiveInteraction : skillInteraction
 
@@ -223,7 +236,8 @@ export function SkillTreeView() {
     setActiveTabIndex(index)
     setPickerState(null)
     setSearchQuery('')
-  }, [])
+    setSelectedNodeId(null)
+  }, [setSelectedNodeId])
 
   const handleReset = useCallback(() => {
     if (isPassiveTab) {
@@ -279,6 +293,12 @@ export function SkillTreeView() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [undoNodeChange])
+
+  // Context menu actions — allocate/remove delegate to handleNodeClick
+  const handleContextMenuAllocate = useCallback((nodeId: string) => handleNodeClick(nodeId, 0), [handleNodeClick])
+  const handleContextMenuRemove = useCallback((nodeId: string) => handleNodeClick(nodeId, 2), [handleNodeClick])
+  // "View in panel" is a future feature stub — node is already shown in tooltip on hover
+  const handleContextMenuViewInPanel = useCallback((_nodeId: string) => {}, [])
 
   if (isLoading) {
     return (
@@ -349,6 +369,9 @@ export function SkillTreeView() {
     ? treeData !== null
     : activeSkill !== null && skillTreeData !== null && !isPickerFullPanel
 
+  // Active canvas ref (for any external calls)
+  const activeCanvasRef = isPassiveTab ? passiveCanvasRef : skillCanvasRef
+
   return (
     <div id="skill-tree-canvas" className="flex flex-col h-full">
       <SkillTreeTabBar
@@ -382,20 +405,27 @@ export function SkillTreeView() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onReset={handleReset}
+          onFit={() => activeCanvasRef.current?.fitToTree()}
         />
       )}
 
-      <div className="flex-1 min-h-0 relative" onMouseMove={handleMouseMove} onMouseLeave={() => handleNodeHover(null)}>
+      {/* No onMouseMove on this div — pointer position comes from native listener inside SkillTreeCanvas */}
+      <div className="flex-1 min-h-0 relative" onMouseLeave={() => handleNodeHover(null)}>
         {isPassiveTab ? (
           <>
             <SkillTreeCanvas
+              ref={passiveCanvasRef}
               treeData={treeData!}
               nodeAllocations={nodeAllocations}
               highlightedNodes={passiveHighlightedNodes}
               iconTextures={iconTextures}
+              selectedNodeId={selectedNodeId}
               onNodeClick={handleNodeClick}
               onNodeHover={handleNodeHover}
+              onNodeSelect={handleNodeSelect}
+              onNodeContextMenu={handleNodeContextMenu}
               onKeyboardNavigate={handleKeyboardNavigate}
+              onPointerMove={handlePointerMove}
               flashNodeIds={flashNodeIds ?? undefined}
             />
 
@@ -438,13 +468,18 @@ export function SkillTreeView() {
         ) : activeSkill && skillTreeData ? (
           <>
             <SkillTreeCanvas
+              ref={skillCanvasRef}
               treeData={skillTreeData}
               nodeAllocations={slotAllocations}
               highlightedNodes={skillHighlightedNodes}
               iconTextures={iconTextures}
+              selectedNodeId={selectedNodeId}
               onNodeClick={handleNodeClick}
               onNodeHover={handleNodeHover}
+              onNodeSelect={handleNodeSelect}
+              onNodeContextMenu={handleNodeContextMenu}
               onKeyboardNavigate={handleKeyboardNavigate}
+              onPointerMove={handlePointerMove}
               flashNodeIds={flashNodeIds ?? undefined}
             />
 
@@ -489,6 +524,18 @@ export function SkillTreeView() {
           </div>
         )}
       </div>
+
+      {/* Context menu — appears on right-click over a node */}
+      {contextMenu && (
+        <NodeContextMenu
+          nodeId={contextMenu.nodeId}
+          position={{ x: contextMenu.x, y: contextMenu.y }}
+          onAllocate={handleContextMenuAllocate}
+          onRemove={handleContextMenuRemove}
+          onViewInPanel={handleContextMenuViewInPanel}
+          onClose={handleContextMenuClose}
+        />
+      )}
 
       {pickerState?.isPopover && (
         <>

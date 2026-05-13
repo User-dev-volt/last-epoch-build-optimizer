@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useSkillTree } from './useSkillTree'
 import { useBuildStore } from '../../shared/stores/buildStore'
+import { useAppStore } from '../../shared/stores/appStore'
 import type { TreeData } from '../../shared/types/treeData'
 
 const initialState = useBuildStore.getState()
@@ -97,6 +98,39 @@ describe('useSkillTree', () => {
     const { result } = renderHook(() => useSkillTree(null))
     act(() => result.current.handleNodeClick('root', 0))
     expect(useBuildStore.getState().activeBuild).toBeNull()
+  })
+
+  // ── Review-finding fixes ────────────────────────────────────────────────
+
+  it('handleNodeSelect sets selectedNodeId in appStore', () => {
+    const { result } = renderHook(() => useSkillTree(mockTreeData))
+    act(() => result.current.handleNodeSelect('root'))
+    expect(useAppStore.getState().selectedNodeId).toBe('root')
+  })
+
+  it('handleNodeSelect does NOT allocate the node', () => {
+    const { result } = renderHook(() => useSkillTree(mockTreeData))
+    act(() => result.current.handleNodeSelect('root'))
+    expect(useBuildStore.getState().activeBuild?.nodeAllocations['root']).toBeUndefined()
+  })
+
+  it('handleNodeContextMenu sets contextMenu state with nodeId and position', () => {
+    const { result } = renderHook(() => useSkillTree(mockTreeData))
+    act(() => result.current.handleNodeContextMenu('root', 200, 300))
+    expect(result.current.contextMenu).toEqual({ nodeId: 'root', x: 200, y: 300 })
+  })
+
+  it('handleContextMenuClose clears contextMenu', () => {
+    const { result } = renderHook(() => useSkillTree(mockTreeData))
+    act(() => result.current.handleNodeContextMenu('root', 200, 300))
+    act(() => result.current.handleContextMenuClose())
+    expect(result.current.contextMenu).toBeNull()
+  })
+
+  it('handlePointerMove updates mousePosition without React event', () => {
+    const { result } = renderHook(() => useSkillTree(mockTreeData))
+    act(() => result.current.handlePointerMove(150, 250))
+    expect(result.current.mousePosition).toEqual({ x: 150, y: 250 })
   })
 
   it('flashNodeIds is null initially', () => {

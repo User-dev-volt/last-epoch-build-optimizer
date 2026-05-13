@@ -56,4 +56,20 @@ describe('TreeControls', () => {
     )
     expect(await axe(container)).toHaveNoViolations()
   })
+
+  // ── Review-finding fixes ─────────────────────────────────────────────────
+
+  it('Fit button is not rendered when onFit is not provided', () => {
+    render(<TreeControls searchQuery="" onSearchChange={vi.fn()} onReset={vi.fn()} />)
+    expect(screen.queryByRole('button', { name: 'Fit tree to view' })).not.toBeInTheDocument()
+  })
+
+  it('Fit button is rendered and calls onFit when onFit is provided', () => {
+    const onFit = vi.fn()
+    render(<TreeControls searchQuery="" onSearchChange={vi.fn()} onReset={vi.fn()} onFit={onFit} />)
+    const fitBtn = screen.getByRole('button', { name: 'Fit tree to view' })
+    expect(fitBtn).toBeInTheDocument()
+    fireEvent.click(fitBtn)
+    expect(onFit).toHaveBeenCalledTimes(1)
+  })
 })

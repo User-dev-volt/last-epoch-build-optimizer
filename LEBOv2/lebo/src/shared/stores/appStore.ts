@@ -20,6 +20,7 @@ interface AppStore {
   updateProgress: number
   updateDismissed: boolean
   iconSource: 'game-files' | 'community-cdn' | 'placeholder' | null
+  selectedNodeId: string | null
   setOnline: (online: boolean) => void
   setCurrentView: (view: 'main' | 'settings') => void
   setPanelState: (panel: 'left' | 'right', state: PanelCollapseState) => void
@@ -31,6 +32,7 @@ interface AppStore {
   setUpdateProgress: (progress: number) => void
   setUpdateDismissed: (dismissed: boolean) => void
   setIconSource: (v: 'game-files' | 'community-cdn' | 'placeholder') => void
+  setSelectedNodeId: (id: string | null) => void
 }
 
 export const useAppStore = create<AppStore>()((set) => ({
@@ -46,6 +48,7 @@ export const useAppStore = create<AppStore>()((set) => ({
   updateProgress: 0,
   updateDismissed: false,
   iconSource: null,
+  selectedNodeId: null,
   setOnline: (online) => set({ isOnline: online, isOnlineChecked: true }),
   setCurrentView: (view) => set({ currentView: view }),
   setPanelState: (panel, state) =>
@@ -58,4 +61,5 @@ export const useAppStore = create<AppStore>()((set) => ({
   setUpdateProgress: (progress) => set({ updateProgress: progress }),
   setUpdateDismissed: (dismissed) => set({ updateDismissed: dismissed }),
   setIconSource: (v) => set({ iconSource: v }),
+  setSelectedNodeId: (id) => set({ selectedNodeId: id }),
 }))

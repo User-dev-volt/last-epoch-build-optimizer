@@ -1,11 +1,13 @@
 import type { Texture } from 'pixi.js'
-import type { TreeData, HighlightedNodes } from '../../shared/types/treeData'
+import type { TreeData, HighlightedNodes, TreeNode } from '../../shared/types/treeData'
 
 export type { NodeSize, NodeState, HighlightedNodes, TreeNode, TreeEdge, TreeData } from '../../shared/types/treeData'
 
 export interface RendererCallbacks {
   onNodeClick: (nodeId: string, button: 0 | 2) => void
   onNodeHover: (nodeId: string | null) => void
+  onNodeSelect?: (nodeId: string) => void
+  onNodeContextMenu?: (nodeId: string, screenX: number, screenY: number) => void
 }
 
 export interface RendererInstance {
@@ -13,7 +15,8 @@ export interface RendererInstance {
     data: TreeData,
     nodeAllocations: Record<string, number>,
     highlightedNodes: HighlightedNodes,
-    iconTextures: Map<string, Texture>
+    iconTextures: Map<string, Texture>,
+    selectedNodeId?: string | null
   ): void
   resize(w: number, h: number): void
   destroy(): void
@@ -21,6 +24,15 @@ export interface RendererInstance {
   addTickerListener(fn: () => void): () => void
   setReducedMotion(enabled: boolean): void
   triggerFlash(nodeIds: string[]): void
+  fitToTree(nodes: TreeNode[]): void
+  zoomIn(): void
+  zoomOut(): void
+}
+
+export interface SkillTreeCanvasHandle {
+  fitToTree(): void
+  zoomIn(): void
+  zoomOut(): void
 }
 
 export interface SkillTreeCanvasProps {
@@ -28,8 +40,13 @@ export interface SkillTreeCanvasProps {
   nodeAllocations: Record<string, number>
   highlightedNodes: HighlightedNodes
   iconTextures: Map<string, Texture>
+  selectedNodeId?: string | null
   onNodeClick: (nodeId: string, button: 0 | 2) => void
   onNodeHover: (nodeId: string | null) => void
+  onNodeSelect?: (nodeId: string) => void
+  onNodeContextMenu?: (nodeId: string, screenX: number, screenY: number) => void
   onKeyboardNavigate: (nodeId: string | null, screenX: number, screenY: number) => void
+  onPointerMove?: (x: number, y: number) => void
   flashNodeIds?: string[]
+  ref?: React.Ref<SkillTreeCanvasHandle>
 }

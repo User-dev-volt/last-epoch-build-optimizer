@@ -4,9 +4,10 @@ interface TreeControlsProps {
   searchQuery: string
   onSearchChange: (query: string) => void
   onReset: () => void
+  onFit?: () => void
 }
 
-export function TreeControls({ searchQuery, onSearchChange, onReset }: TreeControlsProps) {
+export function TreeControls({ searchQuery, onSearchChange, onReset, onFit }: TreeControlsProps) {
   const [focused, setFocused] = useState(false)
 
   return (
@@ -37,6 +38,26 @@ export function TreeControls({ searchQuery, onSearchChange, onReset }: TreeContr
       >
         Reset
       </button>
+
+      {onFit && (
+        <button
+          type="button"
+          aria-label="Fit tree to view"
+          onClick={onFit}
+          style={{
+            height: 28,
+            background: 'transparent',
+            border: '1px solid var(--color-bg-elevated)',
+            borderRadius: 4,
+            padding: '0 8px',
+            fontSize: 12,
+            color: 'var(--color-text-secondary)',
+            cursor: 'pointer',
+          }}
+        >
+          Fit
+        </button>
+      )}
 
       <div style={{ position: 'relative', width: 200, marginLeft: 'auto' }}>
         <input

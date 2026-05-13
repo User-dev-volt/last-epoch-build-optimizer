@@ -103,7 +103,7 @@ export async function initRenderer(
     resolution: window.devicePixelRatio || 1,
   })
 
-  // Prevent browser context menu on right-click so right-click node removal works
+  // Prevent browser context menu on right-click so right-click node action works
   const onContextMenu = (e: Event) => e.preventDefault()
   app.canvas.addEventListener('contextmenu', onContextMenu)
 
@@ -120,14 +120,16 @@ export async function initRenderer(
   const previewAddedGraphics = new Graphics()
   const searchDimOverlayGraphics = new Graphics()
   const searchHighlightGraphics = new Graphics()
-  // Pure interaction layer — no rendering, just hitArea containers
-  const hitAreaContainer = new Container()
   // Text labels for point counts
   const labelContainer = new Container()
-  // Flash animation layer — above labels, below hit areas; managed independently of renderTree
+  // Flash animation layer — above labels, below selection/hit areas
   const flashContainer = new Container()
   // Icon sprites — above node backgrounds, below suggestion/preview overlays and labels
   const iconContainer = new Container()
+  // Selection ring — above all node/label layers, below hit areas
+  const selectionGraphics = new Graphics()
+  // Pure interaction layer — no rendering, just hitArea containers
+  const hitAreaContainer = new Container()
 
   worldContainer.addChild(
     edgeGraphics,
@@ -143,26 +145,32 @@ export async function initRenderer(
     searchHighlightGraphics,
     labelContainer,
     flashContainer,
+    selectionGraphics,
     hitAreaContainer,
   )
 
   worldContainer.scale.set(0.6)
 
-  // Pan
+  // Pan — with 4px drag threshold so a short click drift doesn't pan
   app.stage.eventMode = 'static'
   app.stage.hitArea = app.screen
 
   let dragging = false
   let dragOrigin = { x: 0, y: 0 }
   let panOrigin = { x: 0, y: 0 }
+  const DRAG_THRESHOLD = 4
 
   app.stage.on('pointerdown', (e) => {
-    dragging = true
     dragOrigin = { x: e.global.x, y: e.global.y }
     panOrigin = { x: worldContainer.x, y: worldContainer.y }
   })
   app.stage.on('pointermove', (e) => {
-    if (!dragging) return
+    if (!dragging) {
+      const dx = e.global.x - dragOrigin.x
+      const dy = e.global.y - dragOrigin.y
+      if (Math.sqrt(dx * dx + dy * dy) < DRAG_THRESHOLD) return
+      dragging = true
+    }
     worldContainer.x = panOrigin.x + (e.global.x - dragOrigin.x)
     worldContainer.y = panOrigin.y + (e.global.y - dragOrigin.y)
   })
@@ -173,9 +181,9 @@ export async function initRenderer(
     dragging = false
   })
 
-  // Zoom toward cursor
+  // Zoom toward cursor — range 0.3x–2.5x (AC requirement)
   const MIN_ZOOM = 0.3
-  const MAX_ZOOM = 1.5
+  const MAX_ZOOM = 2.5
 
   app.canvas.addEventListener(
     'wheel',
@@ -193,10 +201,21 @@ export async function initRenderer(
     { passive: false }
   )
 
+  // Double-click detection for allocate; single-click for select
+  let lastClickedId: string | null = null
+  let lastClickTime = 0
+  const DOUBLE_CLICK_DELAY = 300
+
   let lastRenderedNodeMap: Map<string, TreeNode> = new Map()
   let iconTexturesMap: Map<string, Texture> = new Map()
   let lastRenderedIconIds = new Set<string>()
   let lastTreeId: string | undefined
+
+  // Canvas dimensions — tracked by resize(), used by fitToTree/zoomIn/zoomOut
+  let canvasW = 0
+  let canvasH = 0
+  // If fitToTree is called before canvas has dimensions, defer until first valid resize
+  let pendingFitNodes: TreeNode[] | null = null
 
   interface PendingIconAnim {
     sprite: Sprite
@@ -223,16 +242,18 @@ export async function initRenderer(
     data: TreeData,
     nodeAllocations: Record<string, number>,
     highlightedNodes: HighlightedNodes,
-    iconTextures: Map<string, Texture>
+    iconTextures: Map<string, Texture>,
+    selectedNodeId?: string | null
   ) {
     iconTexturesMap = iconTextures
     lastRenderedNodeMap = new Map(data.nodes.map((n) => [n.id, n]))
 
-    // Reset icon tracking when the tree changes (all icons animate in fresh)
+    // Auto-fit when the tree changes (mastery switch or first load)
     const currentTreeId = data.nodes[0]?.id
     if (currentTreeId !== lastTreeId) {
       lastRenderedIconIds = new Set()
       lastTreeId = currentTreeId
+      fitToTree(data.nodes)
     }
     const prevIconIds = lastRenderedIconIds
     const newIconIds = new Set<string>()
@@ -247,6 +268,7 @@ export async function initRenderer(
     previewAddedGraphics.clear()
     searchDimOverlayGraphics.clear()
     searchHighlightGraphics.clear()
+    selectionGraphics.clear()
     iconContainer.removeChildren()
     hitAreaContainer.removeChildren()
     labelContainer.removeChildren()
@@ -267,7 +289,8 @@ export async function initRenderer(
 
     for (const node of data.nodes) {
       const r = NODE_RADIUS[node.size]
-      const isAllocated = nodeAllocations[node.id] !== undefined
+      // Fix: key exists with value 0 means NOT allocated — must check value > 0
+      const isAllocated = (nodeAllocations[node.id] ?? 0) > 0
       const isGlowing = highlightedNodes.glowing.has(node.id)
       const isDimmed = highlightedNodes.dimmed.has(node.id) && !isGlowing
       const isPreviewRemoved = highlightedNodes.previewRemoved.has(node.id)
@@ -293,6 +316,11 @@ export async function initRenderer(
       const isSearchDimmed = highlightedNodes.searchDimmed.has(node.id)
       if (isSearchDimmed && !isGlowing) drawSearchDimOverlay(searchDimOverlayGraphics, node.x, node.y, r)
       if (isSearchHighlighted) drawSearchHighlight(searchHighlightGraphics, node.x, node.y, r)
+
+      // Selection ring — white border around the selected node, drawn above all other node layers
+      if (selectedNodeId === node.id) {
+        selectionGraphics.circle(node.x, node.y, r + 4).stroke({ color: 0xffffff, width: 2.5 })
+      }
 
       // Icon sprite — centered in node, clipped to circle
       const texture = iconTexturesMap.get(node.id)
@@ -365,7 +393,24 @@ export async function initRenderer(
       hit.on('pointerout', () => callbacksRef.current.onNodeHover(null))
       hit.on('pointerdown', (e) => {
         e.stopPropagation()
-        callbacksRef.current.onNodeClick(node.id, e.button === 2 ? 2 : 0)
+        if (e.button === 2) {
+          // Right-click → context menu (not direct deallocate)
+          const rect = canvas.getBoundingClientRect()
+          callbacksRef.current.onNodeContextMenu?.(node.id, rect.left + e.global.x, rect.top + e.global.y)
+          return
+        }
+        const now = performance.now()
+        if (lastClickedId === node.id && now - lastClickTime < DOUBLE_CLICK_DELAY) {
+          // Double-click → allocate
+          lastClickedId = null
+          lastClickTime = 0
+          callbacksRef.current.onNodeClick(node.id, 0)
+        } else {
+          // Single-click → select only
+          lastClickedId = node.id
+          lastClickTime = now
+          callbacksRef.current.onNodeSelect?.(node.id)
+        }
       })
       hitAreaContainer.addChild(hit)
     }
@@ -375,19 +420,66 @@ export async function initRenderer(
 
   let reducedMotionEnabled = false
 
-  let initialCentered = false
-
   function setReducedMotion(enabled: boolean) {
     reducedMotionEnabled = enabled
+  }
+
+  function fitToTree(nodes: TreeNode[]) {
+    if (nodes.length === 0) return
+    if (canvasW === 0 || canvasH === 0) {
+      pendingFitNodes = nodes
+      return
+    }
+    pendingFitNodes = null
+    const xs = nodes.map((n) => n.x)
+    const ys = nodes.map((n) => n.y)
+    const minX = Math.min(...xs)
+    const maxX = Math.max(...xs)
+    const minY = Math.min(...ys)
+    const maxY = Math.max(...ys)
+    const PADDING = 60
+    const treeW = maxX - minX + PADDING * 2
+    const treeH = maxY - minY + PADDING * 2
+    const scaleX = canvasW / treeW
+    const scaleY = canvasH / treeH
+    const newScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(scaleX, scaleY)))
+    worldContainer.scale.set(newScale)
+    const treeCenterX = (minX + maxX) / 2
+    const treeCenterY = (minY + maxY) / 2
+    worldContainer.x = canvasW / 2 - treeCenterX * newScale
+    worldContainer.y = canvasH / 2 - treeCenterY * newScale
+  }
+
+  function zoomIn() {
+    const newScale = Math.min(MAX_ZOOM, worldContainer.scale.x * 1.25)
+    const cx = canvasW / 2
+    const cy = canvasH / 2
+    const cursorWorldX = (cx - worldContainer.x) / worldContainer.scale.x
+    const cursorWorldY = (cy - worldContainer.y) / worldContainer.scale.y
+    worldContainer.scale.set(newScale)
+    worldContainer.x = cx - cursorWorldX * newScale
+    worldContainer.y = cy - cursorWorldY * newScale
+  }
+
+  function zoomOut() {
+    const newScale = Math.max(MIN_ZOOM, worldContainer.scale.x / 1.25)
+    const cx = canvasW / 2
+    const cy = canvasH / 2
+    const cursorWorldX = (cx - worldContainer.x) / worldContainer.scale.x
+    const cursorWorldY = (cy - worldContainer.y) / worldContainer.scale.y
+    worldContainer.scale.set(newScale)
+    worldContainer.x = cx - cursorWorldX * newScale
+    worldContainer.y = cy - cursorWorldY * newScale
   }
 
   function resize(w: number, h: number) {
     app.renderer.resize(w, h)
     app.stage.hitArea = app.screen
-    if (!initialCentered && w > 0 && h > 0) {
-      worldContainer.x = w / 2
-      worldContainer.y = h / 2
-      initialCentered = true
+    canvasW = w
+    canvasH = h
+    // Execute any deferred fit that was requested before canvas had dimensions
+    if (pendingFitNodes && w > 0 && h > 0) {
+      fitToTree(pendingFitNodes)
     }
   }
 
@@ -461,5 +553,16 @@ export async function initRenderer(
     app.ticker.add(tick)
   }
 
-  return { renderTree, resize, destroy, getViewport, addTickerListener, setReducedMotion, triggerFlash }
+  return {
+    renderTree,
+    resize,
+    destroy,
+    getViewport,
+    addTickerListener,
+    setReducedMotion,
+    triggerFlash,
+    fitToTree,
+    zoomIn,
+    zoomOut,
+  }
 }

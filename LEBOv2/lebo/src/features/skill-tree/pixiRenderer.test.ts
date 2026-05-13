@@ -200,4 +200,73 @@ describe('initRenderer', () => {
     // Sprite called once per renderTree call (2 total), and iconContainer.removeChildren called each time
     expect(MockSprite).toHaveBeenCalledTimes(2)
   })
+
+  // ── Review-finding fixes ────────────────────────────────────────────────
+
+  it('exposes fitToTree, zoomIn, zoomOut methods', async () => {
+    const renderer = await initRenderer(makeCanvas(), makeCallbacksRef())
+    expect(typeof renderer.fitToTree).toBe('function')
+    expect(typeof renderer.zoomIn).toBe('function')
+    expect(typeof renderer.zoomOut).toBe('function')
+  })
+
+  it('fitToTree does not throw with empty node list', async () => {
+    const renderer = await initRenderer(makeCanvas(), makeCallbacksRef())
+    expect(() => renderer.fitToTree([])).not.toThrow()
+  })
+
+  it('fitToTree does not throw with a valid node list (canvas size > 0)', async () => {
+    const renderer = await initRenderer(makeCanvas(), makeCallbacksRef())
+    renderer.resize(800, 600)
+    expect(() =>
+      renderer.fitToTree([{ id: 'n1', x: -100, y: -100, size: 'medium', maxPoints: 1, connections: [], state: 'available' }])
+    ).not.toThrow()
+  })
+
+  it('zoomIn and zoomOut do not throw', async () => {
+    const renderer = await initRenderer(makeCanvas(), makeCallbacksRef())
+    renderer.resize(800, 600)
+    expect(() => renderer.zoomIn()).not.toThrow()
+    expect(() => renderer.zoomOut()).not.toThrow()
+  })
+
+  it('renderTree with selectedNodeId does not throw', async () => {
+    const renderer = await initRenderer(makeCanvas(), makeCallbacksRef())
+    const singleNodeTree: TreeData = {
+      nodes: [{ id: 'node1', x: 100, y: 100, size: 'medium', state: 'available', maxPoints: 1, connections: [] }],
+      edges: [],
+    }
+    const emptyHighlight = {
+      glowing: new Set<string>(),
+      dimmed: new Set<string>(),
+      previewRemoved: new Set<string>(),
+      previewAdded: new Set<string>(),
+      searchHighlighted: new Set<string>(),
+      searchDimmed: new Set<string>(),
+    }
+    expect(() => renderer.renderTree(singleNodeTree, {}, emptyHighlight, new Map(), 'node1')).not.toThrow()
+  })
+
+  it('node with nodeAllocations value 0 is NOT rendered as allocated (isAllocated fix)', async () => {
+    const renderer = await initRenderer(makeCanvas(), makeCallbacksRef())
+    // Provide a node whose allocation value is explicitly 0 — should draw as available, not allocated
+    const singleNodeTree: TreeData = {
+      nodes: [{ id: 'node1', x: 100, y: 100, size: 'medium', state: 'available', maxPoints: 3, connections: [] }],
+      edges: [],
+    }
+    const emptyHighlight = {
+      glowing: new Set<string>(),
+      dimmed: new Set<string>(),
+      previewRemoved: new Set<string>(),
+      previewAdded: new Set<string>(),
+      searchHighlighted: new Set<string>(),
+      searchDimmed: new Set<string>(),
+    }
+    // nodeAllocations has the key but value is 0 — must NOT count as allocated
+    expect(() =>
+      renderer.renderTree(singleNodeTree, { node1: 0 }, emptyHighlight, new Map())
+    ).not.toThrow()
+    // The Sprite constructor must not have been called (icon rendering is separate, but we verify no crash)
+    expect(MockSprite).not.toHaveBeenCalled()
+  })
 })

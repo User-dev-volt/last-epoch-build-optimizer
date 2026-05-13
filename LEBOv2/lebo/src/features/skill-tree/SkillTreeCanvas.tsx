@@ -1,25 +1,34 @@
-import { useEffect, useRef, useState, useMemo } from 'react'
+import { useEffect, useRef, useState, useMemo, useImperativeHandle } from 'react'
 import type { SkillTreeCanvasProps, RendererCallbacks, RendererInstance } from './types'
 import { initRenderer, NODE_RADIUS } from './pixiRenderer'
 import { useReducedMotion } from '../../shared/hooks/useReducedMotion'
 
 type NodeButton = { id: string; screenX: number; screenY: number; r: number }
 
+// Epsilon for syncButtonPositions — avoids scheduling React re-renders on sub-pixel PixiJS float drift
+const VIEWPORT_EPS = 0.5
+const VIEWPORT_SCALE_EPS = 0.001
+
 export function SkillTreeCanvas({
+  ref,
   treeData,
   nodeAllocations,
   highlightedNodes,
   iconTextures,
+  selectedNodeId,
   onNodeClick,
   onNodeHover,
+  onNodeSelect,
+  onNodeContextMenu,
   onKeyboardNavigate,
+  onPointerMove,
   flashNodeIds,
 }: SkillTreeCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rendererRef = useRef<RendererInstance | null>(null)
-  const callbacksRef = useRef<RendererCallbacks>({ onNodeClick, onNodeHover })
-  const dataRef = useRef({ treeData, nodeAllocations, highlightedNodes, iconTextures })
+  const callbacksRef = useRef<RendererCallbacks>({ onNodeClick, onNodeHover, onNodeSelect, onNodeContextMenu })
+  const dataRef = useRef({ treeData, nodeAllocations, highlightedNodes, iconTextures, selectedNodeId })
   const treeDataRef = useRef(treeData)
   const bfsOrderRef = useRef<string[]>([])
   const focusedNodeIdRef = useRef<string | null>(null)
@@ -31,6 +40,13 @@ export function SkillTreeCanvas({
   const [nodeButtons, setNodeButtons] = useState<NodeButton[]>([])
   const reducedMotion = useReducedMotion()
   const reducedMotionRef = useRef(reducedMotion)
+
+  // Expose viewport control to parent via ref (React 19 ref-as-prop)
+  useImperativeHandle(ref, () => ({
+    fitToTree: () => rendererRef.current?.fitToTree(treeDataRef.current.nodes),
+    zoomIn: () => rendererRef.current?.zoomIn(),
+    zoomOut: () => rendererRef.current?.zoomOut(),
+  }))
 
   // BFS order derived from directed edges (fromId → toId); roots are nodes with no incoming edge
   const bfsOrder = useMemo(() => {
@@ -63,8 +79,8 @@ export function SkillTreeCanvas({
 
   // Keep refs current after every render
   useEffect(() => {
-    callbacksRef.current = { onNodeClick, onNodeHover }
-    dataRef.current = { treeData, nodeAllocations, highlightedNodes, iconTextures }
+    callbacksRef.current = { onNodeClick, onNodeHover, onNodeSelect, onNodeContextMenu }
+    dataRef.current = { treeData, nodeAllocations, highlightedNodes, iconTextures, selectedNodeId }
     treeDataRef.current = treeData
     bfsOrderRef.current = bfsOrder
     reducedMotionRef.current = reducedMotion
@@ -85,7 +101,12 @@ export function SkillTreeCanvas({
     if (!r || !container) return
     const vp = r.getViewport()
     const last = lastViewportRef.current
-    if (vp.x === last.x && vp.y === last.y && vp.scale === last.scale) return
+    // Epsilon guard — avoids React re-renders from sub-pixel PixiJS float drift during idle
+    if (
+      Math.abs(vp.x - last.x) < VIEWPORT_EPS &&
+      Math.abs(vp.y - last.y) < VIEWPORT_EPS &&
+      Math.abs(vp.scale - last.scale) < VIEWPORT_SCALE_EPS
+    ) return
     lastViewportRef.current = vp
     const { width, height } = container.getBoundingClientRect()
     const { x: panX, y: panY, scale } = vp
@@ -111,7 +132,7 @@ export function SkillTreeCanvas({
     setNodeButtons(buttons)
   }
 
-  // Mount/unmount: init renderer + ResizeObserver + ticker
+  // Mount/unmount: init renderer + ResizeObserver + ticker + native pointermove
   useEffect(() => {
     const canvas = canvasRef.current
     const container = containerRef.current
@@ -121,6 +142,12 @@ export function SkillTreeCanvas({
     let resizeObserver: ResizeObserver | null = null
     let unsubTicker: (() => void) | null = null
     let cancelled = false
+
+    // Native pointermove listener — fires at pointer rate without React synthetic event batching
+    const handleNativePointerMove = (e: PointerEvent) => {
+      onPointerMove?.(e.clientX, e.clientY)
+    }
+    container.addEventListener('pointermove', handleNativePointerMove)
 
     const prevChain = initChainRef.current
     const thisChain = prevChain
@@ -148,8 +175,8 @@ export function SkillTreeCanvas({
         const { width, height } = container.getBoundingClientRect()
         r.resize(width, height)
         r.setReducedMotion(reducedMotionRef.current)
-        const { treeData: td, nodeAllocations: na, highlightedNodes: hn, iconTextures: it } = dataRef.current
-        r.renderTree(td, na, hn, it)
+        const { treeData: td, nodeAllocations: na, highlightedNodes: hn, iconTextures: it, selectedNodeId: sid } = dataRef.current
+        r.renderTree(td, na, hn, it, sid)
 
         syncButtonPositions()
         unsubTicker = r.addTickerListener(syncButtonPositions)
@@ -162,25 +189,27 @@ export function SkillTreeCanvas({
 
     return () => {
       cancelled = true
+      container.removeEventListener('pointermove', handleNativePointerMove)
       unsubTicker?.()
       resizeObserver?.disconnect()
       renderer?.destroy()
       rendererRef.current = null
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Re-render whenever tree data changes
+  // Re-render whenever tree data or selection changes
   useEffect(() => {
-    rendererRef.current?.renderTree(treeData, nodeAllocations, highlightedNodes, iconTextures)
-  }, [treeData, nodeAllocations, highlightedNodes, iconTextures])
+    rendererRef.current?.renderTree(treeData, nodeAllocations, highlightedNodes, iconTextures, selectedNodeId)
+  }, [treeData, nodeAllocations, highlightedNodes, iconTextures, selectedNodeId])
 
   // Propagate reduced motion preference to renderer and re-render so the change takes effect immediately
   useEffect(() => {
     const r = rendererRef.current
     if (!r) return
     r.setReducedMotion(reducedMotion)
-    const { treeData: td, nodeAllocations: na, highlightedNodes: hn, iconTextures: it } = dataRef.current
-    r.renderTree(td, na, hn, it)
+    const { treeData: td, nodeAllocations: na, highlightedNodes: hn, iconTextures: it, selectedNodeId: sid } = dataRef.current
+    r.renderTree(td, na, hn, it, sid)
   }, [reducedMotion])
 
   // Trigger flash animation — each failure creates a new array reference to re-run this effect
@@ -257,6 +286,21 @@ export function SkillTreeCanvas({
     }
   }
 
+  const zoomBtnStyle: React.CSSProperties = {
+    width: 28,
+    height: 28,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'var(--color-bg-elevated)',
+    border: '1px solid var(--color-bg-base)',
+    borderRadius: 4,
+    cursor: 'pointer',
+    fontSize: 14,
+    color: 'var(--color-text-secondary)',
+    userSelect: 'none',
+  }
+
   return (
     <div
       ref={containerRef}
@@ -268,6 +312,7 @@ export function SkillTreeCanvas({
         style={{ display: 'block', width: '100%', height: '100%' }}
         aria-hidden="true"
       />
+
       {/* Invisible button overlay — keyboard nav; pointer-events:none so mouse clicks reach PixiJS canvas */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         {nodeButtons.map(({ id, screenX, screenY, r }, index) => {
@@ -305,11 +350,50 @@ export function SkillTreeCanvas({
               onClick={() => onNodeClick(id, 0)}
               onContextMenu={(e) => {
                 e.preventDefault()
-                onNodeClick(id, 2)
+                onNodeContextMenu?.(id, e.clientX, e.clientY)
               }}
             />
           )
         })}
+      </div>
+
+      {/* Zoom controls — ± and Fit in the bottom-right graph corner (AC requirement).
+          Rendered after keyboard-nav overlay so DOM order keeps node buttons first for tests. */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 12,
+          right: 12,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 4,
+          zIndex: 10,
+        }}
+      >
+        <button
+          type="button"
+          aria-label="Zoom in"
+          style={zoomBtnStyle}
+          onClick={() => rendererRef.current?.zoomIn()}
+        >
+          +
+        </button>
+        <button
+          type="button"
+          aria-label="Zoom out"
+          style={zoomBtnStyle}
+          onClick={() => rendererRef.current?.zoomOut()}
+        >
+          −
+        </button>
+        <button
+          type="button"
+          aria-label="Fit tree to view"
+          style={{ ...zoomBtnStyle, fontSize: 10, fontWeight: 600 }}
+          onClick={() => rendererRef.current?.fitToTree(treeDataRef.current.nodes)}
+        >
+          Fit
+        </button>
       </div>
     </div>
   )

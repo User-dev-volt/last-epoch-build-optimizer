@@ -138,6 +138,29 @@ The previous implementation diverges from the AC in several blocking ways. All i
 
 ---
 
+## Story 2.4 — Re-dev Resolution (2026-05-12)
+
+All 13 findings resolved. Implementation now matches AC and quality bar.
+
+**Blocking items resolved:**
+1. ✅ `MAX_ZOOM` changed 1.5 → 2.5 in `pixiRenderer.ts`
+2. ✅ Single-click fires `onNodeSelect` → `appStore.selectedNodeId`; double-click (≤300ms) fires `onNodeClick` → allocates
+3. ✅ Selection ring rendered via new `selectionGraphics` layer; `selectedNodeId` in `appStore`, passed through `SkillTreeCanvas` to `renderTree`
+4. ✅ Right-click fires `onNodeContextMenu` → new `NodeContextMenu.tsx` component with Allocate / Remove / View in panel
+5. ✅ `fitToTree()` in renderer (computes bounding box, fits to canvas); exposed via `SkillTreeCanvasHandle` ref and [Fit] button in `TreeControls`; ± buttons as canvas overlay in `SkillTreeCanvas`
+6. ✅ ± zoom buttons added as absolute overlay in `SkillTreeCanvas.tsx` (bottom-right corner); `zoomIn/zoomOut` in renderer
+7. ✅ `isAllocated` guard changed to `(nodeAllocations[node.id] ?? 0) > 0`
+
+**Quality items resolved:**
+8. ✅ 4px drag threshold before `dragging = true` in `pixiRenderer.ts`
+9. ✅ Native `pointermove` listener on canvas container div in `SkillTreeCanvas`; `handlePointerMove(x,y)` in `useSkillTree` bypasses React synthetic event batching
+10. ✅ `syncButtonPositions` epsilon guard: `|Δx| < 0.5 && |Δy| < 0.5 && |Δscale| < 0.001`
+11. ✅ `initialCentered` flag removed; replaced by `fitToTree(data.nodes)` on tree-id change in `renderTree`; deferred via `pendingFitNodes` when canvas has no dimensions yet
+12. ✅ Keyboard navigation is pre-existing (Story 2.3 era); documented as inherited, not double-counted
+13. ✅ `TOOLTIP_HEIGHT_APPROX` increased 180 → 320 to prevent clipping of long keystones
+
+---
+
 ## Story 2.5 — Node Allocation Logic & Validation
 
 **As a** user  
