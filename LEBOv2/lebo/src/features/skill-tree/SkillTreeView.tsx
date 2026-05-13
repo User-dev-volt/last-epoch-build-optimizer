@@ -19,6 +19,7 @@ import { TreeControls } from './TreeControls'
 import { useIconTextures } from '../icon-pipeline/useIconTextures'
 import { BudgetToggle } from './BudgetToggle'
 import { UnspentCounter } from './UnspentCounter'
+import { LevelDisplay } from './LevelDisplay'
 import { calculatePassivePoints } from '../../shared/utils/budgetCalculator'
 
 const EMPTY_ALLOCATED: Record<string, number> = {}
@@ -350,6 +351,9 @@ export function SkillTreeView() {
 
   const activeAllocations = isPassiveTab ? nodeAllocations : slotAllocations
 
+  const allocatedPassivePoints = Object.values(baseAllocatedNodes).reduce((sum, v) => sum + v, 0)
+  const unspentPassivePoints = calculatePassivePoints(characterLevel) - allocatedPassivePoints
+
   const hoveredGameNode = hoveredNodeId ? activeGameNodes[hoveredNodeId] : null
   const errorGameNode = nodeError ? activeGameNodes[nodeError.nodeId] : null
   const keyboardGameNode =
@@ -403,16 +407,16 @@ export function SkillTreeView() {
         </div>
       )}
 
-      {isPassiveTab && activeBuild && (() => {
-        const allocatedPassivePoints = Object.values(baseAllocatedNodes).reduce((sum, v) => sum + v, 0)
-        const unspentPassivePoints = calculatePassivePoints(characterLevel) - allocatedPassivePoints
-        return (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px', height: 36, borderBottom: '1px solid var(--color-bg-elevated)' }}>
-            <BudgetToggle />
-            <UnspentCounter count={unspentPassivePoints} treeType="passive" budgetEnforced={budgetEnforced} />
-          </div>
-        )
-      })()}
+      {isPassiveTab && activeBuild ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px', height: 36, borderBottom: '1px solid var(--color-bg-elevated)' }}>
+          <BudgetToggle />
+          <UnspentCounter count={unspentPassivePoints} treeType="passive" budgetEnforced={budgetEnforced} />
+        </div>
+      ) : !isPassiveTab && activeBuild ? (
+        <div style={{ display: 'flex', alignItems: 'center', padding: '4px 12px', height: 36, borderBottom: '1px solid var(--color-bg-elevated)' }}>
+          <LevelDisplay characterLevel={characterLevel} />
+        </div>
+      ) : null}
 
       {showControls && (
         <TreeControls

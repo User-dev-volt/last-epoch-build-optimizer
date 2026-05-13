@@ -51,17 +51,35 @@ describe('BudgetToggle', () => {
     expect(toggle).toBeTruthy()
   })
 
-  it('calls setCharacterLevel with clamped value on level input change', () => {
+  it('calls setCharacterLevel with clamped value on blur', () => {
     render(<BudgetToggle />)
     const input = screen.getByRole('spinbutton', { name: /character level/i })
     fireEvent.change(input, { target: { value: '50' } })
+    expect(mockSetCharacterLevel).not.toHaveBeenCalled()
+    fireEvent.blur(input)
     expect(mockSetCharacterLevel).toHaveBeenCalledWith(50)
+  })
+
+  it('does not write to store while typing (before blur)', () => {
+    render(<BudgetToggle />)
+    const input = screen.getByRole('spinbutton', { name: /character level/i })
+    fireEvent.change(input, { target: { value: '' } })
+    expect(mockSetCharacterLevel).not.toHaveBeenCalled()
+  })
+
+  it('clamps to 1 when field is cleared and blurred', () => {
+    render(<BudgetToggle />)
+    const input = screen.getByRole('spinbutton', { name: /character level/i })
+    fireEvent.change(input, { target: { value: '' } })
+    fireEvent.blur(input)
+    expect(mockSetCharacterLevel).toHaveBeenCalledWith(1)
   })
 
   it('clamps level to 100 when value exceeds max', () => {
     render(<BudgetToggle />)
     const input = screen.getByRole('spinbutton', { name: /character level/i })
     fireEvent.change(input, { target: { value: '150' } })
+    fireEvent.blur(input)
     expect(mockSetCharacterLevel).toHaveBeenCalledWith(100)
   })
 
@@ -69,13 +87,23 @@ describe('BudgetToggle', () => {
     render(<BudgetToggle />)
     const input = screen.getByRole('spinbutton', { name: /character level/i })
     fireEvent.change(input, { target: { value: '0' } })
+    fireEvent.blur(input)
     expect(mockSetCharacterLevel).toHaveBeenCalledWith(1)
   })
 
-  it('calls setBudgetEnforced when switch is toggled', () => {
+  it('commits on Enter key', () => {
+    render(<BudgetToggle />)
+    const input = screen.getByRole('spinbutton', { name: /character level/i })
+    fireEvent.change(input, { target: { value: '75' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(mockSetCharacterLevel).toHaveBeenCalledWith(75)
+  })
+
+  it('calls setBudgetEnforced exactly once when switch is clicked', () => {
     render(<BudgetToggle />)
     const toggle = screen.getByRole('switch', { name: /enforce level budget/i })
     fireEvent.click(toggle)
+    expect(mockSetBudgetEnforced).toHaveBeenCalledTimes(1)
     expect(mockSetBudgetEnforced).toHaveBeenCalledWith(true)
   })
 

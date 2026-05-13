@@ -1,4 +1,5 @@
-import { Switch } from '@headlessui/react'
+import { useState, useEffect } from 'react'
+import { Field, Label, Switch } from '@headlessui/react'
 import { useBuildStore } from '../../shared/stores/buildStore'
 import { MAX_CHARACTER_LEVEL } from '../../shared/utils/budgetCalculator'
 
@@ -9,24 +10,44 @@ export function BudgetToggle() {
   const setCharacterLevel = useBuildStore((s) => s.setCharacterLevel)
   const setBudgetEnforced = useBuildStore((s) => s.setBudgetEnforced)
 
+  const [inputValue, setInputValue] = useState(String(characterLevel))
+  const [isFocused, setIsFocused] = useState(false)
+
+  // Sync local input string from store when level changes externally (build switch, undo)
+  // and the input is not currently being edited.
+  useEffect(() => {
+    if (!isFocused) {
+      setInputValue(String(characterLevel))
+    }
+  }, [characterLevel, isFocused])
+
   if (!activeBuild) return null
 
-  function handleLevelChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = parseInt(e.target.value, 10)
+  function commitLevelChange() {
+    const raw = parseInt(inputValue, 10)
     const clamped = Math.max(1, Math.min(MAX_CHARACTER_LEVEL, isNaN(raw) ? 1 : raw))
     setCharacterLevel(clamped)
+    setInputValue(String(clamped))
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') commitLevelChange()
   }
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-text-secondary)', fontSize: 13 }}>
-        Level
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-text-secondary)', fontSize: 13 }}>
+        <span>Level</span>
         <input
           type="number"
           min={1}
           max={MAX_CHARACTER_LEVEL}
-          value={characterLevel}
-          onChange={handleLevelChange}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => { commitLevelChange(); setIsFocused(false) }}
+          onKeyDown={handleKeyDown}
+          aria-label="Character level"
           style={{
             width: 56,
             height: 28,
@@ -36,12 +57,13 @@ export function BudgetToggle() {
             borderRadius: 4,
             color: 'var(--color-text-primary)',
             fontSize: 13,
+            outline: isFocused ? '2px solid var(--color-accent-gold)' : 'none',
+            outlineOffset: 2,
           }}
-          aria-label="Character level"
         />
-      </label>
+      </div>
 
-      <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-text-secondary)', fontSize: 13, cursor: 'pointer' }}>
+      <Field style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <Switch
           checked={budgetEnforced}
           onChange={setBudgetEnforced}
@@ -72,8 +94,10 @@ export function BudgetToggle() {
             }}
           />
         </Switch>
-        Enforce Level Budget
-      </label>
+        <Label style={{ color: 'var(--color-text-secondary)', fontSize: 13, cursor: 'pointer' }}>
+          Enforce Level Budget
+        </Label>
+      </Field>
     </div>
   )
 }

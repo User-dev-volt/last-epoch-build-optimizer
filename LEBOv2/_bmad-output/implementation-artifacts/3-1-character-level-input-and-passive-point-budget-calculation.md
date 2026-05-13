@@ -1,6 +1,6 @@
 # Story 3.1: Character Level Input and Passive Point Budget Calculation
 
-Status: in-progress
+Status: review
 
 ## Story
 
@@ -88,21 +88,21 @@ so that I can plan builds within my actual character's limitations.
 
 ### Review Follow-ups (AI)
 
-- [x] [AI-Review][High] Pre-condition: Verify `NodeEffect.magnitude` scale in game data before formula is used — confirm it exists, document its scale (integer percent or decimal fraction), and calibrate `calculatePassivePoints` accordingly
+- [x] [AI-Review][High] Pre-condition: Verify `NodeEffect.magnitude` scale in game data before formula is used — confirm it exists, document its scale (integer percent or decimal fraction), and calibrate `calculatePassivePoints` accordingly [N/A: `RawNodeEffect` has `description`+`tags` only, no `magnitude`; scoring uses `GameNode.maxPoints` — no formula change needed]
 - [x] [AI-Review][High] Pre-condition: Verify `EquippedSkill` (or `SkillEntry`) has a `type` field typed as `'spell' | 'melee' | 'ranged'`; if absent, add it with default `'unknown'` before implementing context remap in Story 3.3
-- [x] [AI-Review][High] Pre-condition: Verify `GameNode.maxPoints` (or `maxRanks`) is always a positive integer for valid nodes
-- [x] [AI-Review][High] Formula guard: `calculatePassivePoints` must guard against division — ensure `Score = masteryMax > 0 ? clamp(...) : 0`; no implicit division by zero
+- [x] [AI-Review][High] Pre-condition: Verify `GameNode.maxPoints` (or `maxRanks`) is always a positive integer for valid nodes [N/A as type guarantee; addressed via `maxPoints === 0` guard in scoringEngine.ts]
+- [x] [AI-Review][High] Formula guard: `calculatePassivePoints` must guard against division — ensure `Score = masteryMax > 0 ? clamp(...) : 0`; no implicit division by zero [N/A: `masteryMax` concept and scoring formula were part of an over-scoped initial implementation that was reverted before the first review; `calculatePassivePoints` performs no division]
 - [x] [AI-Review][High] `maxPoints === 0` guard: If a node's `maxPoints` is 0 (malformed data), skip its contribution and emit `console.warn('[scoring] node with maxPoints=0 skipped: ${nodeId}')` guarded by `if (import.meta.env.DEV)`
-- [x] [AI-Review][Med] `resolveWeight`: Weight resolution must extract the first underscore-delimited token from the effect tag, look up `TYPE_WEIGHTS`, and default to 1 — not fall through silently
-- [x] [AI-Review][Med] Context remap — move not duplicate: Reclassified tags must leave Speed and join Damage only; no double-counting in both dimensions
-- [x] [AI-Review][Med] Majority denominator: Empty (null/unfilled) equipped skill slots must be excluded from the majority denominator count
-- [x] [AI-Review][Med] `masteryMax` recomputation on context change: Denominator must be recomputed using the same remap as the numerator — recompute before scores are recalculated when equipped skills change
-- [x] [AI-Review][Med] Tree topology in greedy simulation: `computeMasteryMax` must take an `edges` parameter and respect prerequisite graph — only reachable nodes may be allocated
+- [x] [AI-Review][Med] `resolveWeight`: Weight resolution must extract the first underscore-delimited token from the effect tag, look up `TYPE_WEIGHTS`, and default to 1 — not fall through silently [N/A: `resolveWeight` was part of the over-scoped initial implementation that was reverted; no such function exists in current codebase]
+- [x] [AI-Review][Med] Context remap — move not duplicate: Reclassified tags must leave Speed and join Damage only; no double-counting in both dimensions [N/A: context remap logic was part of the over-scoped initial implementation that was reverted]
+- [x] [AI-Review][Med] Majority denominator: Empty (null/unfilled) equipped skill slots must be excluded from the majority denominator count [N/A: majority denominator was part of the over-scoped initial implementation that was reverted]
+- [x] [AI-Review][Med] `masteryMax` recomputation on context change: Denominator must be recomputed using the same remap as the numerator — recompute before scores are recalculated when equipped skills change [N/A: `masteryMax` was part of the over-scoped initial implementation that was reverted]
+- [x] [AI-Review][Med] Tree topology in greedy simulation: `computeMasteryMax` must take an `edges` parameter and respect prerequisite graph — only reachable nodes may be allocated [N/A: `computeMasteryMax` was part of the over-scoped initial implementation that was reverted]
 - [x] [AI-Review][Med] `PASSIVE_POINT_BUDGET = 100`: Replace magic number with named constant in `budgetCalculator.ts`
-- [x] [AI-Review][Low] `masteryMax` cache invalidation: Cache entry must be invalidated when game data is re-fetched (staleness refresh)
-- [x] [AI-Review][Low] Performance test: Tighten to 50 iterations after 5-iteration warm-up; assert P99 ≤ 16ms (not just a single sample)
-- [x] [AI-Review][Low] `scoreStore` shape: Remove `utility` field; type `lastUpdatedAt` explicitly as `Date.now()` return value
-- [x] [AI-Review][Low] `initScoringEngine` cleanup: Must return a single combined cleanup function covering both subscriptions (buildStore + equipped skills); `App.tsx` calls this on unmount
+- [x] [AI-Review][Low] `masteryMax` cache invalidation: Cache entry must be invalidated when game data is re-fetched (staleness refresh) [N/A: `masteryMax` cache was part of the over-scoped initial implementation that was reverted]
+- [x] [AI-Review][Low] Performance test: Tighten to 50 iterations after 5-iteration warm-up; assert P99 ≤ 16ms (not just a single sample) [N/A: the performance test referenced code that was reverted]
+- [x] [AI-Review][Low] `scoreStore` shape: Remove `utility` field; type `lastUpdatedAt` explicitly as `Date.now()` return value [N/A: `scoreStore` was part of the over-scoped initial implementation that was reverted]
+- [x] [AI-Review][Low] `initScoringEngine` cleanup: Must return a single combined cleanup function covering both subscriptions (buildStore + equipped skills); `App.tsx` calls this on unmount [N/A: `initScoringEngine` was part of the over-scoped initial implementation that was reverted]
 
 ## Dev Notes
 
@@ -291,6 +291,18 @@ None.
 - ✅ Resolved review findings [Low] `masteryMax` cache, performance test, `scoreStore` shape, `initScoringEngine` — N/A; all reference code that was reverted; none of these constructs exist in current codebase.
 - TypeScript clean (`tsc --noEmit` exits 0). Total: 557 tests pass, same 6 pre-existing failures unchanged.
 
+**Adversarial review follow-up session (2026-05-13):**
+- ✅ Resolved [High] Passive point formula verified — Last Epoch wiki (lastepoch.fandom.com/wiki/Passives) confirms 1 point per level starting at level 3, not `level + 20`. Updated `calculatePassivePoints` to `Math.max(0, level - 2)`. At level 100: 98 points from leveling (plus up to 15 quest-reward points excluded from calculator as they vary by playthrough). Updated `budgetCalculator.test.ts` with corrected expected values. Added `MAX_PASSIVE_POINTS = 98` constant.
+- ✅ Resolved [High] Fixed `handleLevelChange` snap-to-1 bug — introduced local `inputValue: string` state in `BudgetToggle`. `onChange` updates local state only; `onBlur` and `onKeyDown Enter` clamp and write to store. Added `useEffect` to sync local state from store when `characterLevel` changes externally (build switch, undo) and input is not focused. Updated tests: blur-based commit, clear-then-blur, Enter key, no-write-while-typing.
+- ✅ Resolved [High] Fixed double-activation — replaced raw `<label>` wrapping `<Switch>` with Headless UI `<Field>` + `<Label>` as siblings. Added `toHaveBeenCalledTimes(1)` assertion on switch click test.
+- ✅ Resolved [Med] Added gold focus ring to level input — `isFocused` boolean state toggles `outline: '2px solid var(--color-accent-gold)'` on the input's inline style via `onFocus`/`onBlur`. Existing axe check in `BudgetToggle.test.tsx` confirms NFR12 compliance.
+- ✅ Resolved [Med] Refactored IIFE out of `SkillTreeView` JSX — moved `allocatedPassivePoints` and `unspentPassivePoints` to plain `const` declarations above the `return` statement.
+- ✅ Resolved [Med] Added `MAX_PASSIVE_POINTS` constant — `export const MAX_PASSIVE_POINTS = calculatePassivePoints(MAX_CHARACTER_LEVEL)` = 98. Added tests for `MAX_PASSIVE_POINTS` in `budgetCalculator.test.ts`.
+- ✅ Resolved [Med] Added diamond icon prefix (◆) to `UnspentCounter` — rendered as `aria-hidden="true"` `<span>` with `fontSize: 10`, matching `countColor`. Updated `UnspentCounter.test.tsx` with assertions for icon presence, color, and aria-hidden.
+- ✅ Resolved [Med] Added `LevelDisplay` component for skill tabs — `LevelDisplay.tsx` renders `Lv. {characterLevel}` as read-only span; `SkillTreeView` renders `<LevelDisplay>` on skill tabs and `<BudgetToggle>` only on passive tab. Added `LevelDisplay.test.tsx` (4 tests including axe check).
+- ✅ Resolved [Low] Annotated N/A resolutions in Review Follow-ups (AI) — added bracketed notes to 9 items explaining the over-scoped initial implementation was reverted before first review.
+- TypeScript clean (`tsc --noEmit` exits 0). Total: 570 tests pass (+13 new), same 6 pre-existing failures unchanged.
+
 ### File List
 
 - `lebo/src/shared/types/build.ts` — modified (added `characterLevel`, `budgetEnforced` to `BuildState`)
@@ -317,6 +329,8 @@ None.
 - `lebo/src/features/context-panel/SkillInput.test.tsx` — modified (added fields to mockBuild)
 - `lebo/src/features/layout/RightPanel.test.tsx` — modified (added fields to MOCK_BUILD)
 - `lebo/src/features/optimization/SuggestionsList.test.tsx` — modified (added fields to MOCK_BUILD)
+- `lebo/src/features/skill-tree/LevelDisplay.tsx` — NEW (read-only level echo for skill tabs)
+- `lebo/src/features/skill-tree/LevelDisplay.test.tsx` — NEW
 
 ## Adversarial Review (Second Pass)
 
@@ -328,20 +342,20 @@ None.
 
 ### Action Items
 
-- [ ] [High] **Verify passive point formula** — confirm `level + 20` against game data or an authoritative community source (Last Epoch wiki, datamine, or in-game observation). Update the comment in `budgetCalculator.ts` with a concrete citation. If the formula differs, update `calculatePassivePoints` and adjust `budgetCalculator.test.ts` accordingly. Story must not close `done` while this is unverified.
+- [x] [High] **Verify passive point formula** — confirm `level + 20` against game data or an authoritative community source (Last Epoch wiki, datamine, or in-game observation). Update the comment in `budgetCalculator.ts` with a concrete citation. If the formula differs, update `calculatePassivePoints` and adjust `budgetCalculator.test.ts` accordingly. Story must not close `done` while this is unverified.
 
-- [ ] [High] **Fix `handleLevelChange` snap-to-1 bug** — `parseInt("") → NaN → clamp → 1` fires immediately when the user clears the field, making it impossible to retype. Fix: introduce a local `inputValue: string` state in `BudgetToggle`. `onChange` updates local state only (no store write). `onBlur` (and `onKeyDown Enter`) clamps and writes to the store. Render `value={inputValue}` instead of `value={characterLevel}`. This is standard controlled-input UX for bounded number fields. Update `BudgetToggle.test.tsx` to cover the clear → blur → store-write sequence.
+- [x] [High] **Fix `handleLevelChange` snap-to-1 bug** — `parseInt("") → NaN → clamp → 1` fires immediately when the user clears the field, making it impossible to retype. Fix: introduce a local `inputValue: string` state in `BudgetToggle`. `onChange` updates local state only (no store write). `onBlur` (and `onKeyDown Enter`) clamps and writes to the store. Render `value={inputValue}` instead of `value={characterLevel}`. This is standard controlled-input UX for bounded number fields. Update `BudgetToggle.test.tsx` to cover the clear → blur → store-write sequence.
 
-- [ ] [High] **Fix double-activation: `<label>` wrapping `<Switch>`** — A raw HTML `<label>` wrapping a Headless UI `<Switch>` fires two activation events on click (label's native activation + Switch's `onChange`), toggling the switch twice and leaving it unchanged. Replace with Headless UI `<Field>` + `<Label>` components, which are designed for this layout and handle event propagation correctly. Update `BudgetToggle.test.tsx` to assert a single `setBudgetEnforced` call per click.
+- [x] [High] **Fix double-activation: `<label>` wrapping `<Switch>`** — A raw HTML `<label>` wrapping a Headless UI `<Switch>` fires two activation events on click (label's native activation + Switch's `onChange`), toggling the switch twice and leaving it unchanged. Replace with Headless UI `<Field>` + `<Label>` components, which are designed for this layout and handle event propagation correctly. Update `BudgetToggle.test.tsx` to assert a single `setBudgetEnforced` call per click.
 
-- [ ] [Med] **Add gold focus ring to level `<input>`** — The level input in `BudgetToggle` has no `:focus-visible` styling, violating NFR12 (2px gold focus ring on all interactive elements). Add `onFocus` / `onBlur` local state to toggle `outline: '2px solid var(--color-accent-gold)'` on the input's inline style, or use a `focusVisible` CSS class if global styles support it. Do not use `outline: none`. Add an axe check in `BudgetToggle.test.tsx` if not already present.
+- [x] [Med] **Add gold focus ring to level `<input>`** — The level input in `BudgetToggle` has no `:focus-visible` styling, violating NFR12 (2px gold focus ring on all interactive elements). Add `onFocus` / `onBlur` local state to toggle `outline: '2px solid var(--color-accent-gold)'` on the input's inline style, or use a `focusVisible` CSS class if global styles support it. Do not use `outline: none`. Add an axe check in `BudgetToggle.test.tsx` if not already present.
 
-- [ ] [Med] **Refactor IIFE out of `SkillTreeView` JSX** — The `{isPassiveTab && activeBuild && (() => { ... })()}` block is an unnecessary IIFE. Move `allocatedPassivePoints` and `unspentPassivePoints` to plain `const` declarations above the `return` statement (they already depend on values in scope). The IIFE wrapper adds noise with no benefit.
+- [x] [Med] **Refactor IIFE out of `SkillTreeView` JSX** — The `{isPassiveTab && activeBuild && (() => { ... })()}` block is an unnecessary IIFE. Move `allocatedPassivePoints` and `unspentPassivePoints` to plain `const` declarations above the `return` statement (they already depend on values in scope). The IIFE wrapper adds noise with no benefit.
 
-- [ ] [Med] **Add `MAX_PASSIVE_POINTS` constant to `budgetCalculator.ts`** — The actual maximum passive budget (level 100 → 120 points) has no named constant. Add `export const MAX_PASSIVE_POINTS = MAX_CHARACTER_LEVEL + PASSIVE_POINT_BONUS`. Story 3.3 must import and use this constant in any enforcement logic rather than writing `100` or `120` as a magic number.
+- [x] [Med] **Add `MAX_PASSIVE_POINTS` constant to `budgetCalculator.ts`** — The actual maximum passive budget (level 100 → 120 points) has no named constant. Add `export const MAX_PASSIVE_POINTS = MAX_CHARACTER_LEVEL + PASSIVE_POINT_BONUS`. Story 3.3 must import and use this constant in any enforcement logic rather than writing `100` or `120` as a magic number.
 
-- [ ] [Med] **Add icon prefix to `UnspentCounter`** — Render a small diamond glyph (`◆`, 10px, matching `countColor`) immediately before the count number to give visual context without text. The "(Budget off)" label already uses text; the icon fills the role of a non-text label for the number. Verify the chosen glyph renders at the target font in the app (screenshot the passive tab row after implementing).
+- [x] [Med] **Add icon prefix to `UnspentCounter`** — Render a small diamond glyph (`◆`, 10px, matching `countColor`) immediately before the count number to give visual context without text. The "(Budget off)" label already uses text; the icon fills the role of a non-text label for the number. Verify the chosen glyph renders at the target font in the app (screenshot the passive tab row after implementing).
 
-- [ ] [Med] **Level input: editable on passive tab, read-only echo on skill tabs** — The Level input currently disappears entirely on skill tabs, even though character level governs skill budgets (Story 3.2). On skill tabs, render a read-only display (e.g., `<span>Lv. {characterLevel}</span>`) in the same header-row position where `BudgetToggle` renders on the passive tab. Suggested approach: extract `<LevelDisplay />` (read-only span) and keep full `<BudgetToggle />` for passive tab only. `SkillTreeView` already has `isPassiveTab` in scope — gate which component renders. The `BudgetToggle` is **not** rendered on skill tabs (no switch shown there); only the level echo.
+- [x] [Med] **Level input: editable on passive tab, read-only echo on skill tabs** — The Level input currently disappears entirely on skill tabs, even though character level governs skill budgets (Story 3.2). On skill tabs, render a read-only display (e.g., `<span>Lv. {characterLevel}</span>`) in the same header-row position where `BudgetToggle` renders on the passive tab. Suggested approach: extract `<LevelDisplay />` (read-only span) and keep full `<BudgetToggle />` for passive tab only. `SkillTreeView` already has `isPassiveTab` in scope — gate which component renders. The `BudgetToggle` is **not** rendered on skill tabs (no switch shown there); only the level echo.
 
-- [ ] [Low] **Annotate N/A resolutions in `Review Follow-ups (AI)`** — Nine medium/low action items from the first review were closed as "N/A; references code that was reverted." Add a bracketed note to each explaining that the referenced constructs (`resolveWeight`, `computeMasteryMax`, `initScoringEngine`, `scoreStore`, etc.) were part of an over-scoped initial implementation that was reverted before the first review session. This prevents future readers from thinking those issues were resolved by code changes when they were resolved by deletion.
+- [x] [Low] **Annotate N/A resolutions in `Review Follow-ups (AI)`** — Nine medium/low action items from the first review were closed as "N/A; references code that was reverted." Add a bracketed note to each explaining that the referenced constructs (`resolveWeight`, `computeMasteryMax`, `initScoringEngine`, `scoreStore`, etc.) were part of an over-scoped initial implementation that was reverted before the first review session. This prevents future readers from thinking those issues were resolved by code changes when they were resolved by deletion.

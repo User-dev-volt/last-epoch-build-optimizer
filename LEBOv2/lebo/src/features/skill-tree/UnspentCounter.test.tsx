@@ -8,18 +8,41 @@ describe('UnspentCounter', () => {
     const { container } = render(
       <UnspentCounter count={14} treeType="passive" budgetEnforced={true} />
     )
-    const countEl = container.querySelector('span > span')!
+    // Count is the second child span (first is diamond icon)
+    const spans = container.querySelectorAll('span > span')
+    const countEl = spans[1] as HTMLElement
     expect(countEl.textContent).toBe('14')
-    expect((countEl as HTMLElement).style.color).toBe('var(--color-accent-gold)')
+    expect(countEl.style.color).toBe('var(--color-accent-gold)')
   })
 
   it('renders count in secondary color when count === 0', () => {
     const { container } = render(
       <UnspentCounter count={0} treeType="passive" budgetEnforced={true} />
     )
-    const countEl = container.querySelector('span > span')!
+    const spans = container.querySelectorAll('span > span')
+    const countEl = spans[1] as HTMLElement
     expect(countEl.textContent).toBe('0')
-    expect((countEl as HTMLElement).style.color).toBe('var(--color-text-secondary)')
+    expect(countEl.style.color).toBe('var(--color-text-secondary)')
+  })
+
+  it('renders diamond icon matching count color when count > 0', () => {
+    const { container } = render(
+      <UnspentCounter count={5} treeType="passive" budgetEnforced={true} />
+    )
+    const spans = container.querySelectorAll('span > span')
+    const iconEl = spans[0] as HTMLElement
+    expect(iconEl.textContent).toBe('◆')
+    expect(iconEl.getAttribute('aria-hidden')).toBe('true')
+    expect(iconEl.style.color).toBe('var(--color-accent-gold)')
+  })
+
+  it('renders diamond icon in secondary color when count === 0', () => {
+    const { container } = render(
+      <UnspentCounter count={0} treeType="passive" budgetEnforced={true} />
+    )
+    const spans = container.querySelectorAll('span > span')
+    const iconEl = spans[0] as HTMLElement
+    expect(iconEl.style.color).toBe('var(--color-text-secondary)')
   })
 
   it('shows "(Budget off)" label when budgetEnforced is false', () => {
