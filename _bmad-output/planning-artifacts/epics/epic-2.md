@@ -161,6 +161,40 @@ All 13 findings resolved. Implementation now matches AC and quality bar.
 
 ---
 
+## Story 2.4 — Code Review Findings (2026-05-12, post re-dev)
+
+Three-layer review (Blind Hunter / Edge Case Hunter / Acceptance Auditor) against the re-dev resolution claims. 13/13 original findings confirmed resolved. New findings surfaced below.
+
+### Decision Needed
+
+- [ ] [Review][Decision] **"View in panel" is a no-op stub** — `NodeContextMenu.tsx` has the menu item; `SkillTreeView.tsx:301` wires it to an empty callback. Code comment says "future feature stub — node already shown in tooltip." AC says the option must exist in the context menu; it does not specify behavior. **Choose:** (a) keep stub as-is (AC satisfied by presence), (b) remove the item until implemented, or (c) implement panel navigation now.
+
+- [ ] [Review][Decision] **Two Fit buttons rendered simultaneously** — `SkillTreeCanvas.tsx:388` renders a Fit button in the canvas overlay (bottom-right, always visible). `TreeControls.tsx:42` renders a second Fit button in the toolbar above. When `showControls` is true (normal state) both appear at once. Both work. **Choose:** (a) keep both (convenient dual placement), (b) remove the canvas-overlay Fit and keep only TreeControls', (c) remove TreeControls' Fit and keep only the canvas overlay.
+
+### Patch Items
+
+- [ ] [Review][Patch] **`lastClickedId`/`lastClickTime` not reset on tree switch — ghost double-click across mastery changes** [`pixiRenderer.ts:252-257`] — `lastClickedId` is closure state that survives `renderTree` calls. If the user clicks a node then switches mastery within 300ms, clicking any node in the new tree fires `onNodeClick` (allocate) as a double-click. Fix: reset both vars in the `if (currentTreeId !== lastTreeId)` branch.
+
+- [ ] [Review][Patch] **Right-click primes double-click detector — RMB context menu open followed by LMB allocates unexpectedly** [`pixiRenderer.ts:394-400`] — `e.button === 2` branch returns early without clearing `lastClickedId`/`lastClickTime`. A right-click then left-click within 300ms on the same node fires the double-click allocate path. Fix: add `lastClickedId = null; lastClickTime = 0` in the right-click branch.
+
+- [ ] [Review][Patch] **Context menu no bottom-overflow clamp — items unreachable near bottom of viewport** [`NodeContextMenu.tsx:43-44`] — Horizontal flip exists but no vertical flip. In Tauri (no page scroll), nodes in the lower third of the canvas produce a menu that overflows below the fold. Fix: mirror the horizontal logic for vertical using `window.innerHeight`.
+
+- [ ] [Review][Patch] **Stale `dragOrigin`/`panOrigin` after node `pointerdown` + `stopPropagation` — pan jump on first drag from a node** [`pixiRenderer.ts:163-165,394`] — The hit container's `pointerdown` calls `e.stopPropagation()`, preventing the stage's `pointerdown` from updating `dragOrigin` and `panOrigin`. Subsequent `pointermove` on the stage uses the old origin, immediately exceeding DRAG_THRESHOLD and snapping to an incorrect pan position. Fix: also set `dragOrigin`/`panOrigin` inside the hit's `pointerdown` handler before calling `stopPropagation`.
+
+- [ ] [Review][Patch] **`onNodeSelect` fires on every `pointerdown` regardless of whether a drag follows — panning from a node spuriously changes `selectedNodeId`** [`pixiRenderer.ts:409-412`] — Single-click select fires on `pointerdown`. If the user presses on a node and drags, `onNodeSelect` fires before the drag threshold is reached, changing the selected node unexpectedly. Fix: defer `onNodeSelect` to a `pointerup` handler that only fires when `dragging` was never set to true (requires adding a per-node `pointerup` that checks the drag flag).
+
+### Deferred
+
+- [x] [Review][Defer] **`pendingIconAnimations` not flushed on `renderTree` — bounded wasted work on rapid re-renders** [`pixiRenderer.ts:227-238`] — deferred, bounded self-healing within ~100ms; harmless at current call rate
+- [x] [Review][Defer] **`selectedNodeId` not cleared on mastery switch within same build** [`SkillTreeView.tsx:86-90`] — deferred, tab-switch clears it; mastery-switch edge case minor
+- [x] [Review][Defer] **Keyboard overlay `onClick` allocates directly, skips `onNodeSelect`** [`SkillTreeCanvas.tsx:350`] — deferred, intentional for keyboard UX; mouse path is correct
+- [x] [Review][Defer] **Rapid mastery switch causes double `fitToTree` viewport flash** [`pixiRenderer.ts:254-257`] — deferred, cosmetic only; very rare trigger
+- [x] [Review][Defer] **Multi-touch second contact resets drag origin** [`pixiRenderer.ts:163-166`] — deferred, desktop-primary app; Surface tablet edge case
+- [x] [Review][Defer] **`flashNodeIds` never reset to `null` after animation** [`useSkillTree.ts:57-60`] — deferred, functionally harmless; pre-existing from 1-2 review
+- [x] [Review][Defer] **`onNodeContextMenu` typed optional despite being required for full AC behavior** [`types.ts:10,47`] — deferred, no runtime impact; typing hygiene
+
+---
+
 ## Story 2.5 — Node Allocation Logic & Validation
 
 **As a** user  

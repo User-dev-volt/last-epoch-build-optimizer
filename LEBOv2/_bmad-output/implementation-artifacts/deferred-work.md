@@ -1,3 +1,13 @@
+## Deferred from: code review of epic-2 story 2.4 graph-interaction (2026-05-12)
+
+- **`pendingIconAnimations` not flushed on `renderTree`** — `pixiRenderer.ts:227-238` — On rapid re-renders (e.g. repeated node allocations), orphaned sprite references accumulate in `pendingIconAnimations`. Self-heal within ~100ms; bounded by animation duration. No visual impact. Revisit if profiling reveals wasted ticker work.
+- **`selectedNodeId` not cleared on mastery switch within same build** — `SkillTreeView.tsx:86-90` — The store only clears `selectedNodeId` on `activeBuildId` change, not mastery change. If mastery IDs share node IDs with the base tree, a stale ring could appear. Tab-switch does clear it. Low probability in practice.
+- **Keyboard overlay `onClick` allocates directly, skips `onNodeSelect`** — `SkillTreeCanvas.tsx:350` — Intentional for keyboard UX (Enter/Space = activate). Mouse path is correct. Assistive-technology click-by-focus will allocate rather than select. Acceptable tradeoff.
+- **Rapid mastery switch causes double `fitToTree` viewport flash** — `pixiRenderer.ts:254-257` — If `resize()` fires between two rapid `renderTree` calls for different trees, two `fitToTree` executions run in succession. Cosmetic viewport flash only; no data impact.
+- **Multi-touch second contact resets drag origin** — `pixiRenderer.ts:163-166` — No `pointerId` guard; second finger on a touchscreen resets `dragOrigin`/`panOrigin`. Desktop-primary app; Surface tablet fringe case.
+- **`flashNodeIds` never reset to `null` after animation** — `useSkillTree.ts:57-60` — Stale non-null value lingers in state after flash completes. Functionally harmless (effect uses array identity, not null check). Pre-existing pattern from 1-2 review.
+- **`onNodeContextMenu` typed optional despite being required for full AC behavior** — `types.ts:10,47` — Optional typing in `RendererCallbacks` and `SkillTreeCanvasProps` means TypeScript won't catch a future refactor that drops the callback. No runtime impact today.
+
 ## Deferred from: code review of 2-3-typescript-icon-texture-loading-useicontextures-hook (2026-05-12)
 
 - **`loadedIdsRef` accumulates across class switches** — `useIconTextures.ts` — The loaded-IDs Set is never cleared on class change. Memory grows with each class visited per session. Harmless in practice because PixiJS Assets cache deduplication by URL means re-loading is free anyway, and Last Epoch skill IDs are globally unique. Revisit if per-class texture scoping is needed.
