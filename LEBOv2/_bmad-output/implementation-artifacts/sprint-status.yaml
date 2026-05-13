@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-06
-last_updated: 2026-05-13 (story 3.1 done)
+last_updated: 2026-05-13 (story 7.0 created from Phase 1 code-review findings)
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -92,7 +92,9 @@ development_status:
   epic-6-retrospective: optional
 
   # Epic 7: Advanced Optimization UX — Archetype Slider
+  # Story 7.0 is a prerequisite: replaces the Phase 1 scoring engine with the reviewed v2 algorithm
   epic-7: backlog
+  7-0-scoring-engine-v2-mastery-max-and-context-remap: ready-for-dev
   7-1-optimizationslider-component-and-useoptimizationstore-extension: backlog
   7-2-finetunepanel-component: backlog
   7-3-optimization-weight-computation-in-rust-and-prompt-construction: backlog
