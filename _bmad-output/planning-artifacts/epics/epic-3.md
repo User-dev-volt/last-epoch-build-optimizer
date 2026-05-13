@@ -14,89 +14,79 @@
 
 **Acceptance Criteria:**
 
-**Pre-conditions (verify before implementing)**
-- [ ] `NodeEffect` in `shared/types/gameData.ts` has a `magnitude` field — confirm it exists, document its scale (integer percent, e.g. `50` = "50% increased damage", or decimal fraction, e.g. `0.5`), and ensure the scoring formula is calibrated to that scale; this must be resolved before any other scoring AC is implemented
-- [ ] `EquippedSkill` in `shared/types/gameData.ts` has a `type` field typed as `'spell' | 'melee' | 'ranged'` — if absent, add it as part of this story before implementing context remap
-- [ ] `PassiveNode` in `shared/types/gameData.ts` has a `maxRanks: number` field (positive integer for all valid nodes)
-
 **Scoring formula**
 - [ ] Three score dimensions: Damage (0–100), Survivability (0–100), Speed (0–100)
-- [ ] `Score = masteryMax > 0 ? clamp((playerTotal / masteryMax) × 100, 0, 100) : 0` — division is only performed when `masteryMax > 0`
+- [ ] `Score = clamp((playerTotal / masteryMax) × 100, 0, 100)` per dimension
 - [ ] `playerTotal` = sum of `(effect.magnitude × typeWeight × allocatedRanks / maxRanks)` for all effects on all allocated nodes whose resolved dimension matches the target
-- [ ] If a node's `maxRanks` is 0 (malformed game data), skip that node's contribution entirely and emit `console.warn('[scoring] node with maxRanks=0 skipped: ${nodeId}')` in dev mode
-- [ ] Effect type weights: `more_*` = 3×, `increased_*` = 2×, all other prefixes = 1× (flat/additive default)
-- [ ] Weight resolution: extract the first underscore-delimited token from the effect tag (e.g. `'more'` from `'more_damage'`, `'increased'` from `'increased_cast_speed'`); look up in `TYPE_WEIGHTS`; default to 1 if not found
+- [ ] Effect type weights: `more_*` = 3×, `increased_*` = 2×, all flat/additive effects = 1×
 - [ ] Multi-rank nodes contribute proportionally: a 2/3-rank node contributes ⅔ of its max potential
+- [ ] Tags not in any dimension list contribute to an internal `utility` accumulator (not shown in UI; reserved for future use)
 - [ ] If `masteryMax` for a dimension is 0 (no nodes exist for it in the mastery), that dimension's score is 0 — no division occurs
 
 **Context-aware tag reclassification**
 - [ ] Before scoring, the engine runs a context remap using equipped skills from the context panel
-- [ ] If the build's equipped skills are majority spells (skill type = `spell`), `cast_speed` is reclassified from Speed → Damage (contributes to Damage only; removed from Speed)
-- [ ] If the build's equipped skills are majority weapon attacks (skill type = `melee` or `ranged`), `attack_speed` is reclassified from Speed → Damage (contributes to Damage only; removed from Speed)
-- [ ] "Majority" = more than half of the *filled* (non-null) equipped skill slots contain that skill type; empty slots do not count toward the denominator; ties default to no reclassification
-- [ ] When context remap changes (equipped skills updated), `masteryMax` is recomputed with the active remap applied before scores are recalculated — ensures the denominator uses the same tag assignments as the numerator and scores remain in the 0–100 range
+- [ ] If the build's equipped skills are majority spells (skill type = `spell`), `cast_speed` is reclassified from Speed → also contributes to Damage at full weight
+- [ ] If the build's equipped skills are majority weapon attacks (skill type = `melee` or `ranged`), `attack_speed` is reclassified from Speed → also contributes to Damage at full weight
+- [ ] Reclassified tags contribute to *both* their original dimension and the reclassified one (not moved, duplicated)
+- [ ] "Majority" = more than half of the equipped skill slots contain that skill type; ties default to no reclassification
 - [ ] Context remap re-runs whenever equipped skills change in the context panel
 
 **`masteryMax` (denominator)**
-- [ ] `masteryMax` per dimension is computed at game data load time and recomputed whenever the active context remap changes (equipped skills updated)
-- [ ] Point budget is defined as the named constant `PASSIVE_POINT_BUDGET = 100` in `src/engine/scoring.ts`
-- [ ] Algorithm: greedy allocation of a simulated `PASSIVE_POINT_BUDGET`-point budget, respecting tree topology — only nodes reachable from the tree's root nodes (nodes with no prerequisites) via allocated prerequisite paths may be selected; sort eligible reachable nodes descending by per-point contribution to this dimension, allocate greedily (respecting each node's `maxRanks`) and expand the reachable set as nodes are allocated; `masteryMax` = sum of contributions from that simulated allocation
-- [ ] `masteryMax` values are cached in `gameDataStore`; the cache entry for a mastery is invalidated when game data is re-fetched (staleness refresh) and recomputed on next access
+- [ ] `masteryMax` per dimension is computed once per mastery at game data load time
+- [ ] Algorithm: greedy allocation of a simulated 100-point budget — sort all mastery nodes descending by per-point contribution to this dimension, allocate points greedily until 100 points are spent (respecting each node's `maxRanks`); `masteryMax` = sum of contributions from that simulated allocation
+- [ ] `masteryMax` values are cached in `gameDataStore` and reused across score recalculations
 
 **Performance & correctness**
-- [ ] Time from `buildStore` state commit to `scoreStore` state commit ≤ 16ms — measured in a unit test using `performance.now()` with a full-size mastery fixture (100+ nodes); run 50 iterations after a 5-iteration warm-up and assert the P99 result is ≤ 16ms
+- [ ] Time from `buildStore` state commit to `scoreStore` state commit ≤ 16ms, measured in a unit test using `performance.now()` with a full-size mastery fixture (100+ nodes)
 - [ ] Given identical node allocations and identical equipped skills, the engine always produces identical scores (no randomness, no set-iteration nondeterminism — use sorted arrays, not Sets, when iterating effects)
-- [ ] `scoreStore` exposes: `{ damage: number, survivability: number, speed: number, lastUpdatedAt: number }` where `lastUpdatedAt` is `Date.now()` at the time of the last score computation
+- [ ] `scoreStore` exposes: `{ damage: number, survivability: number, speed: number, utility: number, lastUpdatedAt: number }`
 
 **Subscription & lifecycle**
 - [ ] `scoreStore` subscribes to `buildStore` via `zustand.subscribe()` — subscription is initialized once in `src/engine/scoring.ts` module scope via an exported `initScoringEngine()` function
-- [ ] `initScoringEngine()` also subscribes to equipped skills changes (context panel) to trigger context remap re-runs and `masteryMax` recomputation
-- [ ] `initScoringEngine()` returns a single combined cleanup function that unsubscribes both subscriptions; `App.tsx` stores it and calls it on unmount
+- [ ] `initScoringEngine()` returns an `unsubscribe` handle; `App.tsx` stores it and calls it on unmount
+- [ ] `scoreStore` also subscribes to changes in equipped skills (context panel) to trigger reclassification re-runs
 
 **Testing**
-- [ ] Unit tests in `src/engine/scoring.test.ts` cover: basic per-dimension score, multi-rank partial allocation, context remap (spell majority, attack majority, tie/no-remap), zero-dimension mastery (no crash), unknown tag → console.warn emitted in dev mode, `masteryMax` greedy algorithm produces correct denominator for a known fixture, `masteryMax` respects tree topology (unreachable node is not allocated), `maxRanks=0` node skipped without crash, P99 performance with 100-node fixture ≤ 16ms
+- [ ] Unit tests in `src/engine/scoring.test.ts` cover: basic per-dimension score, multi-rank partial allocation, context remap (spell majority, attack majority, tie/no-remap), zero-dimension mastery (no crash), unknown tag → utility bucket, `masteryMax` greedy algorithm produces correct denominator for a known fixture
 
 **Technical Notes:**
 
 Scoring logic in `src/engine/scoring.ts`:
 
 ```typescript
-// Update if Last Epoch changes the passive point cap
-const PASSIVE_POINT_BUDGET = 100;
-
 // Base dimension tag lists (before context remap)
 const DAMAGE_TAGS = ['increased_damage', 'flat_damage', 'more_damage', 'critical_strike_chance', 'critical_strike_multiplier', 'penetration', 'damage_over_time'];
 const SURVIVABILITY_TAGS = ['increased_health', 'flat_health', 'armor', 'damage_reduction', 'dodge_rating', 'block_chance', 'resist', 'leech'];
 const SPEED_TAGS = ['movement_speed', 'attack_speed', 'cast_speed', 'cooldown_recovery'];
 
-// Effect type weights — any prefix not listed defaults to 1
+// Effect type weights
 const TYPE_WEIGHTS: Record<string, number> = {
   more: 3,
   increased: 2,
+  flat: 1,         // default for any unrecognized prefix
 };
 
-// Extract first underscore-delimited token from tag; look up TYPE_WEIGHTS; default 1
+// Resolve weight from effect tag prefix: 'more_damage' → 3, 'increased_health' → 2, etc.
 function resolveWeight(tag: string): number { ... }
 
-// Context remap: returns a map of tag → replacement dimension (reclassified tags move, not duplicate)
-function buildContextRemap(equippedSkills: EquippedSkill[]): Map<string, Dimension> { ... }
+// Context remap: returns a map of extra dimension contributions per tag
+function buildContextRemap(equippedSkills: EquippedSkill[]): Map<string, Dimension[]> { ... }
 
-// masteryMax greedy simulation — respects tree topology via prerequisite graph
-// pointBudget = PASSIVE_POINT_BUDGET
-function computeMasteryMax(nodes: PassiveNode[], edges: TreeEdge[], pointBudget: number, contextRemap: Map<string, Dimension>): DimensionScores { ... }
+// masteryMax greedy simulation (run once at load, stored in gameDataStore)
+function computeMasteryMax(nodes: PassiveNode[], pointBudget: number): DimensionScores { ... }
 
 // Main scoring entry point
 function scoreAllocation(
   allocations: NodeAllocations,
   masteryMax: DimensionScores,
-  contextRemap: Map<string, Dimension>
+  contextRemap: Map<string, Dimension[]>
 ): ScoredDimensions { ... }
 ```
 
-- `NodeEffect.magnitude` scale must be confirmed and documented (see Pre-conditions) before calibrating the formula
-- `computeMasteryMax` takes both `nodes` and `edges` (prerequisite graph) to enforce topology constraints during simulation
-- `scoreStore` shape: `{ damage, survivability, speed, lastUpdatedAt }` — `utility` is not tracked; unknown tags emit `console.warn('[scoring] unknown tag: ${tag}')` guarded by `if (import.meta.env.DEV)` (Vite replaces this with `false` at build time; the minifier dead-code-eliminates the block in production)
-- `initScoringEngine()` wires up both subscriptions (buildStore allocations + equipped skills) and returns a single combined cleanup function
+- `NodeEffect` must have a `magnitude: number` field — verify this exists in `shared/types/gameData.ts` before implementing; if absent, add it there as part of this story
+- `scoreStore` shape: `{ damage, survivability, speed, utility, lastUpdatedAt }` — all numbers
+- `initScoringEngine()` wires up both subscriptions (buildStore allocations + equipped skills) and returns a cleanup handle
+- Dev-mode logging: unknown tags emit `console.warn('[scoring] unknown tag: ${tag}')` — stripped in prod builds via `import.meta.env.DEV` guard
 
 ---
 
