@@ -53,6 +53,11 @@ export function calculateScore(build: BuildState, gameData: GameData): BuildScor
     const node = allNodes[nodeId]
     if (!node) continue
 
+    if (node.maxPoints === 0) {
+      if (import.meta.env.DEV) console.warn(`[scoring] node with maxPoints=0 skipped: ${nodeId}`)
+      continue
+    }
+
     const weight = allocatedPoints * node.maxPoints
     switch (classifyNode(node.tags)) {
       case 'damage': rawDamage += weight; break

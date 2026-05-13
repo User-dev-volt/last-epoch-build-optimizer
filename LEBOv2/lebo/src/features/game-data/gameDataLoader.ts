@@ -109,6 +109,7 @@ function transformSkillEntry(raw: RawSkillEntry, masteries: Record<string, Maste
     masteryId: raw.masteryId,
     masteryName: raw.masteryId != null ? (masteries[raw.masteryId]?.masteryName ?? null) : null,
     masteryGatePoints: raw.masteryGatePoints ?? null,
+    type: 'unknown',
   }
 }
 

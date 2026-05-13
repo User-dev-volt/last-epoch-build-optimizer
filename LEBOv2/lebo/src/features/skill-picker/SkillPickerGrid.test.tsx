@@ -10,14 +10,14 @@ vi.mock('../../shared/utils/invokeCommand', () => ({
 }))
 
 const baseSkills: SkillEntry[] = [
-  { skillId: 'skill-1', skillName: 'Forge Strike', masteryId: null, masteryName: null, masteryGatePoints: null },
-  { skillId: 'skill-2', skillName: 'Warpath', masteryId: null, masteryName: null, masteryGatePoints: null },
+  { skillId: 'skill-1', skillName: 'Forge Strike', masteryId: null, masteryName: null, masteryGatePoints: null, type: 'unknown' },
+  { skillId: 'skill-2', skillName: 'Warpath', masteryId: null, masteryName: null, masteryGatePoints: null, type: 'unknown' },
 ]
 
 const masterySkills: SkillEntry[] = [
-  { skillId: 'skill-3', skillName: 'Lunge', masteryId: 'void_knight', masteryName: 'Void Knight', masteryGatePoints: 15 },
-  { skillId: 'skill-4', skillName: 'Devouring Orb', masteryId: 'void_knight', masteryName: 'Void Knight', masteryGatePoints: 20 },
-  { skillId: 'skill-5', skillName: 'Hammer Throw', masteryId: 'forge_guard', masteryName: 'Forge Guard', masteryGatePoints: 10 },
+  { skillId: 'skill-3', skillName: 'Lunge', masteryId: 'void_knight', masteryName: 'Void Knight', masteryGatePoints: 15, type: 'unknown' },
+  { skillId: 'skill-4', skillName: 'Devouring Orb', masteryId: 'void_knight', masteryName: 'Void Knight', masteryGatePoints: 20, type: 'unknown' },
+  { skillId: 'skill-5', skillName: 'Hammer Throw', masteryId: 'forge_guard', masteryName: 'Forge Guard', masteryGatePoints: 10, type: 'unknown' },
 ]
 
 const allSkills = [...baseSkills, ...masterySkills]

@@ -28,6 +28,8 @@ function makeBuild(
     name: 'Test',
     classId,
     masteryId,
+    characterLevel: 1,
+    budgetEnforced: false,
     nodeAllocations,
     skillNodeAllocations: {},
     contextData: { gear: [], skills: [], idols: [] },
@@ -150,6 +152,22 @@ describe('calculateScore', () => {
   it('allocatedPoints=0 node is skipped', () => {
     const build = makeBuild('test-class', 'test-mastery', { 'dmg-node': 0 })
     const result = calculateScore(build, TEST_GAME_DATA)
+    expect(result).toEqual({ damage: 0, survivability: 0, speed: 0 })
+  })
+
+  it('node with maxPoints=0 is skipped and contributes nothing', () => {
+    const zeroNode = makeNode('zero-node', ['DAMAGE'], 0)
+    const gameData: GameData = {
+      ...TEST_GAME_DATA,
+      classes: {
+        'test-class': {
+          ...TEST_GAME_DATA.classes['test-class'],
+          baseTree: { ...TEST_GAME_DATA.classes['test-class'].baseTree, 'zero-node': zeroNode },
+        },
+      },
+    }
+    const build = makeBuild('test-class', 'test-mastery', { 'zero-node': 1 })
+    const result = calculateScore(build, gameData)
     expect(result).toEqual({ damage: 0, survivability: 0, speed: 0 })
   })
 

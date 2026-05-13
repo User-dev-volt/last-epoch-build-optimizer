@@ -44,6 +44,7 @@ export interface SkillEntry {
   masteryId: string | null
   masteryName: string | null
   masteryGatePoints: number | null
+  type: 'spell' | 'melee' | 'ranged' | 'unknown'
 }
 
 export interface DataVersionCheckResult {

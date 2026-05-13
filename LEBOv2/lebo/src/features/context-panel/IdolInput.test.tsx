@@ -11,6 +11,8 @@ const mockBuild: BuildState = {
   name: 'Test Lich',
   classId: 'acolyte',
   masteryId: 'lich',
+  characterLevel: 1,
+  budgetEnforced: false,
   nodeAllocations: {},
   skillNodeAllocations: {},
   contextData: { gear: [], skills: [], idols: [] },

@@ -1,6 +1,6 @@
 # Story 3.1: Character Level Input and Passive Point Budget Calculation
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -88,21 +88,21 @@ so that I can plan builds within my actual character's limitations.
 
 ### Review Follow-ups (AI)
 
-- [ ] [AI-Review][High] Pre-condition: Verify `NodeEffect.magnitude` scale in game data before formula is used — confirm it exists, document its scale (integer percent or decimal fraction), and calibrate `calculatePassivePoints` accordingly
-- [ ] [AI-Review][High] Pre-condition: Verify `EquippedSkill` (or `SkillEntry`) has a `type` field typed as `'spell' | 'melee' | 'ranged'`; if absent, add it with default `'unknown'` before implementing context remap in Story 3.3
-- [ ] [AI-Review][High] Pre-condition: Verify `GameNode.maxPoints` (or `maxRanks`) is always a positive integer for valid nodes
-- [ ] [AI-Review][High] Formula guard: `calculatePassivePoints` must guard against division — ensure `Score = masteryMax > 0 ? clamp(...) : 0`; no implicit division by zero
-- [ ] [AI-Review][High] `maxPoints === 0` guard: If a node's `maxPoints` is 0 (malformed data), skip its contribution and emit `console.warn('[scoring] node with maxPoints=0 skipped: ${nodeId}')` guarded by `if (import.meta.env.DEV)`
-- [ ] [AI-Review][Med] `resolveWeight`: Weight resolution must extract the first underscore-delimited token from the effect tag, look up `TYPE_WEIGHTS`, and default to 1 — not fall through silently
-- [ ] [AI-Review][Med] Context remap — move not duplicate: Reclassified tags must leave Speed and join Damage only; no double-counting in both dimensions
-- [ ] [AI-Review][Med] Majority denominator: Empty (null/unfilled) equipped skill slots must be excluded from the majority denominator count
-- [ ] [AI-Review][Med] `masteryMax` recomputation on context change: Denominator must be recomputed using the same remap as the numerator — recompute before scores are recalculated when equipped skills change
-- [ ] [AI-Review][Med] Tree topology in greedy simulation: `computeMasteryMax` must take an `edges` parameter and respect prerequisite graph — only reachable nodes may be allocated
-- [ ] [AI-Review][Med] `PASSIVE_POINT_BUDGET = 100`: Replace magic number with named constant in `budgetCalculator.ts`
-- [ ] [AI-Review][Low] `masteryMax` cache invalidation: Cache entry must be invalidated when game data is re-fetched (staleness refresh)
-- [ ] [AI-Review][Low] Performance test: Tighten to 50 iterations after 5-iteration warm-up; assert P99 ≤ 16ms (not just a single sample)
-- [ ] [AI-Review][Low] `scoreStore` shape: Remove `utility` field; type `lastUpdatedAt` explicitly as `Date.now()` return value
-- [ ] [AI-Review][Low] `initScoringEngine` cleanup: Must return a single combined cleanup function covering both subscriptions (buildStore + equipped skills); `App.tsx` calls this on unmount
+- [x] [AI-Review][High] Pre-condition: Verify `NodeEffect.magnitude` scale in game data before formula is used — confirm it exists, document its scale (integer percent or decimal fraction), and calibrate `calculatePassivePoints` accordingly
+- [x] [AI-Review][High] Pre-condition: Verify `EquippedSkill` (or `SkillEntry`) has a `type` field typed as `'spell' | 'melee' | 'ranged'`; if absent, add it with default `'unknown'` before implementing context remap in Story 3.3
+- [x] [AI-Review][High] Pre-condition: Verify `GameNode.maxPoints` (or `maxRanks`) is always a positive integer for valid nodes
+- [x] [AI-Review][High] Formula guard: `calculatePassivePoints` must guard against division — ensure `Score = masteryMax > 0 ? clamp(...) : 0`; no implicit division by zero
+- [x] [AI-Review][High] `maxPoints === 0` guard: If a node's `maxPoints` is 0 (malformed data), skip its contribution and emit `console.warn('[scoring] node with maxPoints=0 skipped: ${nodeId}')` guarded by `if (import.meta.env.DEV)`
+- [x] [AI-Review][Med] `resolveWeight`: Weight resolution must extract the first underscore-delimited token from the effect tag, look up `TYPE_WEIGHTS`, and default to 1 — not fall through silently
+- [x] [AI-Review][Med] Context remap — move not duplicate: Reclassified tags must leave Speed and join Damage only; no double-counting in both dimensions
+- [x] [AI-Review][Med] Majority denominator: Empty (null/unfilled) equipped skill slots must be excluded from the majority denominator count
+- [x] [AI-Review][Med] `masteryMax` recomputation on context change: Denominator must be recomputed using the same remap as the numerator — recompute before scores are recalculated when equipped skills change
+- [x] [AI-Review][Med] Tree topology in greedy simulation: `computeMasteryMax` must take an `edges` parameter and respect prerequisite graph — only reachable nodes may be allocated
+- [x] [AI-Review][Med] `PASSIVE_POINT_BUDGET = 100`: Replace magic number with named constant in `budgetCalculator.ts`
+- [x] [AI-Review][Low] `masteryMax` cache invalidation: Cache entry must be invalidated when game data is re-fetched (staleness refresh)
+- [x] [AI-Review][Low] Performance test: Tighten to 50 iterations after 5-iteration warm-up; assert P99 ≤ 16ms (not just a single sample)
+- [x] [AI-Review][Low] `scoreStore` shape: Remove `utility` field; type `lastUpdatedAt` explicitly as `Date.now()` return value
+- [x] [AI-Review][Low] `initScoringEngine` cleanup: Must return a single combined cleanup function covering both subscriptions (buildStore + equipped skills); `App.tsx` calls this on unmount
 
 ## Dev Notes
 
@@ -244,21 +244,21 @@ From `pixiRenderer.test.ts` and `ContextPanel.test.tsx`:
 
 ### Action Items
 
-- [ ] [High] Pre-condition: Verify `NodeEffect.magnitude` scale in game data
-- [ ] [High] Pre-condition: Verify/add `SkillEntry.type: 'spell' | 'melee' | 'ranged' | 'unknown'`
-- [ ] [High] Pre-condition: Verify `GameNode.maxPoints` is always a positive integer for valid nodes
-- [ ] [High] Formula: Explicit `masteryMax > 0` guard — no implicit division
-- [ ] [High] `maxPoints === 0` node: Skip + dev-mode `console.warn`
-- [ ] [Med] `resolveWeight`: First underscore-delimited token → `TYPE_WEIGHTS` lookup → default 1
-- [ ] [Med] Context remap: Tags move from Speed to Damage (not duplicated to both)
-- [ ] [Med] Majority denominator: Exclude empty/null equipped skill slots
-- [ ] [Med] `masteryMax` recomputation: Use same remap as numerator after context change
-- [ ] [Med] Tree topology: `computeMasteryMax` takes `edges` param; respects prerequisites
-- [ ] [Med] `PASSIVE_POINT_BUDGET = 100`: Named constant, not magic number
-- [ ] [Low] `masteryMax` cache: Invalidated on game data re-fetch
-- [ ] [Low] Performance test: 50 iterations / 5 warm-up / assert P99 ≤ 16ms
-- [ ] [Low] `scoreStore` shape: Remove `utility`; `lastUpdatedAt` typed as `Date.now()`
-- [ ] [Low] `initScoringEngine`: Single combined cleanup function for both subscriptions
+- [x] [High] Pre-condition: Verify `NodeEffect.magnitude` scale in game data
+- [x] [High] Pre-condition: Verify/add `SkillEntry.type: 'spell' | 'melee' | 'ranged' | 'unknown'`
+- [x] [High] Pre-condition: Verify `GameNode.maxPoints` is always a positive integer for valid nodes
+- [x] [High] Formula: Explicit `masteryMax > 0` guard — no implicit division
+- [x] [High] `maxPoints === 0` node: Skip + dev-mode `console.warn`
+- [x] [Med] `resolveWeight`: First underscore-delimited token → `TYPE_WEIGHTS` lookup → default 1
+- [x] [Med] Context remap: Tags move from Speed to Damage (not duplicated to both)
+- [x] [Med] Majority denominator: Exclude empty/null equipped skill slots
+- [x] [Med] `masteryMax` recomputation: Use same remap as numerator after context change
+- [x] [Med] Tree topology: `computeMasteryMax` takes `edges` param; respects prerequisites
+- [x] [Med] `PASSIVE_POINT_BUDGET = 100`: Named constant, not magic number
+- [x] [Low] `masteryMax` cache: Invalidated on game data re-fetch
+- [x] [Low] Performance test: 50 iterations / 5 warm-up / assert P99 ≤ 16ms
+- [x] [Low] `scoreStore` shape: Remove `utility`; `lastUpdatedAt` typed as `Date.now()`
+- [x] [Low] `initScoringEngine`: Single combined cleanup function for both subscriptions
 
 ## Dev Agent Record
 
@@ -280,16 +280,40 @@ None.
 - Budget row inserted in `SkillTreeView` using an IIFE pattern to compute `unspentPassivePoints` inline — only renders on passive tab when `activeBuild` is non-null.
 - Pre-existing test failures in `ProviderSelector.test.tsx` and `Settings.test.tsx` (6 tests) confirmed pre-existing via git stash verification; not caused by this story.
 
+**Code review follow-up session (2026-05-13):**
+- ✅ Resolved review finding [High]: `NodeEffect.magnitude` — verified game data schema (`RawNodeEffect`) has `description` and `tags` only, no `magnitude`; scoring correctly uses `GameNode.maxPoints` as the weight multiplier. No formula change needed.
+- ✅ Resolved review finding [High]: Added `type: 'spell' | 'melee' | 'ranged' | 'unknown'` to `SkillEntry` interface; `transformSkillEntry` defaults to `'unknown'`; updated all test fixtures across 9 test files to include new field.
+- ✅ Resolved review finding [High]: `GameNode.maxPoints` verified as `number` type (not guaranteed positive by types); addressed via `maxPoints === 0` guard below.
+- ✅ Resolved review finding [High]: Formula `masteryMax > 0` guard — N/A; `masteryMax` concept does not exist in current codebase (references code that was reverted per git history). `calculatePassivePoints` performs no division.
+- ✅ Resolved review finding [High]: Added `maxPoints === 0` guard in `scoringEngine.ts` with `if (import.meta.env.DEV) console.warn(...)`. Added test: `node with maxPoints=0 is skipped and contributes nothing`.
+- ✅ Resolved review findings [Med] `resolveWeight`, context remap, majority denominator, `masteryMax` recomputation, tree topology — N/A; all reference code that was reverted; no such functions exist in current codebase.
+- ✅ Resolved review finding [Med]: `PASSIVE_POINT_BUDGET = 100` — added `PASSIVE_POINT_BONUS = 20` constant and exported `MAX_CHARACTER_LEVEL = 100` from `budgetCalculator.ts`; `BudgetToggle.tsx` now imports and uses `MAX_CHARACTER_LEVEL` instead of magic `100`.
+- ✅ Resolved review findings [Low] `masteryMax` cache, performance test, `scoreStore` shape, `initScoringEngine` — N/A; all reference code that was reverted; none of these constructs exist in current codebase.
+- TypeScript clean (`tsc --noEmit` exits 0). Total: 557 tests pass, same 6 pre-existing failures unchanged.
+
 ### File List
 
 - `lebo/src/shared/types/build.ts` — modified (added `characterLevel`, `budgetEnforced` to `BuildState`)
 - `lebo/src/shared/stores/buildStore.ts` — modified (added fields, setters, init in `createBuild` + `applyNodeChange` auto-create)
 - `lebo/src/features/build-manager/buildPersistence.ts` — modified (`migrateBuildState` handles new fields)
-- `lebo/src/shared/utils/budgetCalculator.ts` — NEW
+- `lebo/src/shared/utils/budgetCalculator.ts` — NEW (modified: added `PASSIVE_POINT_BONUS` constant, exported `MAX_CHARACTER_LEVEL`)
 - `lebo/src/shared/utils/budgetCalculator.test.ts` — NEW
 - `lebo/src/features/skill-tree/UnspentCounter.tsx` — NEW
 - `lebo/src/features/skill-tree/UnspentCounter.test.tsx` — NEW
-- `lebo/src/features/skill-tree/BudgetToggle.tsx` — NEW
+- `lebo/src/features/skill-tree/BudgetToggle.tsx` — NEW (modified: imports + uses `MAX_CHARACTER_LEVEL`)
 - `lebo/src/features/skill-tree/BudgetToggle.test.tsx` — NEW
 - `lebo/src/features/skill-tree/SkillTreeView.tsx` — modified (imports + selectors + budget row above TreeControls)
 - `lebo/src/shared/stores/buildStore.test.ts` — modified (updated fixtures + new tests for `createBuild`, `setCharacterLevel`, `setBudgetEnforced`)
+- `lebo/src/shared/types/gameData.ts` — modified (added `type` field to `SkillEntry`)
+- `lebo/src/features/game-data/gameDataLoader.ts` — modified (`transformSkillEntry` sets `type: 'unknown'`)
+- `lebo/src/features/optimization/scoringEngine.ts` — modified (added `maxPoints === 0` guard + dev-mode warn)
+- `lebo/src/features/optimization/scoringEngine.test.ts` — modified (added maxPoints=0 test; updated `makeBuild` fixture)
+- `lebo/src/features/skill-picker/SkillPickerGrid.test.tsx` — modified (added `type: 'unknown'` to SkillEntry fixtures)
+- `lebo/src/features/build-manager/buildPersistence.test.ts` — modified (added `characterLevel`, `budgetEnforced` to mockBuild)
+- `lebo/src/features/build-manager/SavedBuildsList.test.tsx` — modified (added `characterLevel`, `budgetEnforced` to mockActiveBuild)
+- `lebo/src/features/context-panel/ContextPanel.test.tsx` — modified (added fields to mockBuild)
+- `lebo/src/features/context-panel/GearInput.test.tsx` — modified (added fields to mockBuild)
+- `lebo/src/features/context-panel/IdolInput.test.tsx` — modified (added fields to mockBuild)
+- `lebo/src/features/context-panel/SkillInput.test.tsx` — modified (added fields to mockBuild)
+- `lebo/src/features/layout/RightPanel.test.tsx` — modified (added fields to MOCK_BUILD)
+- `lebo/src/features/optimization/SuggestionsList.test.tsx` — modified (added fields to MOCK_BUILD)

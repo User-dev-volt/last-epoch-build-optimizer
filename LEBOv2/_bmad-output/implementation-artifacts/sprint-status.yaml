@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-06
-last_updated: 2026-05-13 (story 3.1 back to ready-for-dev with review findings)
+last_updated: 2026-05-13 (story 3.1 review findings addressed; back to review)
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -61,7 +61,7 @@ development_status:
 
   # Epic 3: Character Level & Point Budget System
   epic-3: in-progress
-  3-1-character-level-input-and-passive-point-budget-calculation: ready-for-dev
+  3-1-character-level-input-and-passive-point-budget-calculation: review
   3-2-active-skill-level-input-and-per-skill-tree-budget: backlog
   3-3-enforce-level-budget-toggle-and-allocation-enforcement: backlog
   epic-3-retrospective: optional

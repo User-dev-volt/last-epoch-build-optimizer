@@ -1,5 +1,6 @@
 import { Switch } from '@headlessui/react'
 import { useBuildStore } from '../../shared/stores/buildStore'
+import { MAX_CHARACTER_LEVEL } from '../../shared/utils/budgetCalculator'
 
 export function BudgetToggle() {
   const characterLevel = useBuildStore((s) => s.activeBuild?.characterLevel ?? 1)
@@ -12,7 +13,7 @@ export function BudgetToggle() {
 
   function handleLevelChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = parseInt(e.target.value, 10)
-    const clamped = Math.max(1, Math.min(100, isNaN(raw) ? 1 : raw))
+    const clamped = Math.max(1, Math.min(MAX_CHARACTER_LEVEL, isNaN(raw) ? 1 : raw))
     setCharacterLevel(clamped)
   }
 
@@ -23,7 +24,7 @@ export function BudgetToggle() {
         <input
           type="number"
           min={1}
-          max={100}
+          max={MAX_CHARACTER_LEVEL}
           value={characterLevel}
           onChange={handleLevelChange}
           style={{

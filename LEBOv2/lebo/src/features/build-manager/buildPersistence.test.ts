@@ -32,6 +32,8 @@ const mockBuild: BuildState = {
   name: 'Void Knight',
   classId: 'sentinel',
   masteryId: 'void_knight',
+  characterLevel: 1,
+  budgetEnforced: false,
   nodeAllocations: { 'node-a': 1 },
   skillNodeAllocations: {},
   contextData: { gear: [], skills: [], idols: [] },
