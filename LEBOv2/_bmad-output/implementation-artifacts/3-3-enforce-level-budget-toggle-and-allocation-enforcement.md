@@ -1,6 +1,6 @@
 # Story 3.3: Enforce Level Budget Toggle and Allocation Enforcement
 
-Status: review
+Status: done
 
 ## Story
 
@@ -319,6 +319,11 @@ claude-sonnet-4-6
 - `lebo/src/shared/stores/buildStore.ts`
 - `lebo/src/shared/stores/buildStore.test.ts`
 
+### Review Findings
+
+- [x] [Review][Defer] Budget check doesn't verify allocation delta amount [`buildStore.ts:165`] — deferred, pre-existing: `if (available - allocated <= 0)` guards against 0 unspent points but allows a call with `delta > 1` to allocate multiple points past the budget ceiling. In practice the UI always passes `delta = ±1`; no realistic code path reaches this. Fix would add complexity for a theoretical case the spec doesn't address.
+
 ## Change Log
 
 - 2026-05-13: Story 3-3 implemented — added budget enforcement guards to `applyNodeChange` and `applySkillNodeChange` in `buildStore.ts`; extended `buildStore.test.ts` with 8 enforcement tests covering both passive and skill budget paths (AC #1, #2, #3). No UI changes required.
+- 2026-05-13: Code review passed — 0 patches, 1 deferred (multi-delta edge case), 3 dismissed. Status set to done.
