@@ -1,6 +1,6 @@
 # Story 4.1: Weaver Tree Research Spike
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -30,46 +30,46 @@ so that the Weaver Tree epic has confirmed data before any rendering code is wri
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Re-check tunklab.com for Weaver Tree data (AC: #1 — items 1, 2, 3)
-  - [ ] Navigate to `https://lastepoch.tunklab.com/` — confirm if SSL 526 is resolved (was temporary as of 2026-05-08 per Story 2.1)
-  - [ ] If accessible, search for a Weaver Tree section: look for links titled "Weaver Tree", "Weaver", or similar
-  - [ ] Check if Weaver node data is structured with: node IDs, x/y positions, edge connections, point costs
-  - [ ] Document: whether data exists, its format, and whether coordinates are present or must be derived
+- [x] Task 1: Re-check tunklab.com for Weaver Tree data (AC: #1 — items 1, 2, 3)
+  - [x] Navigate to `https://lastepoch.tunklab.com/` — confirm if SSL 526 is resolved (was temporary as of 2026-05-08 per Story 2.1)
+  - [x] If accessible, search for a Weaver Tree section: look for links titled "Weaver Tree", "Weaver", or similar
+  - [x] Check if Weaver node data is structured with: node IDs, x/y positions, edge connections, point costs
+  - [x] Document: whether data exists, its format, and whether coordinates are present or must be derived
 
-- [ ] Task 2: Check lastepochtools.com for Weaver Tree data (AC: #1 — items 1, 2, 3)
-  - [ ] Navigate to `https://www.lastepochtools.com/` — check if a Weaver Tree section exists
-  - [ ] Try known URL patterns: `/weaver`, `/weaver-tree`, `/skills/weaver`, `/passive/weaver`
-  - [ ] If a Weaver Tree page exists: inspect the page for node grid structure, coordinate data, edge/connection data, point costs
-  - [ ] Document: whether data exists, its format, and HTTP accessibility (403 / accessible)
+- [x] Task 2: Check lastepochtools.com for Weaver Tree data (AC: #1 — items 1, 2, 3)
+  - [x] Navigate to `https://www.lastepochtools.com/` — check if a Weaver Tree section exists
+  - [x] Try known URL patterns: `/weaver`, `/weaver-tree`, `/skills/weaver`, `/passive/weaver`
+  - [x] If a Weaver Tree page exists: inspect the page for node grid structure, coordinate data, edge/connection data, point costs
+  - [x] Document: whether data exists, its format, and HTTP accessibility (403 / accessible)
 
-- [ ] Task 3: Check Musholic/PathOfBuildingForLastEpoch for Weaver Tree data (AC: #1 — items 1, 2, 3)
-  - [ ] The repo is MIT-licensed and actively maintained (v0.11.0, 2026-04-02) — check if Weaver Tree data is present
-  - [ ] Look in the data Lua tables for any `weaver` key or Weaver Tree node definitions
-  - [ ] If Weaver data exists: document node count, whether positions/coordinates are included, the schema structure
-  - [ ] Check the repo changelog/releases since April 2026 for any Weaver Tree additions
-  - [ ] Document findings and note whether Lua → JSON conversion would be feasible
+- [x] Task 3: Check Musholic/PathOfBuildingForLastEpoch for Weaver Tree data (AC: #1 — items 1, 2, 3)
+  - [x] The repo is MIT-licensed and actively maintained (v0.11.0, 2026-04-02) — check if Weaver Tree data is present
+  - [x] Look in the data Lua tables for any `weaver` key or Weaver Tree node definitions
+  - [x] If Weaver data exists: document node count, whether positions/coordinates are included, the schema structure
+  - [x] Check the repo changelog/releases since April 2026 for any Weaver Tree additions
+  - [x] Document findings and note whether Lua → JSON conversion would be feasible
 
-- [ ] Task 4: Search GitHub for other community Weaver Tree data repos (AC: #1 — items 1, 2)
-  - [ ] Search GitHub: `last epoch weaver tree data`, `last epoch weaver nodes`, `last epoch weaver json`
-  - [ ] Check any results with: machine-readable format (JSON, CSV, Lua), node coordinates, edge data
-  - [ ] Check `prowner/last-epoch-data` for Weaver Tree additions since the original game-data spike (was incomplete as of that spike)
-  - [ ] Document any viable candidates with URL, license, format, and completeness
+- [x] Task 4: Search GitHub for other community Weaver Tree data repos (AC: #1 — items 1, 2)
+  - [x] Search GitHub: `last epoch weaver tree data`, `last epoch weaver nodes`, `last epoch weaver json`
+  - [x] Check any results with: machine-readable format (JSON, CSV, Lua), node coordinates, edge data
+  - [x] Check `prowner/last-epoch-data` for Weaver Tree additions since the original game-data spike (was incomplete as of that spike)
+  - [x] Document any viable candidates with URL, license, format, and completeness
 
-- [ ] Task 5: Check Last Epoch wiki for Weaver Tree mechanics (AC: #1 — item 3)
-  - [ ] Navigate to the Weaver Tree article on the Last Epoch wiki (`wiki.lastepoch.com` or Fandom)
-  - [ ] Document: how many point pools exist, the unlock formula (e.g., "1 point per N character levels"), whether it is truly separate from passive tree points
-  - [ ] Note any visual layout description (radial, web, how many tiers) that can inform whether web/radial PixiJS layout is correct
-  - [ ] Document wiki URL for attribution in the spike report
+- [x] Task 5: Check Last Epoch wiki for Weaver Tree mechanics (AC: #1 — item 3)
+  - [x] Navigate to the Weaver Tree article on the Last Epoch wiki (`wiki.lastepoch.com` or Fandom)
+  - [x] Document: how many point pools exist, the unlock formula (e.g., "1 point per N character levels"), whether it is truly separate from passive tree points
+  - [x] Note any visual layout description (radial, web, how many tiers) that can inform whether web/radial PixiJS layout is correct
+  - [x] Document wiki URL for attribution in the spike report
 
-- [ ] Task 6: Assess coordinate format compatibility (AC: #1 — item 2)
-  - [ ] If any source provides x/y coordinates: determine the coordinate space (pixel-based, grid-based, integer offsets)
-  - [ ] Compare against existing `TreeData` type at `src/shared/types/treeData.ts` — node `x`/`y` are world-space integers relative to tree origin 0,0
-  - [ ] Determine: can coordinates be used directly, or do they require scaling/transformation?
-  - [ ] If no coordinates exist: assess feasibility of algorithmic derivation from a web/radial graph layout (the same approach used for passive/skill trees in Story 1.3b)
-  - [ ] Document the compatibility assessment
+- [x] Task 6: Assess coordinate format compatibility (AC: #1 — item 2)
+  - [x] If any source provides x/y coordinates: determine the coordinate space (pixel-based, grid-based, integer offsets)
+  - [x] Compare against existing `TreeData` type at `src/shared/types/treeData.ts` — node `x`/`y` are world-space integers relative to tree origin 0,0
+  - [x] Determine: can coordinates be used directly, or do they require scaling/transformation?
+  - [x] If no coordinates exist: assess feasibility of algorithmic derivation from a web/radial graph layout (the same approach used for passive/skill trees in Story 1.3b)
+  - [x] Document the compatibility assessment
 
-- [ ] Task 7: Write the spike report (AC: #1–#5)
-  - [ ] Create `docs/weaver-tree-spike.md` with these sections:
+- [x] Task 7: Write the spike report (AC: #1–#5)
+  - [x] Create `docs/weaver-tree-spike.md` with these sections:
     1. **Data Sources Evaluated** — table of each source with: URL, Weaver data found (yes/no), format, license, accessibility
     2. **Node Data Format** — if GO: schema of node fields (IDs, coordinates, edges, costs); if NO-GO: what is missing
     3. **Point Pool Mechanics** — exact formula or best confirmed approximation; separate pool confirmed yes/no
@@ -77,7 +77,7 @@ so that the Weaver Tree epic has confirmed data before any rendering code is wri
     5. **GO / NO-GO Recommendation** — explicit one-line verdict for Story 4.3
     6. **Impact on Story 4.2** — confirm placeholder tab proceeds regardless; note what the placeholder text should say
     7. **Impact on Story 4.3** — if GO: data loading strategy, `weaverTreeData` population path; if NO-GO: what Story 4.3 becomes (deferred/cancelled)
-  - [ ] Do NOT write any TypeScript, Rust, or configuration files — the report is the only deliverable
+  - [x] Do NOT write any TypeScript, Rust, or configuration files — the report is the only deliverable
 
 ## Dev Notes
 
@@ -161,6 +161,27 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+- tunklab.com SSL 526 confirmed resolved as of 2026-05-13 (game version 1.4.6 displayed)
+- lastepochtools.com returns HTTP 403 to WebFetch and Cloudflare challenge to browser — fully inaccessible for data extraction
+- wiki.lastepoch.com ECONNREFUSED; lastepoch.fandom.com HTTP 403 — both wiki sources offline for automated access
+- Musholic repo latest release WebFetch returned "v0.12.0, April 29, 2025" — note: story spec referenced v0.11.0 (2026-04-02); discrepancy may be WebFetch cache or GitHub CDN artifact; changelog for latest release does not mention Weaver Tree data regardless of version
+- GitHub search for `last epoch weaver tree nodes json` returned 0 repositories
+- tunklab `/faction/the_woven` page provided complete, machine-readable point formula (rank table with reputation thresholds and point grants)
+
 ### Completion Notes List
 
+- All 7 tasks complete. Sole deliverable: `docs/weaver-tree-spike.md`.
+- **Verdict: NO-GO for Story 4.3.** No machine-readable Weaver Tree node data (IDs, positions, edge graph) found in any community source.
+- **Point pool fully documented:** 13 pts from Woven faction ranks (exact formula confirmed from tunklab.com) + ~40 pts from first-time Woven Echo completions = 53 total. Separate pool confirmed — no overlap with class passive or skill tree points.
+- **Key blocker for Story 4.3:** The node connection graph (edges) is unavailable. Even with ~70 node names from guides, algorithmic layout derivation is not feasible without edges. lastepochtools.com has implemented the Weaver Tree planner (suggesting the data exists as game asset extracts), but their site is Cloudflare-protected with no data access path.
+- **Story 4.2 unblocked:** Placeholder tab proceeds; recommended text updated to reflect the precise blocker ("node data not available from community sources").
+- **Re-evaluation triggers documented** in spike report Section 7 — check Musholic repo on next epic boundary; watch for community Unity asset dump.
+- No TypeScript, Rust, or configuration files were created or modified. Only `docs/weaver-tree-spike.md` was produced.
+
 ### File List
+
+docs/weaver-tree-spike.md
+
+## Change Log
+
+- 2026-05-13: Story implemented — all 7 research tasks complete; spike report written at `docs/weaver-tree-spike.md`; verdict NO-GO for Story 4.3; point pool formula confirmed (13 rank pts + ~40 echo pts = 53 total); no production code produced.

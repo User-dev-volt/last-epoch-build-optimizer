@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Run `dev-story` to pull the next `ready-for-dev` story from the backlog; Epic 3 is complete.
+Run `/bmad-dev-story` on the generated story file (`4-1-weaver-tree-research-spike.md`) to begin implementation.
 
 ---
 
