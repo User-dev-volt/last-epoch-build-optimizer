@@ -23,13 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-
-```
-Continue Epic 5 polish. Remaining known issues to address:
-- Story 3.4: URL import from lastepochtools.com (stubbed in LoadModal, needs real Rust impl)
-- Skill tree tab switcher shows placeholder — skill tree data not yet in game-data.json
-- General UX pass on error states and onboarding
-```
+Run `dev-story` to pull the next `ready-for-dev` story from the backlog; Epic 3 is complete.
 
 ---
 
