@@ -9,6 +9,7 @@ export interface SkillTreeInteraction {
   hoveredNodeId: string | null
   mousePosition: { x: number; y: number }
   nodeError: { nodeId: string; message: string } | null
+  setNodeError: (err: { nodeId: string; message: string } | null) => void
   keyboardFocusedNodeId: string | null
   keyboardPosition: { x: number; y: number }
   flashNodeIds: string[] | null
@@ -107,6 +108,7 @@ export function useSkillTree(treeData: TreeData | null, slotId?: string): SkillT
     hoveredNodeId,
     mousePosition,
     nodeError,
+    setNodeError,
     keyboardFocusedNodeId,
     keyboardPosition,
     flashNodeIds,

@@ -296,18 +296,21 @@ export function SkillTreeView() {
     }
   }, [isPassiveTab, slotId, resetActiveTree])
 
+  const { setNodeError: setWeaverNodeError } = weaverInteraction
+
   const handleWeaverNodeClick = useCallback((nodeId: string, button: 0 | 2) => {
     if (!weaverTreeData) return
     const delta: 1 | -1 = button === 2 ? -1 : 1
     const result = applyWeaverNodeChange(nodeId, delta, weaverTreeData)
     if (!result.success && result.error) {
+      setWeaverNodeError({ nodeId, message: result.error })
       if (button === 2 && result.blockedByDependents && result.blockedByDependents.length > 0) {
         setWeaverFlashNodeIds([...result.blockedByDependents])
       } else {
         setWeaverFlashNodeIds([nodeId])
       }
     }
-  }, [weaverTreeData, applyWeaverNodeChange])
+  }, [weaverTreeData, applyWeaverNodeChange, setWeaverNodeError])
 
   const handleSkillTabClick = useCallback(
     (slotIndex: number, el: HTMLButtonElement) => {

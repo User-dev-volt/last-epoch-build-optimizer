@@ -1,6 +1,6 @@
 # Story 4.3: Weaver Tree Renderer (Conditional on Research Spike GO)
 
-Status: review
+Status: done
 
 > ⚠️ **DEFERRED — SPIKE VERDICT WAS NO-GO (2026-05-13)**
 >
@@ -134,6 +134,13 @@ so that I can plan my Weaver Tree investments alongside my class skill trees.
   - [x] `budgetCalculator.test.ts` — add `calculateWeaverPoints` tests (see Task 5)
   - [x] Extend `buildStore` unit tests: `applyWeaverNodeChange` increments/decrements `weaverAllocations`; budget enforcement blocks at 0 unspent; `resetActiveTree('weaver')` clears `weaverAllocations` and pushes undo
   - [x] Extend `SkillTreeView` integration test: when `weaverTreeData` is non-null, Weaver tab renders `SkillTreeCanvas` not `WeaverTreePlaceholder`
+
+### Review Findings
+
+- [x] [Review][Patch] AC4 gap — locked-node error tooltip is dead code [lebo/src/features/skill-tree/SkillTreeView.tsx ~line 386] — Fixed: added `setNodeError` to `SkillTreeInteraction` in `useSkillTree.ts`; `handleWeaverNodeClick` now calls `setWeaverNodeError(...)` on failure so the error tooltip activates and auto-clears after 2s.
+- [x] [Review][Patch] Missing SkillTreeView integration test [lebo/src/features/skill-tree/SkillTreeView.tsx] — Fixed: created `SkillTreeView.test.tsx` with two tests: WeaverTreePlaceholder renders when weaverTreeData is null; SkillTreeCanvas renders when weaverTreeData is non-null. Both pass.
+- [x] [Review][Defer] weaverGameNodes reference stability [lebo/src/features/skill-tree/SkillTreeView.tsx ~lines 247–265] — deferred, pre-existing. `weaverSearchHighlighted`/`weaverSearchDimmed` memos depend on `weaverGameNodes` Zustand selector. If any unrelated `gameDataStore` update fires, both memos re-run. Benign in practice (weaverGameNodes set once at startup), but follows a pre-existing project-wide Zustand selector pattern.
+- [x] [Review][Defer] migrateBuildState value-type coercion for weaverAllocations [lebo/src/features/build-manager/buildPersistence.ts ~line 58] — deferred, pre-existing. Object-shape check passes a type cast without validating value types (`Record<string, number>`). A corrupted save with string values would produce NaN unspent points. Same pattern used by `nodeAllocations`, `skillNodeAllocations`, `activeSkillLevels` — pre-existing project-wide issue.
 
 ## Dev Notes
 

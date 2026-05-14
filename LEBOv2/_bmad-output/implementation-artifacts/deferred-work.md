@@ -4,6 +4,11 @@
 
 - Budget check in `applyNodeChange` / `applySkillNodeChange` only verifies ≥1 unspent point exists, not that `delta` points are available. A caller passing `delta > 1` could allocate multiple points past the budget ceiling (`buildStore.ts:165`). In practice the UI always passes `delta = ±1`; spec doesn't address multi-delta; fix would add complexity for a theoretical case.
 
+## Deferred from: code review of 4-3-weaver-tree-renderer-conditional-on-research-spike-go (2026-05-14)
+
+- `weaverSearchHighlighted`/`weaverSearchDimmed` memos depend on `weaverGameNodes` Zustand selector reference (`SkillTreeView.tsx`). If any unrelated `gameDataStore` update fires, both memos re-run unnecessarily. Benign in practice (weaverGameNodes set once at startup) — pre-existing project-wide selector pattern.
+- `migrateBuildState` for `weaverAllocations` uses object-shape check + type cast without validating individual value types (`buildPersistence.ts`). A corrupted save with string values would produce NaN for unspent point count. Same pattern as all other allocation fields — pre-existing project-wide issue.
+
 ## Deferred from: code review of 4-2-weaver-tree-tab-and-placeholder-component (2026-05-13)
 
 - Magic hardcoded indices (6, 7) for Weaver tab across `SkillTreeView.tsx` and tests — pre-existing pattern used for all other tab indices; no named constant.
