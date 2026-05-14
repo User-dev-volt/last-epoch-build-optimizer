@@ -47,7 +47,10 @@
       "resources/game-data/classes/acolyte.json",
       "resources/game-data/classes/rogue.json",
       "resources/icons/skill-icon-map.json",
-      "resources/icons/skills/**/*"
+      "resources/icons/skills/**/*",
+      "resources/items/base-items.json",
+      "resources/items/uniques.json",
+      "resources/items/affixes.json"
     ],
     "windows": {
       "digestAlgorithm": "sha256",

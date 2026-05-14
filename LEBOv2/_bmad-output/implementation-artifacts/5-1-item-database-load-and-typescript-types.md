@@ -1,6 +1,6 @@
 # Story 5.1: Item Database Load and TypeScript Types
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -30,280 +30,55 @@ so that all gear input features in Epic 5 have a populated item database to quer
 
 ## Tasks / Subtasks
 
-- [ ] Task 0: Source and bundle item database JSON files (AC: #1, #2)
-  - [ ] Source Last Epoch community item data (see Dev Notes: Data Sourcing section for target format and community sources)
-  - [ ] Transform/validate data to produce three JSON files matching the TypeScript type schemas defined in Task 1:
+- [x] Task 0: Source and bundle item database JSON files (AC: #1, #2)
+  - [x] Source Last Epoch community item data (see Dev Notes: Data Sourcing section for target format and community sources)
+  - [x] Transform/validate data to produce three JSON files matching the TypeScript type schemas defined in Task 1:
     - `base-items.json` — array of `BaseItem` objects (≥674 entries)
     - `uniques.json` — array of `UniqueItem` objects (≥445 entries)
     - `affixes.json` — array of `AffixEntry` objects (≥1,112 entries; includes prefixes, suffixes, and implicits)
-  - [ ] Place all three files in `src-tauri/resources/items/` (create this directory)
-  - [ ] Add resources entries to `tauri.conf.json` `bundle.resources` array:
+  - [x] Place all three files in `src-tauri/resources/items/` (create this directory)
+  - [x] Add resources entries to `tauri.conf.json` `bundle.resources` array:
     ```json
     "resources/items/base-items.json",
     "resources/items/uniques.json",
     "resources/items/affixes.json"
     ```
-  - [ ] Verify corpus counts meet minimums: ≥674 base items, ≥445 unique items, ≥1,112 affixes
+  - [x] Verify corpus counts meet minimums: ≥674 base items, ≥445 unique items, ≥1,112 affixes
 
-- [ ] Task 1: Define TypeScript types in `src/shared/types/itemDatabase.ts` (AC: #4)
-  - [ ] Create `src/shared/types/itemDatabase.ts` (no barrel file; no `index.ts` in this directory)
-  - [ ] Export the following interfaces (see Dev Notes: TypeScript Type Schema for field rationale):
-    ```typescript
-    export interface AffixTier {
-      tier: number        // 1-indexed tier number
-      minValue: number    // minimum rolled value at this tier
-      maxValue: number    // maximum rolled value at this tier
-    }
+- [x] Task 1: Define TypeScript types in `src/shared/types/itemDatabase.ts` (AC: #4)
+  - [x] Create `src/shared/types/itemDatabase.ts` (no barrel file; no `index.ts` in this directory)
+  - [x] Export the following interfaces (see Dev Notes: TypeScript Type Schema for field rationale)
+  - [x] **No default exports** — all exports are named (project convention)
 
-    export interface AffixEntry {
-      id: string
-      name: string
-      type: 'prefix' | 'suffix' | 'implicit'
-      itemSlots: string[]     // slot keys this affix can appear on (e.g., ['helmet', 'chest'])
-      tiers: AffixTier[]      // ordered T1..TN; length = max tier count
-    }
+- [x] Task 2: Add `ITEM_DATA_ERROR` to errors.ts and errorNormalizer.ts (AC: #5)
+  - [x] In `src/shared/types/errors.ts`, add `'ITEM_DATA_ERROR'` to the `ErrorType` union (after `'ICON_ERROR'`)
+  - [x] In `src/shared/utils/errorNormalizer.ts`, add to both `ERROR_TYPE_MAP` and `USER_MESSAGES`
+  - [x] Verified `RETRYABLE_ERROR_TYPES` does NOT include `ITEM_DATA_ERROR`
 
-    export interface BaseItem {
-      id: string
-      name: string
-      baseType: string           // display name for item class (e.g., "Sabre", "Leather Helmet")
-      slot: string               // slot key matching build gear slot (e.g., "weapon", "helmet", "chest")
-      implicitAffixIds: string[] // IDs into AffixEntry[] for implicit/inherent modifiers
-    }
+- [x] Task 3: Create Rust models for item database (AC: #1, #5)
+  - [x] Create `src-tauri/src/models/item_data.rs` with structs matching the JSON schema
+  - [x] Add `pub mod item_data;` to `src-tauri/src/models/mod.rs`
 
-    export interface UniqueItemAffix {
-      affixId: string
-      fixedMinValue: number      // minimum of the fixed roll range
-      fixedMaxValue: number      // maximum of the fixed roll range
-    }
+- [x] Task 4: Create Rust item data service at `src-tauri/src/services/item_data_service.rs` (AC: #1, #3)
+  - [x] Create `src-tauri/src/services/item_data_service.rs` following the `game_data_service.rs` pattern
+  - [x] Add `pub mod item_data_service;` to `src-tauri/src/services/mod.rs`
 
-    export interface UniqueItem {
-      id: string
-      name: string
-      baseType: string
-      slot: string
-      affixes: UniqueItemAffix[] // all affixes are known/fixed on uniques
-    }
+- [x] Task 5: Create Rust `item_commands.rs` and register in `lib.rs` (AC: #1, #5)
+  - [x] Create `src-tauri/src/commands/item_commands.rs`
+  - [x] Add `pub mod item_commands;` to `src-tauri/src/commands/mod.rs`
+  - [x] In `src-tauri/src/lib.rs`: add import and register `load_item_database` in `invoke_handler!`
 
-    export interface ItemDatabase {
-      baseItems: BaseItem[]
-      uniqueItems: UniqueItem[]
-      affixes: AffixEntry[]
-    }
-    ```
-  - [ ] **No default exports** — all exports are named (project convention)
+- [x] Task 6: Extend `useGameDataStore` with `itemDatabase` slice (AC: #1, #3)
+  - [x] Added `import type { ItemDatabase }`, `itemDatabase: ItemDatabase | null`, `setItemDatabase` to `gameDataStore.ts`
 
-- [ ] Task 2: Add `ITEM_DATA_ERROR` to errors.ts and errorNormalizer.ts (AC: #5)
-  - [ ] In `src/shared/types/errors.ts`, add `'ITEM_DATA_ERROR'` to the `ErrorType` union (after `'ICON_ERROR'`):
-    ```typescript
-    export type ErrorType =
-      | 'API_ERROR'
-      | 'NETWORK_ERROR'
-      | 'TIMEOUT'
-      | 'PARSE_ERROR'
-      | 'DATA_STALE'
-      | 'STORAGE_ERROR'
-      | 'AUTH_ERROR'
-      | 'ICON_ERROR'
-      | 'ITEM_DATA_ERROR'
-      | 'UNKNOWN'
-    ```
-  - [ ] In `src/shared/utils/errorNormalizer.ts`, add to both `ERROR_TYPE_MAP` and `USER_MESSAGES`:
-    ```typescript
-    // In ERROR_TYPE_MAP:
-    ITEM_DATA_ERROR: 'ITEM_DATA_ERROR',
+- [x] Task 7: Create `itemDatabaseLoader.ts` and wire to `App.tsx` startup (AC: #1, #3, #6)
+  - [x] Created `src/features/item-database/itemDatabaseLoader.ts`
+  - [x] Added import and `loadItemDatabase().catch(console.error)` to `App.tsx` startup useEffect (after `initializeIconPipeline`)
 
-    // In USER_MESSAGES:
-    ITEM_DATA_ERROR: 'Item database unavailable. Gear input will use free-text mode.',
-    ```
-  - [ ] Verify `RETRYABLE_ERROR_TYPES` in errors.ts does NOT include `ITEM_DATA_ERROR` (it should be non-retryable — failure causes graceful fallback, not retry)
-
-- [ ] Task 3: Create Rust models for item database (AC: #1, #5)
-  - [ ] Create `src-tauri/src/models/item_data.rs` with structs matching the JSON schema:
-    ```rust
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Debug, Deserialize, Serialize, Clone)]
-    #[serde(rename_all = "camelCase")]
-    pub struct AffixTier {
-        pub tier: u32,
-        pub min_value: f64,
-        pub max_value: f64,
-    }
-
-    #[derive(Debug, Deserialize, Serialize, Clone)]
-    #[serde(rename_all = "camelCase")]
-    pub struct RawAffix {
-        pub id: String,
-        pub name: String,
-        #[serde(rename = "type")]
-        pub affix_type: String,
-        pub item_slots: Vec<String>,
-        pub tiers: Vec<AffixTier>,
-    }
-
-    #[derive(Debug, Deserialize, Serialize, Clone)]
-    #[serde(rename_all = "camelCase")]
-    pub struct RawBaseItem {
-        pub id: String,
-        pub name: String,
-        pub base_type: String,
-        pub slot: String,
-        pub implicit_affix_ids: Vec<String>,
-    }
-
-    #[derive(Debug, Deserialize, Serialize, Clone)]
-    #[serde(rename_all = "camelCase")]
-    pub struct RawUniqueItemAffix {
-        pub affix_id: String,
-        pub fixed_min_value: f64,
-        pub fixed_max_value: f64,
-    }
-
-    #[derive(Debug, Deserialize, Serialize, Clone)]
-    #[serde(rename_all = "camelCase")]
-    pub struct RawUniqueItem {
-        pub id: String,
-        pub name: String,
-        pub base_type: String,
-        pub slot: String,
-        pub affixes: Vec<RawUniqueItemAffix>,
-    }
-
-    #[derive(Debug, Deserialize, Serialize, Clone)]
-    #[serde(rename_all = "camelCase")]
-    pub struct ItemDatabase {
-        pub base_items: Vec<RawBaseItem>,
-        pub unique_items: Vec<RawUniqueItem>,
-        pub affixes: Vec<RawAffix>,
-    }
-    ```
-  - [ ] Add `pub mod item_data;` to `src-tauri/src/models/mod.rs`
-
-- [ ] Task 4: Create Rust item data service at `src-tauri/src/services/item_data_service.rs` (AC: #1, #3)
-  - [ ] Create `src-tauri/src/services/item_data_service.rs` following the `game_data_service.rs` pattern:
-    ```rust
-    use std::path::{Path, PathBuf};
-    use tauri::Manager;
-    use crate::models::item_data::ItemDatabase;
-
-    pub fn ensure_item_data_dir(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
-        let base = app_handle
-            .path()
-            .app_data_dir()
-            .map_err(|e| format!("ITEM_DATA_ERROR: app_data_dir: {}", e))?;
-        let data_dir = base.join("lebo").join("items");
-        std::fs::create_dir_all(&data_dir)
-            .map_err(|e| format!("ITEM_DATA_ERROR: create items dir: {}", e))?;
-        Ok(data_dir)
-    }
-
-    pub fn copy_bundled_item_resources(app_handle: &tauri::AppHandle) -> Result<(), String> {
-        let data_dir = ensure_item_data_dir(app_handle)?;
-        // Guard: only copy if not already present (same pattern as copy_bundled_resources)
-        if data_dir.join("base-items.json").exists() {
-            return Ok(());
-        }
-        let resource_dir = app_handle
-            .path()
-            .resource_dir()
-            .map_err(|e| format!("ITEM_DATA_ERROR: resource_dir: {}", e))?;
-        let src = resource_dir.join("resources").join("items");
-        for filename in &["base-items.json", "uniques.json", "affixes.json"] {
-            let src_path = src.join(filename);
-            let dst_path = data_dir.join(filename);
-            std::fs::copy(&src_path, &dst_path)
-                .map_err(|e| format!("ITEM_DATA_ERROR: copy {}: {}", filename, e))?;
-        }
-        Ok(())
-    }
-
-    pub fn load_item_database_from_dir(data_dir: &Path) -> Result<ItemDatabase, String> {
-        let base_items_raw = std::fs::read_to_string(data_dir.join("base-items.json"))
-            .map_err(|e| format!("ITEM_DATA_ERROR: read base-items.json: {}", e))?;
-        let unique_items_raw = std::fs::read_to_string(data_dir.join("uniques.json"))
-            .map_err(|e| format!("ITEM_DATA_ERROR: read uniques.json: {}", e))?;
-        let affixes_raw = std::fs::read_to_string(data_dir.join("affixes.json"))
-            .map_err(|e| format!("ITEM_DATA_ERROR: read affixes.json: {}", e))?;
-
-        let base_items = serde_json::from_str(&base_items_raw)
-            .map_err(|e| format!("ITEM_DATA_ERROR: parse base-items.json: {}", e))?;
-        let unique_items = serde_json::from_str(&unique_items_raw)
-            .map_err(|e| format!("ITEM_DATA_ERROR: parse uniques.json: {}", e))?;
-        let affixes = serde_json::from_str(&affixes_raw)
-            .map_err(|e| format!("ITEM_DATA_ERROR: parse affixes.json: {}", e))?;
-
-        Ok(ItemDatabase { base_items, unique_items, affixes })
-    }
-    ```
-  - [ ] Add `pub mod item_data_service;` to `src-tauri/src/services/mod.rs`
-    - **First check:** Read `src-tauri/src/services/mod.rs` to confirm the file exists and get current contents before editing
-
-- [ ] Task 5: Create Rust `item_commands.rs` and register in `lib.rs` (AC: #1, #5)
-  - [ ] Create `src-tauri/src/commands/item_commands.rs`:
-    ```rust
-    use crate::models::item_data::ItemDatabase;
-    use crate::services::item_data_service;
-
-    #[tauri::command]
-    pub async fn load_item_database(app_handle: tauri::AppHandle) -> Result<ItemDatabase, String> {
-        item_data_service::copy_bundled_item_resources(&app_handle)?;
-        let data_dir = item_data_service::ensure_item_data_dir(&app_handle)?;
-        item_data_service::load_item_database_from_dir(&data_dir)
-    }
-    ```
-  - [ ] Add `pub mod item_commands;` to `src-tauri/src/commands/mod.rs`
-  - [ ] In `src-tauri/src/lib.rs`:
-    - Add import: `use commands::item_commands::load_item_database;`
-    - Add `load_item_database` to `invoke_handler!` macro
-
-- [ ] Task 6: Extend `useGameDataStore` with `itemDatabase` slice (AC: #1, #3)
-  - [ ] In `src/shared/stores/gameDataStore.ts`, add to the `GameDataStore` interface and implementation:
-    ```typescript
-    // Add to imports at top:
-    import type { ItemDatabase } from '../types/itemDatabase'
-
-    // Add to GameDataStore interface:
-    itemDatabase: ItemDatabase | null
-    setItemDatabase: (db: ItemDatabase | null) => void
-
-    // Add to create() initial state:
-    itemDatabase: null,
-    setItemDatabase: (db) => set({ itemDatabase: db }),
-    ```
-  - [ ] **TypeScript strict mode:** `noUnusedLocals: true` — ensure the `ItemDatabase` import is actually used in the interface (it is, via the field type)
-
-- [ ] Task 7: Create `itemDatabaseLoader.ts` and wire to `App.tsx` startup (AC: #1, #3, #6)
-  - [ ] Create `src/features/item-database/itemDatabaseLoader.ts`:
-    ```typescript
-    import { invokeCommand } from '../../shared/utils/invokeCommand'
-    import { useGameDataStore } from '../../shared/stores/gameDataStore'
-    import type { ItemDatabase } from '../../shared/types/itemDatabase'
-
-    export async function loadItemDatabase(): Promise<void> {
-      const db = await invokeCommand<ItemDatabase>('load_item_database')
-      useGameDataStore.getState().setItemDatabase(db)
-    }
-    ```
-    Note: If `invokeCommand` throws (ITEM_DATA_ERROR prefix → normalizeAppError), the error propagates to the `.catch(console.error)` in App.tsx — `itemDatabase` stays null, free-text fallback activates for all GearSlot components. No toast — the fallback is silent.
-  - [ ] In `src/App.tsx`, add the import and call inside the startup `useEffect`:
-    ```typescript
-    // Add import:
-    import { loadItemDatabase } from './features/item-database/itemDatabaseLoader'
-
-    // In the useEffect(() => { ... }, []) block, alongside other parallel calls:
-    loadItemDatabase().catch(console.error)
-    ```
-    This goes directly after the existing `initializeIconPipeline().catch(console.error)` line. No `await`, no chaining — fully parallel, non-blocking (same pattern as the three existing startup calls).
-
-- [ ] Task 8: Tests (AC: #1, #3, #4, #5)
-  - [ ] Create `src/features/item-database/itemDatabaseLoader.test.ts`:
-    - Mock `invokeCommand` via `vi.mock('../../shared/utils/invokeCommand', ...)`
-    - Test 1: Successful load → `useGameDataStore.getState().itemDatabase` is populated with returned data
-    - Test 2: Failed load (invokeCommand throws) → `itemDatabase` remains null (verify store unchanged after error caught upstream)
-    - **Do NOT** let tests reach real Tauri IPC (project rule from project-context.md)
-  - [ ] No additional test needed for the TypeScript types file (it is type-only; TS compiler enforces it)
-  - [ ] **No Rust unit tests in this story** — the data loading follows an identical pattern to `game_data_service.rs` which has no unit tests in the current codebase; integration is validated by the TypeScript side
+- [x] Task 8: Tests (AC: #1, #3, #4, #5)
+  - [x] Created `src/features/item-database/itemDatabaseLoader.test.ts`: 2 tests (success + failure paths), all passing
+  - [x] TypeScript types file is type-only; TS compiler (tsc --noEmit) validates it
+  - [x] No Rust unit tests (matches game_data_service.rs precedent)
 
 ## Dev Notes
 
@@ -509,6 +284,39 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+None.
+
 ### Completion Notes List
 
+- Data sourced from Musholic/PathOfBuildingForLastEpoch (dev branch): bases.json (897 base items), uniques.json (471 unique items), ModItem.json (4171 affix entries) — all exceed AC2 minimums.
+- Python transformation script at `docs/data-transform/generate_item_db.py` fetches and transforms raw data; re-run to regenerate JSON files.
+- `implicitAffixIds` is empty for all base items — source data has implicits as text strings, not IDs. Will be cross-linked in a future story when text-to-ID matching is added.
+- `itemSlots` is empty for all affixes — slot filtering not present in source data. Story 5.5 will add slot-scoped filtering another way.
+- Pre-existing test failures in ProviderSelector.test.tsx and Settings.test.tsx (6 total) were present before this story; no new regressions introduced.
+- TypeScript `tsc --noEmit` passes cleanly. All 2 new tests pass; full suite: 645 pass, 6 pre-existing failures.
+
 ### File List
+
+**Created:**
+- `docs/data-transform/generate_item_db.py`
+- `lebo/src-tauri/resources/items/base-items.json`
+- `lebo/src-tauri/resources/items/uniques.json`
+- `lebo/src-tauri/resources/items/affixes.json`
+- `lebo/src/shared/types/itemDatabase.ts`
+- `lebo/src-tauri/src/models/item_data.rs`
+- `lebo/src-tauri/src/services/item_data_service.rs`
+- `lebo/src-tauri/src/commands/item_commands.rs`
+- `lebo/src/features/item-database/itemDatabaseLoader.ts`
+- `lebo/src/features/item-database/itemDatabaseLoader.test.ts`
+
+**Modified:**
+- `lebo/src-tauri/tauri.conf.json`
+- `lebo/src-tauri/src/models/mod.rs`
+- `lebo/src-tauri/src/services/mod.rs`
+- `lebo/src-tauri/src/commands/mod.rs`
+- `lebo/src-tauri/src/lib.rs`
+- `lebo/src/shared/types/errors.ts`
+- `lebo/src/shared/utils/errorNormalizer.ts`
+- `lebo/src/shared/stores/gameDataStore.ts`
+- `lebo/src/App.tsx`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`

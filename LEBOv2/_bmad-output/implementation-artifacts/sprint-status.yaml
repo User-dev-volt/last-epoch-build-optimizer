@@ -75,7 +75,7 @@ development_status:
 
   # Epic 5: Item Database & Structured Gear Input
   epic-5: in-progress
-  5-1-item-database-load-and-typescript-types: ready-for-dev
+  5-1-item-database-load-and-typescript-types: review
   5-2-in-memory-item-search-algorithm: backlog
   5-3-affixtiercontrol-pip-based-tier-selection: backlog
   5-4-gearslot-component-with-typeahead-item-search: backlog

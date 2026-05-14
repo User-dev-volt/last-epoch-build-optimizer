@@ -7,6 +7,7 @@ export type ErrorType =
   | 'STORAGE_ERROR'
   | 'AUTH_ERROR'
   | 'ICON_ERROR'
+  | 'ITEM_DATA_ERROR'
   | 'UNKNOWN'
 
 export interface AppError {

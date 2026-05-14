@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { GameData, GameNode } from '../types/gameData'
 import type { TreeData } from '../types/treeData'
+import type { ItemDatabase } from '../types/itemDatabase'
 
 interface GameDataStore {
   gameData: GameData | null
@@ -23,6 +24,8 @@ interface GameDataStore {
   weaverGameNodes: Record<string, GameNode>
   setWeaverTreeData: (data: TreeData | null) => void
   setWeaverGameNodes: (nodes: Record<string, GameNode>) => void
+  itemDatabase: ItemDatabase | null
+  setItemDatabase: (db: ItemDatabase | null) => void
 }
 
 export const useGameDataStore = create<GameDataStore>()((set) => ({
@@ -46,4 +49,6 @@ export const useGameDataStore = create<GameDataStore>()((set) => ({
   setIsUpdating: (updating) => set({ isUpdating: updating }),
   setWeaverTreeData: (data) => set({ weaverTreeData: data }),
   setWeaverGameNodes: (nodes) => set({ weaverGameNodes: nodes }),
+  itemDatabase: null,
+  setItemDatabase: (db) => set({ itemDatabase: db }),
 }))

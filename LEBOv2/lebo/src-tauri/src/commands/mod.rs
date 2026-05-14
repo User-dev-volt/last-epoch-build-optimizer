@@ -3,3 +3,4 @@ pub mod build_commands;
 pub mod claude_commands;
 pub mod game_data_commands;
 pub mod icon_commands;
+pub mod item_commands;

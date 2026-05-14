@@ -9,6 +9,7 @@ const ERROR_TYPE_MAP: Record<string, ErrorType> = {
   STORAGE_ERROR: 'STORAGE_ERROR',
   AUTH_ERROR: 'AUTH_ERROR',
   ICON_ERROR: 'ICON_ERROR',
+  ITEM_DATA_ERROR: 'ITEM_DATA_ERROR',
 }
 
 const USER_MESSAGES: Record<ErrorType, string> = {
@@ -20,6 +21,7 @@ const USER_MESSAGES: Record<ErrorType, string> = {
   STORAGE_ERROR: 'A storage error occurred. Your data in memory is safe — try saving again.',
   AUTH_ERROR: 'No API key configured. Add your Claude API key in Settings.',
   ICON_ERROR: 'Could not load skill icons. Icons will show as placeholders.',
+  ITEM_DATA_ERROR: 'Item database unavailable. Gear input will use free-text mode.',
   UNKNOWN: 'An unexpected error occurred. Please try again.',
 }
 

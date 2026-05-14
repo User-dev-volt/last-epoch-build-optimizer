@@ -17,6 +17,7 @@ use commands::game_data_commands::{
     load_game_data,
 };
 use commands::icon_commands::{get_icon_cache_path, initialize_icon_pipeline, IconMapCache};
+use commands::item_commands::load_item_database;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -65,6 +66,7 @@ pub fn run() {
             set_openrouter_api_key,
             check_openrouter_configured,
             validate_openrouter_key,
+            load_item_database,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
