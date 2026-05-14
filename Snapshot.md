@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Mark Story 4-1 as `review` in sprint-status.yaml and route to code reviewer (recommend different LLM); prioritize Story 4.2 placeholder tab for next sprint if Weaver Tree data extraction via datamining tools becomes available.
+Start the next story with `dev-story` command to maintain workflow momentum.
 
 ---
 
