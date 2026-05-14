@@ -9,6 +9,15 @@
 - `weaverSearchHighlighted`/`weaverSearchDimmed` memos depend on `weaverGameNodes` Zustand selector reference (`SkillTreeView.tsx`). If any unrelated `gameDataStore` update fires, both memos re-run unnecessarily. Benign in practice (weaverGameNodes set once at startup) — pre-existing project-wide selector pattern.
 - `migrateBuildState` for `weaverAllocations` uses object-shape check + type cast without validating individual value types (`buildPersistence.ts`). A corrupted save with string values would produce NaN for unspent point count. Same pattern as all other allocation fields — pre-existing project-wide issue.
 
+## Deferred from: code review of 5-1-item-database-load-and-typescript-types (2026-05-14)
+
+- Version staleness: `copy_bundled_item_resources` skips copy if `base-items.json` exists, so updated bundled data after an app upgrade will never overwrite the cached copy (`item_data_service.rs:18`). Story 5.6 handles data freshness; no version/hash mechanism added in this story.
+- `AffixEntry.type` TypeScript union includes `'implicit'` but current data only emits `"prefix"` / `"suffix"`; Rust model deserializes `type` as an unvalidated `String`. If future data adds new type values they'll pass through silently.
+- No `isLoadingItemDatabase` flag in `gameDataStore` — downstream components (Stories 5.3–5.5) can't distinguish "still loading" from "load failed". Null-handling pattern to be defined when GearSlot is built.
+- Concurrent race on `copy_bundled_item_resources`: two simultaneous invocations can both pass the `exists()` guard and interleave writes to the same destination files. Pre-existing pattern in game_data_service; startup fires the command once so race is unlikely in practice.
+- Blocking sync I/O (`std::fs::read_to_string`, `serde_json::from_str`) runs on the async Tauri executor without `spawn_blocking`. Pre-existing pattern across all service files in the project.
+- `UniqueItem` / `RawUniqueItem` have no `implicitAffixIds` field — unique item implicits silently omitted. Known gap documented in dev notes; source data has implicits as text strings not IDs.
+
 ## Deferred from: code review of 4-2-weaver-tree-tab-and-placeholder-component (2026-05-13)
 
 - Magic hardcoded indices (6, 7) for Weaver tab across `SkillTreeView.tsx` and tests — pre-existing pattern used for all other tab indices; no named constant.

@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Move Story 4-3 through code review and merge pipeline; Story is ready for review with clean build, all 641 passing tests, and complete test coverage for weaver allocation logic.
+Submit Story 5.1 for code review using a different LLM than the one that implemented it.
 
 ---
 

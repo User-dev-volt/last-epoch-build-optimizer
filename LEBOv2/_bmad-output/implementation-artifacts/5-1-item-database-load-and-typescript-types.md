@@ -276,6 +276,18 @@ Add:
 - [Source: `lebo/src/App.tsx:43-46` — parallel startup calls pattern; loadItemDatabase inserts here]
 - [Source: `_bmad-output/implementation-artifacts/4-3-weaver-tree-renderer-conditional-on-research-spike-go.md` — GameDataStore extension pattern + "updated 11 test fixtures" warning]
 
+### Review Findings
+
+- [ ] [Review][Patch] Partial-copy guard checks only `base-items.json` — crash mid-copy leaves permanent broken state [`lebo/src-tauri/src/services/item_data_service.rs:18`]
+- [ ] [Review][Patch] AC3 violated: `loadItemDatabase()` propagates rejection without a catch; `itemDatabase` never explicitly set to null on failure [`lebo/src/features/item-database/itemDatabaseLoader.ts:5-7`]
+- [ ] [Review][Patch] Double `ensure_item_data_dir` call: `copy_bundled_item_resources` calls it internally, then `load_item_database` calls it again [`lebo/src-tauri/src/commands/item_commands.rs:6-7`]
+- [x] [Review][Defer] Version staleness: copy-skip never refreshes data after app update [`lebo/src-tauri/src/services/item_data_service.rs:18`] — deferred, pre-existing; Story 5.6 handles data freshness
+- [x] [Review][Defer] `AffixEntry.type` 'implicit' variant never emitted by current data; Rust accepts any string unvalidated [`lebo/src/shared/types/itemDatabase.ts:9`, `lebo/src-tauri/src/models/item_data.rs:17`] — deferred, spec-defined type; data coverage is a future concern
+- [x] [Review][Defer] No `isLoadingItemDatabase` flag — consumers can't distinguish loading from failed [`lebo/src/shared/stores/gameDataStore.ts`] — deferred, Stories 5.3–5.5 define null-handling pattern
+- [x] [Review][Defer] Concurrent race on `copy_bundled_item_resources` if called simultaneously — pre-existing pattern in game_data_service — deferred, pre-existing
+- [x] [Review][Defer] Blocking sync I/O in async Tauri command without `spawn_blocking` — deferred, pre-existing project pattern
+- [x] [Review][Defer] `UniqueItem` missing `implicitAffixIds` field — deferred, known gap documented in dev notes
+
 ## Dev Agent Record
 
 ### Agent Model Used
