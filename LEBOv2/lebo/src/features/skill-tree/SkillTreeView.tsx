@@ -310,17 +310,6 @@ export function SkillTreeView() {
   const handleContextMenuAllocate = useCallback((nodeId: string) => handleNodeClick(nodeId, 0), [handleNodeClick])
   const handleContextMenuRemove = useCallback((nodeId: string) => handleNodeClick(nodeId, 2), [handleNodeClick])
 
-  if (isLoading) {
-    return (
-      <div
-        className="flex items-center justify-center h-full"
-        style={{ color: 'var(--color-text-muted)' }}
-      >
-        <p className="text-sm">Loading game data…</p>
-      </div>
-    )
-  }
-
   if (isWeaverTab) {
     return (
       <div id="skill-tree-canvas" className="flex flex-col h-full">
@@ -338,6 +327,17 @@ export function SkillTreeView() {
             <WeaverTreePlaceholder />
           )}
         </div>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div
+        className="flex items-center justify-center h-full"
+        style={{ color: 'var(--color-text-muted)' }}
+      >
+        <p className="text-sm">Loading game data…</p>
       </div>
     )
   }

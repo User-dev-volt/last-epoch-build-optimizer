@@ -1,6 +1,6 @@
 # Story 4.2: Weaver Tree Tab and Placeholder Component
 
-Status: review
+Status: done
 
 ## Story
 
@@ -250,6 +250,15 @@ Story 4.1 produced only `docs/weaver-tree-spike.md`. No TypeScript was written. 
 - [Source: `lebo/src/features/skill-tree/SkillTreeView.tsx` — `activeTabIndex > 5` guards (lines ~99, ~159), `slotId` computation (~162), `isPickerFullPanel` (~375), early return positions]
 - [Source: `lebo/src/shared/stores/gameDataStore.ts` — Existing store interface to extend]
 - [Source: `lebo/src/shared/types/treeData.ts` — `TreeData` interface: `{ nodes: TreeNode[], edges: TreeEdge[] }`]
+
+### Review Findings
+
+- [x] [Review][Patch] `isLoading` early return fires before `isWeaverTab` — AC2 violation: loading spinner displays on Weaver tab while game data loads [`lebo/src/features/skill-tree/SkillTreeView.tsx:313`]
+- [x] [Review][Patch] Fragile test uses raw index `tabs[6].textContent` instead of accessible role query [`lebo/src/features/skill-tree/SkillTreeTabBar.test.tsx:65`]
+- [x] [Review][Defer] Magic hardcoded indices (6, 7) across `SkillTreeView.tsx` and tests — pre-existing pattern, not causing bugs [`lebo/src/features/skill-tree/SkillTreeView.tsx:101,161,163`] — deferred, pre-existing
+- [x] [Review][Defer] `openPickerForCurrentSlot` latent bug: `safeTabIndex - 1` yields slot 5 (out-of-range) if Weaver early return is removed — currently unreachable [`lebo/src/features/skill-tree/SkillTreeView.tsx:~289`] — deferred, pre-existing
+- [x] [Review][Defer] Redundant double-guard: `useEffect` at line 99 resets `activeTabIndex > 6` redundantly with inline clamp at line 161 — pre-existing defensive pattern [`lebo/src/features/skill-tree/SkillTreeView.tsx:99-103,161`] — deferred, pre-existing
+- [x] [Review][Defer] `handleReset` has no explicit Weaver guard but is implicitly safe because `TreeControls` never renders on Weaver tab — fragile implicit dependency [`lebo/src/features/skill-tree/SkillTreeView.tsx:~254`] — deferred, pre-existing
 
 ## Dev Agent Record
 

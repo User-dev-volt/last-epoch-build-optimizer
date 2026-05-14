@@ -62,7 +62,7 @@ describe('SkillTreeTabBar', () => {
   it('renders Weaver Tree as the last (rightmost) tab', () => {
     render(<SkillTreeTabBar activeSkills={[]} selectedIndex={0} onChange={() => {}} />)
     const tabs = screen.getAllByRole('tab')
-    expect(tabs[6].textContent).toBe('Weaver Tree')
+    expect(tabs[tabs.length - 1]).toHaveTextContent('Weaver Tree')
   })
 
   it('does not call onSkillTabClick when Weaver Tree tab is clicked', async () => {
