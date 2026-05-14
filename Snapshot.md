@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Decide patch strategy: apply all three fixes now, leave as explicit action items, or review patch details before committing?
+Complete the detail pass and testing walkthrough to validate the scoring thresholds and result ordering against real item corpus before Story 5.4 integration.
 
 ---
 
