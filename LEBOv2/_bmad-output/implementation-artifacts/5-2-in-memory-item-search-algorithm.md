@@ -1,6 +1,6 @@
 # Story 5.2: In-Memory Item Search Algorithm
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -32,29 +32,29 @@ so that finding items feels like filtering a known list, not waiting for a datab
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `SearchResult` type to `src/shared/types/itemDatabase.ts` (AC: #1, #2, #3, #4, #5)
-  - [ ] Export `SearchResult` interface with fields: `id: string`, `name: string`, `baseType: string`, `slot: string`, `type: 'base' | 'unique'`
-  - [ ] No barrel file — direct import from `itemDatabase.ts`
-  - [ ] Named export only (no `export default`)
+- [x] Task 1: Add `SearchResult` type to `src/shared/types/itemDatabase.ts` (AC: #1, #2, #3, #4, #5)
+  - [x] Export `SearchResult` interface with fields: `id: string`, `name: string`, `baseType: string`, `slot: string`, `type: 'base' | 'unique'`
+  - [x] No barrel file — direct import from `itemDatabase.ts`
+  - [x] Named export only (no `export default`)
 
-- [ ] Task 2: Implement `itemSearch.ts` at `src/features/item-database/itemSearch.ts` (AC: #1, #2, #3, #4, #5)
-  - [ ] Export `searchItems(query: string, database: ItemDatabase): SearchResult[]`
-  - [ ] Case-insensitive matching on item name throughout
-  - [ ] Scoring: score 3 = name starts with query (prefix match); score 2 = name contains query as substring; score 1 = Levenshtein distance ≤ threshold (fuzzy fallback); score 0 = exclude
-  - [ ] Search both `database.baseItems` and `database.uniqueItems`; tag each result with `type: 'base'` or `type: 'unique'`
-  - [ ] Sort results descending by score, then alphabetically within the same score for stable output
-  - [ ] Return all matching results unsorted — cap at call site (GearSlot will take first 6); do not hard-cap inside `searchItems`
-  - [ ] No Tauri IPC calls, no `invokeCommand`, no `import ... from '@tauri-apps/api/core'`
-  - [ ] No debounce logic inside `searchItems` — it is synchronous and must remain so per architecture rule
+- [x] Task 2: Implement `itemSearch.ts` at `src/features/item-database/itemSearch.ts` (AC: #1, #2, #3, #4, #5)
+  - [x] Export `searchItems(query: string, database: ItemDatabase): SearchResult[]`
+  - [x] Case-insensitive matching on item name throughout
+  - [x] Scoring: score 3 = name starts with query (prefix match); score 2 = name contains query as substring; score 1 = Levenshtein distance ≤ threshold (fuzzy fallback); score 0 = exclude
+  - [x] Search both `database.baseItems` and `database.uniqueItems`; tag each result with `type: 'base'` or `type: 'unique'`
+  - [x] Sort results descending by score, then alphabetically within the same score for stable output
+  - [x] Return all matching results unsorted — cap at call site (GearSlot will take first 6); do not hard-cap inside `searchItems`
+  - [x] No Tauri IPC calls, no `invokeCommand`, no `import ... from '@tauri-apps/api/core'`
+  - [x] No debounce logic inside `searchItems` — it is synchronous and must remain so per architecture rule
 
-- [ ] Task 3: Write `itemSearch.test.ts` at `src/features/item-database/itemSearch.test.ts` (AC: #1, #2, #3, #4, #6)
-  - [ ] Prefix match ranking: given corpus with "Juggernaut Helm" and "Helm of Juggernaut", query "Jugg" → "Juggernaut Helm" appears first
-  - [ ] Substring match: query "helm" → items containing "helm" in name appear (not necessarily prefix)
-  - [ ] Fuzzy/typo: query "Jugernaut" (one missing 'g') → "Juggernaut Helm" is in top 5 results
-  - [ ] Empty result: query "xyzxyz" → returns `[]`
-  - [ ] Performance benchmark: build a simulated corpus of 1,400 items (matching real corpus size); call `searchItems` with a 3-char query; assert elapsed < 50ms using `performance.now()`
-  - [ ] No Tauri mocks needed — `itemSearch.ts` has no IPC calls; no `vi.mock` required
-  - [ ] No snapshot tests — explicit `expect` assertions only
+- [x] Task 3: Write `itemSearch.test.ts` at `src/features/item-database/itemSearch.test.ts` (AC: #1, #2, #3, #4, #6)
+  - [x] Prefix match ranking: given corpus with "Juggernaut Helm" and "Helm of Juggernaut", query "Jugg" → "Juggernaut Helm" appears first
+  - [x] Substring match: query "helm" → items containing "helm" in name appear (not necessarily prefix)
+  - [x] Fuzzy/typo: query "Jugernaut" (one missing 'g') → "Juggernaut Helm" is in top 5 results
+  - [x] Empty result: query "xyzxyz" → returns `[]`
+  - [x] Performance benchmark: build a simulated corpus of 1,400 items (matching real corpus size); call `searchItems` with a 3-char query; assert elapsed < 50ms using `performance.now()`
+  - [x] No Tauri mocks needed — `itemSearch.ts` has no IPC calls; no `vi.mock` required
+  - [x] No snapshot tests — explicit `expect` assertions only
 
 ## Dev Notes
 
@@ -187,6 +187,22 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+- Fuzzy match initially failed: `levenshtein` was comparing against full item name ("juggernaut helm") instead of individual words. Fixed `scoreItem` to split the name on whitespace and check each word — aligns with Dev Notes example showing distance to "Juggernaut" (not "Juggernaut Helm") is 1.
+
 ### Completion Notes List
 
+- Added `SearchResult` interface to `src/shared/types/itemDatabase.ts` — named export, no default.
+- Implemented `itemSearch.ts` with synchronous `searchItems(query, database)`: prefix match (score 3) → substring (score 2) → per-word Levenshtein fuzzy (score 1); sorts by score descending then name alphabetically; no cap, no IPC, no debounce.
+- `levenshtein` uses space-optimised single-array DP (O(n) space) — private to module, not exported.
+- 9 tests cover: prefix ranking, substring, case-insensitivity, fuzzy typo, empty results, base/unique type tagging, alphabetic tiebreak, no-internal-cap, and ≤50ms performance on 1,400-item corpus.
+- All 9 new tests pass; 6 pre-existing failures in ProviderSelector/Settings unchanged; TypeScript strict build clean.
+
 ### File List
+
+- `lebo/src/shared/types/itemDatabase.ts` (modified — added `SearchResult`)
+- `lebo/src/features/item-database/itemSearch.ts` (created)
+- `lebo/src/features/item-database/itemSearch.test.ts` (created)
+
+## Change Log
+
+- 2026-05-14: Implemented in-memory item search algorithm — `SearchResult` type added, `searchItems` function with prefix/substring/fuzzy scoring, 9 unit tests including ≤50ms performance benchmark (claude-sonnet-4-6)

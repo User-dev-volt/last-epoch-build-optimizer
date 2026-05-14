@@ -39,3 +39,11 @@ export interface ItemDatabase {
   uniqueItems: UniqueItem[]
   affixes: AffixEntry[]
 }
+
+export interface SearchResult {
+  id: string
+  name: string
+  baseType: string
+  slot: string
+  type: 'base' | 'unique'
+}
