@@ -21,6 +21,7 @@ import { BudgetToggle } from './BudgetToggle'
 import { UnspentCounter } from './UnspentCounter'
 import { SkillLevelInput } from './SkillLevelInput'
 import { calculateSkillPoints } from '../../shared/utils/budgetCalculator'
+import { WeaverTreePlaceholder } from '../weaver-tree/WeaverTreePlaceholder'
 
 const EMPTY_ALLOCATED: Record<string, number> = {}
 const EMPTY_SKILL_ALLOC: Record<string, Record<string, number>> = {}
@@ -59,6 +60,7 @@ function computePreviewAllocations(
 export function SkillTreeView() {
   const gameData = useGameDataStore((s) => s.gameData)
   const isLoading = useGameDataStore((s) => s.isLoading)
+  const weaverTreeData = useGameDataStore((s) => s.weaverTreeData)
   const selectedClassId = useBuildStore((s) => s.selectedClassId)
   const selectedMasteryId = useBuildStore((s) => s.selectedMasteryId)
   const activeBuild = useBuildStore((s) => s.activeBuild)
@@ -96,7 +98,7 @@ export function SkillTreeView() {
   }, [activeBuildId, setSelectedNodeId])
 
   useEffect(() => {
-    if (activeTabIndex > 5) {
+    if (activeTabIndex > 6) {
       setActiveTabIndex(0)
     }
   }, [activeTabIndex])
@@ -156,10 +158,11 @@ export function SkillTreeView() {
     [classData, selectedMasteryId, nodeAllocations]
   )
 
-  const safeTabIndex = activeTabIndex > 5 ? 0 : activeTabIndex
+  const safeTabIndex = activeTabIndex > 6 ? 0 : activeTabIndex
   const isPassiveTab = safeTabIndex === 0
+  const isWeaverTab = safeTabIndex === 6
 
-  const slotId = isPassiveTab ? null : `slot-${safeTabIndex - 1}`
+  const slotId = isPassiveTab || isWeaverTab ? null : `slot-${safeTabIndex - 1}`
   const activeSkill = slotId ? activeSkills.find((s) => s.slotId === slotId) ?? null : null
   const skillNodes = activeSkill ? classData?.skillTrees[activeSkill.skillId] : undefined
   const slotAllocations = slotId ? (skillNodeAllocations[slotId] ?? EMPTY_ALLOCATED) : EMPTY_ALLOCATED
@@ -318,6 +321,27 @@ export function SkillTreeView() {
     )
   }
 
+  if (isWeaverTab) {
+    return (
+      <div id="skill-tree-canvas" className="flex flex-col h-full">
+        <SkillTreeTabBar
+          activeSkills={activeSkills}
+          selectedIndex={safeTabIndex}
+          onChange={handleTabChange}
+          onSkillTabClick={handleSkillTabClick}
+        />
+        <div className="flex-1 min-h-0">
+          {weaverTreeData !== null ? (
+            // Story 4.3 will replace this branch with SkillTreeCanvas when spike is GO
+            <WeaverTreePlaceholder />
+          ) : (
+            <WeaverTreePlaceholder />
+          )}
+        </div>
+      </div>
+    )
+  }
+
   // Passive tab: needs full tree to be ready
   if (isPassiveTab && (!selectedClassId || !selectedMasteryId || !gameData || !classData || !treeData)) {
     return (
@@ -336,7 +360,7 @@ export function SkillTreeView() {
   }
 
   // Skill tab: can show even without full passive tree
-  if (!isPassiveTab && (!selectedClassId || !selectedMasteryId || !gameData || !classData)) {
+  if (!isPassiveTab && !isWeaverTab && (!selectedClassId || !selectedMasteryId || !gameData || !classData)) {
     return (
       <div id="skill-tree-canvas" className="flex flex-col h-full">
         <SkillTreeTabBar
@@ -374,6 +398,7 @@ export function SkillTreeView() {
 
   const isPickerFullPanel =
     !isPassiveTab &&
+    !isWeaverTab &&
     pickerState !== null &&
     !pickerState.isPopover &&
     pickerState.slotIndex === safeTabIndex - 1

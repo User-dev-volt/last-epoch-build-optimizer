@@ -1,6 +1,6 @@
 # Story 4.2: Weaver Tree Tab and Placeholder Component
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -32,139 +32,56 @@ so that the UI layout is consistent and I understand the feature's status.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `weaverTreeData` to `gameDataStore.ts` (AC: #2, #3)
-  - [ ] In `src/shared/stores/gameDataStore.ts`, add import at top (line 2 after current imports):
+- [x] Task 1: Add `weaverTreeData` to `gameDataStore.ts` (AC: #2, #3)
+  - [x] In `src/shared/stores/gameDataStore.ts`, add import at top (line 2 after current imports):
     ```typescript
     import type { TreeData } from '../types/treeData'
     ```
-  - [ ] Add to `GameDataStore` interface (after `setIsUpdating: ...`):
+  - [x] Add to `GameDataStore` interface (after `setIsUpdating: ...`):
     ```typescript
     weaverTreeData: TreeData | null
     setWeaverTreeData: (data: TreeData | null) => void
     ```
-  - [ ] Add to initial state in `create<GameDataStore>()((set) => ({` (after `isUpdating: false`):
+  - [x] Add to initial state in `create<GameDataStore>()((set) => ({` (after `isUpdating: false`):
     ```typescript
     weaverTreeData: null,
     ```
-  - [ ] Add to the implementation (after `setIsUpdating: (updating) => set({ isUpdating: updating })`):
+  - [x] Add to the implementation (after `setIsUpdating: (updating) => set({ isUpdating: updating })`):
     ```typescript
     setWeaverTreeData: (data) => set({ weaverTreeData: data }),
     ```
 
-- [ ] Task 2: Create `WeaverTreePlaceholder.tsx` (AC: #2, #4, #5)
-  - [ ] Create `src/features/weaver-tree/WeaverTreePlaceholder.tsx`:
-    ```typescript
-    export function WeaverTreePlaceholder() {
-      return (
-        <div
-          className="flex items-center justify-center h-full"
-          role="region"
-          aria-label="Weaver Tree"
-        >
-          <p
-            className="text-sm text-center max-w-xs"
-            style={{ color: 'var(--color-text-secondary)' }}
-          >
-            Weaver Tree planning is in research. Node data is not available from community sources.
-          </p>
-        </div>
-      )
-    }
-    ```
-  - [ ] Do NOT create an `index.ts` barrel file in `src/features/weaver-tree/`
+- [x] Task 2: Create `WeaverTreePlaceholder.tsx` (AC: #2, #4, #5)
+  - [x] Create `src/features/weaver-tree/WeaverTreePlaceholder.tsx`
+  - [x] Do NOT create an `index.ts` barrel file in `src/features/weaver-tree/`
 
-- [ ] Task 3: Create `WeaverTreePlaceholder.test.tsx` (AC: #5)
-  - [ ] Create `src/features/weaver-tree/WeaverTreePlaceholder.test.tsx`:
-    ```typescript
-    import { describe, it, expect } from 'vitest'
-    import { render, screen } from '@testing-library/react'
-    import { axe } from 'vitest-axe'
-    import { WeaverTreePlaceholder } from './WeaverTreePlaceholder'
+- [x] Task 3: Create `WeaverTreePlaceholder.test.tsx` (AC: #5)
+  - [x] Create `src/features/weaver-tree/WeaverTreePlaceholder.test.tsx` with render, role/aria, and axe tests
 
-    describe('WeaverTreePlaceholder', () => {
-      it('renders the placeholder message', () => {
-        render(<WeaverTreePlaceholder />)
-        expect(
-          screen.getByText(
-            'Weaver Tree planning is in research. Node data is not available from community sources.'
-          )
-        ).toBeTruthy()
-      })
+- [x] Task 4: Add Weaver Tree tab to `SkillTreeTabBar.tsx` (AC: #1, #6)
+  - [x] Append `{ id: '__weaver__', label: 'Weaver Tree' }` to `tabs` array
+  - [x] Change `const isSkillTab = i >= 1` to `const isSkillTab = i >= 1 && i <= 5`
 
-      it('has role="region" and aria-label="Weaver Tree"', () => {
-        const { container } = render(<WeaverTreePlaceholder />)
-        const root = container.firstElementChild as HTMLElement
-        expect(root.getAttribute('role')).toBe('region')
-        expect(root.getAttribute('aria-label')).toBe('Weaver Tree')
-      })
+- [x] Task 5: Update `SkillTreeTabBar.test.tsx` for 7 tabs (AC: #1, #6)
+  - [x] Updated first test name and length to 7; added Weaver Tree assertion
+  - [x] Updated second test length to 7
+  - [x] Added Weaver Tree rightmost tab test
+  - [x] Added onSkillTabClick not called for Weaver tab test
 
-      it('passes axe accessibility check', async () => {
-        const { container } = render(<WeaverTreePlaceholder />)
-        expect(await axe(container)).toHaveNoViolations()
-      })
-    })
-    ```
-
-- [ ] Task 4: Add Weaver Tree tab to `SkillTreeTabBar.tsx` (AC: #1, #6)
-  - [ ] In `src/features/skill-tree/SkillTreeTabBar.tsx`, find the `tabs` array construction and append the Weaver entry:
-    ```typescript
-    const tabs = [
-      { id: '__passive__', label: 'Passive Tree' },
-      ...SKILL_SLOT_LABELS.map((fallback, i) => {
-        const slotId = `slot-${i}`
-        const assigned = activeSkills.find((s) => s.slotId === slotId)
-        return { id: slotId, label: assigned?.skillName ?? fallback }
-      }),
-      { id: '__weaver__', label: 'Weaver Tree' },  // ADD THIS LINE
-    ]
-    ```
-  - [ ] Change `const isSkillTab = i >= 1` to `const isSkillTab = i >= 1 && i <= 5` — this prevents the Weaver tab (index 6) from triggering `onSkillTabClick`
-  - [ ] The `isEmpty` check is unchanged — it already guards on `isSkillTab`, so Weaver tab (not a skill tab) will have `isEmpty = false` automatically
-
-- [ ] Task 5: Update `SkillTreeTabBar.test.tsx` for 7 tabs (AC: #1, #6)
-  - [ ] In `src/features/skill-tree/SkillTreeTabBar.test.tsx`, update the first test:
-    - Change the test name from `'always renders 6 tabs (passive + 5 skill slots)'` to `'always renders 7 tabs (passive + 5 skill slots + weaver)'`
-    - Change `expect(tabs).toHaveLength(6)` to `expect(tabs).toHaveLength(7)`
-    - Add assertion: `expect(screen.getByText('Weaver Tree')).toBeInTheDocument()`
-  - [ ] Update the second test `'shows assigned skill names and fallback labels for empty slots'`:
-    - Change `expect(tabs).toHaveLength(6)` to `expect(tabs).toHaveLength(7)`
-  - [ ] Add a new test after the existing ones:
-    ```typescript
-    it('renders Weaver Tree as the last (rightmost) tab', () => {
-      render(<SkillTreeTabBar activeSkills={[]} selectedIndex={0} onChange={() => {}} />)
-      const tabs = screen.getAllByRole('tab')
-      expect(tabs[6].textContent).toBe('Weaver Tree')
-    })
-
-    it('does not call onSkillTabClick when Weaver Tree tab is clicked', async () => {
-      const onSkillTabClick = vi.fn()
-      render(
-        <SkillTreeTabBar
-          activeSkills={[]}
-          selectedIndex={0}
-          onChange={() => {}}
-          onSkillTabClick={onSkillTabClick}
-        />
-      )
-      await userEvent.click(screen.getByText('Weaver Tree'))
-      expect(onSkillTabClick).not.toHaveBeenCalled()
-    })
-    ```
-
-- [ ] Task 6: Wire the Weaver tab into `SkillTreeView.tsx` (AC: #1, #2, #3, #6, #7)
-  - [ ] Add `weaverTreeData` selector near the top of `SkillTreeView` (line ~64, after the `isLoading` selector):
+- [x] Task 6: Wire the Weaver tab into `SkillTreeView.tsx` (AC: #1, #2, #3, #6, #7)
+  - [x] Add `weaverTreeData` selector near the top of `SkillTreeView` (line ~64, after the `isLoading` selector):
     ```typescript
     const weaverTreeData = useGameDataStore((s) => s.weaverTreeData)
     ```
-  - [ ] Add `WeaverTreePlaceholder` import at the top (near other feature imports):
+  - [x] Add `WeaverTreePlaceholder` import at the top (near other feature imports):
     ```typescript
     import { WeaverTreePlaceholder } from '../weaver-tree/WeaverTreePlaceholder'
     ```
-  - [ ] Fix the `safeTabIndex` guard (currently line ~159): change `activeTabIndex > 5` to `activeTabIndex > 6`:
+  - [x] Fix the `safeTabIndex` guard (currently line ~159): change `activeTabIndex > 5` to `activeTabIndex > 6`:
     ```typescript
     const safeTabIndex = activeTabIndex > 6 ? 0 : activeTabIndex
     ```
-  - [ ] Fix the `useEffect` guard (currently line ~99): change `if (activeTabIndex > 5)` to `if (activeTabIndex > 6)`:
+  - [x] Fix the `useEffect` guard (currently line ~99): change `if (activeTabIndex > 5)` to `if (activeTabIndex > 6)`:
     ```typescript
     useEffect(() => {
       if (activeTabIndex > 6) {
@@ -172,11 +89,11 @@ so that the UI layout is consistent and I understand the feature's status.
       }
     }, [activeTabIndex])
     ```
-  - [ ] Add `isWeaverTab` derived value immediately after `isPassiveTab` (line ~160):
+  - [x] Add `isWeaverTab` derived value immediately after `isPassiveTab` (line ~160):
     ```typescript
     const isWeaverTab = safeTabIndex === 6
     ```
-  - [ ] Fix `slotId` to handle Weaver tab (line ~162): change from:
+  - [x] Fix `slotId` to handle Weaver tab (line ~162): change from:
     ```typescript
     const slotId = isPassiveTab ? null : `slot-${safeTabIndex - 1}`
     ```
@@ -184,7 +101,7 @@ so that the UI layout is consistent and I understand the feature's status.
     ```typescript
     const slotId = isPassiveTab || isWeaverTab ? null : `slot-${safeTabIndex - 1}`
     ```
-  - [ ] Fix `isPickerFullPanel` to exclude Weaver tab (line ~375):
+  - [x] Fix `isPickerFullPanel` to exclude Weaver tab (line ~375):
     ```typescript
     const isPickerFullPanel =
       !isPassiveTab &&
@@ -193,7 +110,7 @@ so that the UI layout is consistent and I understand the feature's status.
       !pickerState.isPopover &&
       pickerState.slotIndex === safeTabIndex - 1
     ```
-  - [ ] Add Weaver tab early return **after the `isLoading` return** and **before** the passive tab early return:
+  - [x] Add Weaver tab early return **after the `isLoading` return** and **before** the passive tab early return:
     ```typescript
     if (isWeaverTab) {
       return (
@@ -216,7 +133,7 @@ so that the UI layout is consistent and I understand the feature's status.
       )
     }
     ```
-  - [ ] Fix the second early return to exclude Weaver tab (currently `if (!isPassiveTab && ...)`):
+  - [x] Fix the second early return to exclude Weaver tab (currently `if (!isPassiveTab && ...)`):
     ```typescript
     if (!isPassiveTab && !isWeaverTab && (!selectedClassId || !selectedMasteryId || !gameData || !classData)) {
     ```
@@ -342,6 +259,22 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+None — implementation proceeded without blockers.
+
 ### Completion Notes List
 
+- Added `weaverTreeData: TreeData | null` and `setWeaverTreeData` to `gameDataStore.ts`; the field is always `null` per the 4.1 spike NO-GO verdict
+- Created `WeaverTreePlaceholder.tsx` as a named export in `src/features/weaver-tree/` (no barrel file); renders `role="region"` landmark with inline color token per Tailwind v4 rules
+- All 3 `WeaverTreePlaceholder` tests pass including vitest-axe accessibility check (AC #5 / UX-DR15)
+- `SkillTreeTabBar`: appended `__weaver__` tab as index 6; tightened `isSkillTab` to `i >= 1 && i <= 5` so the Weaver tab never fires `onSkillTabClick` (AC #6)
+- `SkillTreeView`: added `weaverTreeData` selector, `isWeaverTab` derived value, fixed `> 5` guards to `> 6`, added Weaver early return with `weaverTreeData !== null` gate (AC #3 — conditional exists for Story 4.3), updated `slotId` null guard, `isPickerFullPanel`, and skill tab early return condition
+- Pre-existing `ProviderSelector.test.tsx` failures (6 tests) confirmed unrelated to this story — present before any changes
+
 ### File List
+
+- `lebo/src/shared/stores/gameDataStore.ts` (modified)
+- `lebo/src/features/weaver-tree/WeaverTreePlaceholder.tsx` (created)
+- `lebo/src/features/weaver-tree/WeaverTreePlaceholder.test.tsx` (created)
+- `lebo/src/features/skill-tree/SkillTreeTabBar.tsx` (modified)
+- `lebo/src/features/skill-tree/SkillTreeTabBar.test.tsx` (modified)
+- `lebo/src/features/skill-tree/SkillTreeView.tsx` (modified)

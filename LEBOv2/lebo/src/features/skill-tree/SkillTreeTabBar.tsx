@@ -18,6 +18,7 @@ export function SkillTreeTabBar({ activeSkills, selectedIndex, onChange, onSkill
       const assigned = activeSkills.find((s) => s.slotId === slotId)
       return { id: slotId, label: assigned?.skillName ?? fallback }
     }),
+    { id: '__weaver__', label: 'Weaver Tree' },
   ]
 
   return (
@@ -28,7 +29,7 @@ export function SkillTreeTabBar({ activeSkills, selectedIndex, onChange, onSkill
       >
         {tabs.map((tab, i) => {
           const selected = selectedIndex === i
-          const isSkillTab = i >= 1
+          const isSkillTab = i >= 1 && i <= 5
           const isEmpty = isSkillTab && !activeSkills.find((s) => s.slotId === `slot-${i - 1}`)
           return (
             <Tab

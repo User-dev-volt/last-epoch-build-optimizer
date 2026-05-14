@@ -10,19 +10,20 @@ const twoSkills: ActiveSkill[] = [
 ]
 
 describe('SkillTreeTabBar', () => {
-  it('always renders 6 tabs (passive + 5 skill slots)', () => {
+  it('always renders 7 tabs (passive + 5 skill slots + weaver)', () => {
     render(<SkillTreeTabBar activeSkills={[]} selectedIndex={0} onChange={() => {}} />)
     const tabs = screen.getAllByRole('tab')
-    expect(tabs).toHaveLength(6)
+    expect(tabs).toHaveLength(7)
     expect(screen.getByText('Passive Tree')).toBeInTheDocument()
     expect(screen.getByText('Skill 1')).toBeInTheDocument()
     expect(screen.getByText('Skill 5')).toBeInTheDocument()
+    expect(screen.getByText('Weaver Tree')).toBeInTheDocument()
   })
 
   it('shows assigned skill names and fallback labels for empty slots', () => {
     render(<SkillTreeTabBar activeSkills={twoSkills} selectedIndex={0} onChange={() => {}} />)
     const tabs = screen.getAllByRole('tab')
-    expect(tabs).toHaveLength(6)
+    expect(tabs).toHaveLength(7)
     expect(screen.getByText('Skill 1')).toBeInTheDocument()
     expect(screen.getByText('Judgement')).toBeInTheDocument()
     expect(screen.getByText('Volatile Reversal')).toBeInTheDocument()
@@ -56,5 +57,25 @@ describe('SkillTreeTabBar', () => {
     )
     await userEvent.click(screen.getByText('Skill 1'))
     expect(onSkillTabClick).toHaveBeenCalledWith(0, expect.any(HTMLButtonElement))
+  })
+
+  it('renders Weaver Tree as the last (rightmost) tab', () => {
+    render(<SkillTreeTabBar activeSkills={[]} selectedIndex={0} onChange={() => {}} />)
+    const tabs = screen.getAllByRole('tab')
+    expect(tabs[6].textContent).toBe('Weaver Tree')
+  })
+
+  it('does not call onSkillTabClick when Weaver Tree tab is clicked', async () => {
+    const onSkillTabClick = vi.fn()
+    render(
+      <SkillTreeTabBar
+        activeSkills={[]}
+        selectedIndex={0}
+        onChange={() => {}}
+        onSkillTabClick={onSkillTabClick}
+      />
+    )
+    await userEvent.click(screen.getByText('Weaver Tree'))
+    expect(onSkillTabClick).not.toHaveBeenCalled()
   })
 })
