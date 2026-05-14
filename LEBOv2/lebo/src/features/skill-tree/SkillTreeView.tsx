@@ -1,4 +1,5 @@
 import { useMemo, useEffect, useState, useCallback, useRef } from 'react'
+import type { Texture } from 'pixi.js'
 import type { GameNode } from '../../shared/types/gameData'
 import type { ActiveSkill } from '../../shared/types/build'
 import type { NodeChange } from '../../shared/types/optimization'
@@ -20,7 +21,7 @@ import { useIconTextures } from '../icon-pipeline/useIconTextures'
 import { BudgetToggle } from './BudgetToggle'
 import { UnspentCounter } from './UnspentCounter'
 import { SkillLevelInput } from './SkillLevelInput'
-import { calculateSkillPoints } from '../../shared/utils/budgetCalculator'
+import { calculateSkillPoints, calculateWeaverPoints } from '../../shared/utils/budgetCalculator'
 import { WeaverTreePlaceholder } from '../weaver-tree/WeaverTreePlaceholder'
 
 const EMPTY_ALLOCATED: Record<string, number> = {}
@@ -35,6 +36,7 @@ const EMPTY_HIGHLIGHTED: HighlightedNodes = {
   searchDimmed: EMPTY_SET,
 }
 const EMPTY_SKILLS: ActiveSkill[] = []
+const EMPTY_TEXTURES = new Map<string, Texture>()
 
 type PickerState = {
   slotIndex: number
@@ -61,12 +63,15 @@ export function SkillTreeView() {
   const gameData = useGameDataStore((s) => s.gameData)
   const isLoading = useGameDataStore((s) => s.isLoading)
   const weaverTreeData = useGameDataStore((s) => s.weaverTreeData)
+  const weaverGameNodes = useGameDataStore((s) => s.weaverGameNodes)
   const selectedClassId = useBuildStore((s) => s.selectedClassId)
   const selectedMasteryId = useBuildStore((s) => s.selectedMasteryId)
   const activeBuild = useBuildStore((s) => s.activeBuild)
   const undoNodeChange = useBuildStore((s) => s.undoNodeChange)
   const assignSkillToSlot = useBuildStore((s) => s.assignSkillToSlot)
   const resetActiveTree = useBuildStore((s) => s.resetActiveTree)
+  const applyWeaverNodeChange = useBuildStore((s) => s.applyWeaverNodeChange)
+  const weaverAllocations = useBuildStore((s) => s.activeBuild?.weaverAllocations ?? EMPTY_ALLOCATED)
   const activeSkills = useBuildStore(
     (s) => s.activeBuild?.contextData.skills ?? EMPTY_SKILLS
   )
@@ -85,11 +90,13 @@ export function SkillTreeView() {
   const [activeTabIndex, setActiveTabIndex] = useState(0)
   const [pickerState, setPickerState] = useState<PickerState | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [weaverFlashNodeIds, setWeaverFlashNodeIds] = useState<string[] | null>(null)
   const emptySlotButtonRef = useRef<HTMLButtonElement>(null)
 
   // Canvas refs for imperative viewport control (fit, zoom)
   const passiveCanvasRef = useRef<SkillTreeCanvasHandle>(null)
   const skillCanvasRef = useRef<SkillTreeCanvasHandle>(null)
+  const weaverCanvasRef = useRef<SkillTreeCanvasHandle>(null)
 
   useEffect(() => {
     setActiveTabIndex(0)
@@ -224,8 +231,36 @@ export function SkillTreeView() {
     [searchHighlighted, searchDimmed]
   )
 
+  const weaverSearchHighlighted = useMemo<Set<string>>(() => {
+    if (!searchQuery || !weaverTreeData) return EMPTY_SET
+    const q = searchQuery.toLowerCase()
+    return new Set(
+      weaverTreeData.nodes
+        .filter((n) => (weaverGameNodes[n.id]?.name ?? '').toLowerCase().includes(q))
+        .map((n) => n.id)
+    )
+  }, [searchQuery, weaverTreeData, weaverGameNodes])
+
+  const weaverSearchDimmed = useMemo<Set<string>>(() => {
+    if (!searchQuery || !weaverTreeData) return EMPTY_SET
+    const q = searchQuery.toLowerCase()
+    return new Set(
+      weaverTreeData.nodes
+        .filter((n) => !(weaverGameNodes[n.id]?.name ?? '').toLowerCase().includes(q))
+        .map((n) => n.id)
+    )
+  }, [searchQuery, weaverTreeData, weaverGameNodes])
+
+  const weaverHighlightedNodes = useMemo<HighlightedNodes>(
+    () => ({ ...EMPTY_HIGHLIGHTED, searchHighlighted: weaverSearchHighlighted, searchDimmed: weaverSearchDimmed }),
+    [weaverSearchHighlighted, weaverSearchDimmed]
+  )
+
+  const allocatedWeaverPoints = Object.values(weaverAllocations).reduce((sum, v) => sum + v, 0)
+
   const passiveInteraction = useSkillTree(treeData)
   const skillInteraction = useSkillTree(skillTreeData, slotId ?? undefined)
+  const weaverInteraction = useSkillTree(isWeaverTab ? weaverTreeData : null)
 
   const {
     hoveredNodeId,
@@ -260,6 +295,19 @@ export function SkillTreeView() {
       setSearchQuery('')
     }
   }, [isPassiveTab, slotId, resetActiveTree])
+
+  const handleWeaverNodeClick = useCallback((nodeId: string, button: 0 | 2) => {
+    if (!weaverTreeData) return
+    const delta: 1 | -1 = button === 2 ? -1 : 1
+    const result = applyWeaverNodeChange(nodeId, delta, weaverTreeData)
+    if (!result.success && result.error) {
+      if (button === 2 && result.blockedByDependents && result.blockedByDependents.length > 0) {
+        setWeaverFlashNodeIds([...result.blockedByDependents])
+      } else {
+        setWeaverFlashNodeIds([nodeId])
+      }
+    }
+  }, [weaverTreeData, applyWeaverNodeChange])
 
   const handleSkillTabClick = useCallback(
     (slotIndex: number, el: HTMLButtonElement) => {
@@ -311,6 +359,33 @@ export function SkillTreeView() {
   const handleContextMenuRemove = useCallback((nodeId: string) => handleNodeClick(nodeId, 2), [handleNodeClick])
 
   if (isWeaverTab) {
+    const {
+      hoveredNodeId: weaverHoveredNodeId,
+      mousePosition: weaverMousePosition,
+      nodeError: weaverNodeError,
+      keyboardFocusedNodeId: weaverKeyboardFocusedNodeId,
+      keyboardPosition: weaverKeyboardPosition,
+      handleNodeSelect: handleWeaverNodeSelect,
+      handleNodeHover: handleWeaverNodeHover,
+      handleNodeContextMenu: handleWeaverNodeContextMenu,
+      handleContextMenuClose: handleWeaverContextMenuClose,
+      handlePointerMove: handleWeaverPointerMove,
+      handleKeyboardNavigate: handleWeaverKeyboardNavigate,
+      contextMenu: weaverContextMenu,
+    } = weaverInteraction
+
+    const weaverHoveredGameNode = weaverHoveredNodeId ? weaverGameNodes[weaverHoveredNodeId] ?? null : null
+    const weaverErrorGameNode = weaverNodeError ? weaverGameNodes[weaverNodeError.nodeId] ?? null : null
+    const weaverKeyboardGameNode =
+      !weaverHoveredNodeId && !weaverNodeError && weaverKeyboardFocusedNodeId
+        ? weaverGameNodes[weaverKeyboardFocusedNodeId] ?? null
+        : null
+
+    const getWeaverPrereqNames = (node: GameNode | null) =>
+      node ? node.prerequisiteNodeIds.map((id) => weaverGameNodes[id]?.name ?? id) : []
+
+    const unspentWeaverPoints = calculateWeaverPoints(activeBuild?.characterLevel ?? 1) - allocatedWeaverPoints
+
     return (
       <div id="skill-tree-canvas" className="flex flex-col h-full">
         <SkillTreeTabBar
@@ -319,10 +394,81 @@ export function SkillTreeView() {
           onChange={handleTabChange}
           onSkillTabClick={handleSkillTabClick}
         />
+
+        {activeBuild && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px', height: 36, borderBottom: '1px solid var(--color-bg-elevated)' }}>
+            <BudgetToggle />
+            <UnspentCounter count={unspentWeaverPoints} treeType="weaver" budgetEnforced={budgetEnforced} />
+          </div>
+        )}
+
+        {weaverTreeData !== null && (
+          <TreeControls
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onReset={() => { resetActiveTree('weaver'); setSearchQuery('') }}
+            onFit={() => weaverCanvasRef.current?.fitToTree()}
+          />
+        )}
+
         <div className="flex-1 min-h-0">
           {weaverTreeData !== null ? (
-            // Story 4.3 will replace this branch with SkillTreeCanvas when spike is GO
-            <WeaverTreePlaceholder />
+            <div className="relative h-full" onMouseLeave={() => handleWeaverNodeHover(null)}>
+              <SkillTreeCanvas
+                ref={weaverCanvasRef}
+                treeData={weaverTreeData}
+                treeLayout="weaver"
+                nodeAllocations={weaverAllocations}
+                highlightedNodes={weaverHighlightedNodes}
+                iconTextures={EMPTY_TEXTURES}
+                selectedNodeId={selectedNodeId}
+                onNodeClick={handleWeaverNodeClick}
+                onNodeHover={handleWeaverNodeHover}
+                onNodeSelect={handleWeaverNodeSelect}
+                onNodeContextMenu={handleWeaverNodeContextMenu}
+                onKeyboardNavigate={handleWeaverKeyboardNavigate}
+                onPointerMove={handleWeaverPointerMove}
+                flashNodeIds={weaverFlashNodeIds ?? undefined}
+              />
+
+              {weaverHoveredGameNode && !weaverNodeError && (
+                <NodeTooltip
+                  gameNode={weaverHoveredGameNode}
+                  allocatedPoints={weaverAllocations[weaverHoveredNodeId!] ?? 0}
+                  position={weaverMousePosition}
+                  prerequisiteNames={getWeaverPrereqNames(weaverHoveredGameNode)}
+                />
+              )}
+
+              {weaverNodeError && weaverErrorGameNode && (
+                <NodeTooltip
+                  gameNode={weaverErrorGameNode}
+                  allocatedPoints={weaverAllocations[weaverNodeError.nodeId] ?? 0}
+                  position={weaverMousePosition}
+                  errorMessage={weaverNodeError.message}
+                  prerequisiteNames={getWeaverPrereqNames(weaverErrorGameNode)}
+                />
+              )}
+
+              {weaverKeyboardGameNode && (
+                <NodeTooltip
+                  gameNode={weaverKeyboardGameNode}
+                  allocatedPoints={weaverAllocations[weaverKeyboardFocusedNodeId!] ?? 0}
+                  position={weaverKeyboardPosition}
+                  prerequisiteNames={getWeaverPrereqNames(weaverKeyboardGameNode)}
+                />
+              )}
+
+              {weaverContextMenu && (
+                <NodeContextMenu
+                  nodeId={weaverContextMenu.nodeId}
+                  position={{ x: weaverContextMenu.x, y: weaverContextMenu.y }}
+                  onAllocate={(nodeId) => handleWeaverNodeClick(nodeId, 0)}
+                  onRemove={(nodeId) => handleWeaverNodeClick(nodeId, 2)}
+                  onClose={handleWeaverContextMenuClose}
+                />
+              )}
+            </div>
           ) : (
             <WeaverTreePlaceholder />
           )}

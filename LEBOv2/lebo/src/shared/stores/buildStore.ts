@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { BuildState, BuildMeta, ApplyNodeResult, GearItem, ActiveSkill, IdolItem } from '../types/build'
 import type { SkillEntry } from '../types/gameData'
 import type { TreeData } from '../types/treeData'
-import { calculatePassivePoints, calculateSkillPoints } from '../utils/budgetCalculator'
+import { calculatePassivePoints, calculateSkillPoints, calculateWeaverPoints } from '../utils/budgetCalculator'
 
 const MAX_UNDO_STACK = 10
 
@@ -36,7 +36,12 @@ export interface BuildStore {
     treeData: TreeData
   ) => ApplyNodeResult
   assignSkillToSlot: (slotId: string, skill: Pick<SkillEntry, 'skillId' | 'skillName'>) => void
-  resetActiveTree: (treeType: 'passive' | 'skill', slotId?: string) => void
+  applyWeaverNodeChange: (
+    nodeId: string,
+    delta: number,
+    treeData: TreeData
+  ) => ApplyNodeResult
+  resetActiveTree: (treeType: 'passive' | 'skill' | 'weaver', slotId?: string) => void
   undoNodeChange: () => void
   updateContextGear: (gear: GearItem[]) => void
   updateContextSkills: (skills: ActiveSkill[]) => void
@@ -79,6 +84,7 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
         nodeAllocations: {},
         skillNodeAllocations: {},
         activeSkillLevels: {},
+        weaverAllocations: {},
         contextData: { gear: [], skills: [], idols: [] },
         isPersisted: false,
         createdAt: now,
@@ -136,6 +142,7 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
         nodeAllocations: {},
         skillNodeAllocations: {},
         activeSkillLevels: {},
+        weaverAllocations: {},
         contextData: { gear: [], skills: [], idols: [] },
         isPersisted: false,
         createdAt: now,
@@ -203,6 +210,66 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
     return { success: true }
   },
 
+  applyWeaverNodeChange: (nodeId, delta, treeData) => {
+    const state = get()
+    const activeBuild = state.activeBuild
+    if (!activeBuild) return { success: false, error: 'No active build' }
+
+    const nodeMap = new Map(treeData.nodes.map((n) => [n.id, n]))
+    const node = nodeMap.get(nodeId)
+    if (!node) return { success: false }
+
+    const current = activeBuild.weaverAllocations[nodeId] ?? 0
+    const newPoints = Math.max(0, Math.min(current + delta, node.maxPoints))
+
+    if (newPoints === current) return { success: false }
+
+    if (delta > 0) {
+      const prerequisites = treeData.edges.filter((e) => e.toId === nodeId).map((e) => e.fromId)
+      const prereqsMet = prerequisites.every(
+        (prereqId) => (activeBuild.weaverAllocations[prereqId] ?? 0) > 0
+      )
+      if (!prereqsMet) return { success: false, error: 'Prerequisite not met' }
+      if (activeBuild.budgetEnforced) {
+        const available = calculateWeaverPoints(activeBuild.characterLevel)
+        const allocated = Object.values(activeBuild.weaverAllocations).reduce((sum, v) => sum + v, 0)
+        if (available - allocated <= 0) return { success: false }
+      }
+    }
+
+    if (delta < 0 && newPoints === 0) {
+      const dependents = treeData.edges
+        .filter((e) => e.fromId === nodeId)
+        .map((e) => e.toId)
+        .filter((depId) => (activeBuild.weaverAllocations[depId] ?? 0) > 0)
+      if (dependents.length > 0) {
+        return {
+          success: false,
+          error: `Cannot remove — ${dependents.length} node(s) depend on this`,
+          blockedByDependents: dependents,
+        }
+      }
+    }
+
+    const newWeaverAllocations = { ...activeBuild.weaverAllocations }
+    if (newPoints === 0) {
+      delete newWeaverAllocations[nodeId]
+    } else {
+      newWeaverAllocations[nodeId] = newPoints
+    }
+
+    const newActiveBuild: BuildState = {
+      ...activeBuild,
+      weaverAllocations: newWeaverAllocations,
+      isPersisted: false,
+      updatedAt: new Date().toISOString(),
+    }
+
+    const newUndoStack = [...state.undoStack, activeBuild].slice(-MAX_UNDO_STACK)
+    set({ activeBuild: newActiveBuild, undoStack: newUndoStack })
+    return { success: true }
+  },
+
   resetActiveTree: (treeType, slotId) => {
     const { activeBuild, undoStack } = get()
     if (!activeBuild) return
@@ -223,6 +290,17 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
         activeBuild: {
           ...activeBuild,
           skillNodeAllocations: { ...activeBuild.skillNodeAllocations, [slotId]: {} },
+          isPersisted: false,
+          updatedAt: new Date().toISOString(),
+        },
+        undoStack: [...undoStack, activeBuild].slice(-MAX_UNDO_STACK),
+      })
+    } else if (treeType === 'weaver') {
+      if (Object.keys(activeBuild.weaverAllocations).length === 0) return
+      set({
+        activeBuild: {
+          ...activeBuild,
+          weaverAllocations: {},
           isPersisted: false,
           updatedAt: new Date().toISOString(),
         },

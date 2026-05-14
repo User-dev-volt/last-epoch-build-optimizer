@@ -16,6 +16,7 @@ const mockBuild: BuildState = {
   nodeAllocations: { 'node-a': 1, 'node-b': 2 },
   skillNodeAllocations: {},
   activeSkillLevels: {},
+  weaverAllocations: {},
   contextData: { gear: [], skills: [], idols: [] },
   isPersisted: false,
   createdAt: '2026-01-01T00:00:00Z',
@@ -404,6 +405,7 @@ describe('buildStore — updateContextGear', () => {
       nodeAllocations: {},
       skillNodeAllocations: {},
       activeSkillLevels: {},
+      weaverAllocations: {},
       contextData: { gear: [], skills: [], idols: [] },
       isPersisted: false,
       createdAt: '2026-01-01T00:00:00Z',
@@ -433,6 +435,7 @@ describe('buildStore — updateContextSkills', () => {
     nodeAllocations: {},
     skillNodeAllocations: {},
     activeSkillLevels: {},
+    weaverAllocations: {},
     contextData: { gear: [], skills: [], idols: [] },
     isPersisted: false,
     createdAt: '2026-01-01T00:00:00Z',
@@ -479,6 +482,7 @@ describe('buildStore — updateContextIdols', () => {
     nodeAllocations: {},
     skillNodeAllocations: {},
     activeSkillLevels: {},
+    weaverAllocations: {},
     contextData: { gear: [], skills: [], idols: [] },
     isPersisted: false,
     createdAt: '2026-01-01T00:00:00Z',
@@ -524,6 +528,7 @@ const buildWithSkill: BuildState = {
   nodeAllocations: {},
   skillNodeAllocations: {},
   activeSkillLevels: {},
+  weaverAllocations: {},
   contextData: { gear: [], skills: [], idols: [] },
   isPersisted: false,
   createdAt: '2026-01-01T00:00:00Z',
@@ -610,6 +615,7 @@ describe('buildStore — resetActiveTree', () => {
       nodeAllocations: {},
       skillNodeAllocations: { 'slot-0': { 'skill-root': 2 }, 'slot-1': { 'other-node': 1 } },
       activeSkillLevels: {},
+      weaverAllocations: {},
       contextData: { gear: [], skills: [], idols: [] },
       isPersisted: false,
       createdAt: '2026-01-01T00:00:00Z',
@@ -782,5 +788,91 @@ describe('buildStore — applySkillNodeChange', () => {
     const alloc = useBuildStore.getState().activeBuild!.skillNodeAllocations['slot-0']
     expect(alloc['skill-root']).toBe(1)
     expect(alloc['skill-child']).toBeUndefined()
+  })
+})
+
+const mockWeaverTreeData: TreeData = {
+  nodes: [
+    { id: 'w-hub', x: 0, y: 0, size: 'large', maxPoints: 3, connections: ['w-ring1'], state: 'available' },
+    { id: 'w-ring1', x: 120, y: 0, size: 'medium', maxPoints: 3, connections: ['w-hub'], state: 'available' },
+  ],
+  edges: [{ fromId: 'w-hub', toId: 'w-ring1' }],
+}
+
+describe('buildStore — applyWeaverNodeChange', () => {
+  beforeEach(() => {
+    useBuildStore.setState(initialState, true)
+    useBuildStore.getState().setActiveBuild({ ...mockBuild, budgetEnforced: false, weaverAllocations: {} })
+  })
+
+  it('increments weaverAllocations for a given node', () => {
+    const result = useBuildStore.getState().applyWeaverNodeChange('w-hub', 1, mockWeaverTreeData)
+    expect(result.success).toBe(true)
+    expect(useBuildStore.getState().activeBuild!.weaverAllocations['w-hub']).toBe(1)
+  })
+
+  it('decrements weaverAllocations correctly', () => {
+    useBuildStore.getState().applyWeaverNodeChange('w-hub', 1, mockWeaverTreeData)
+    useBuildStore.getState().applyWeaverNodeChange('w-hub', 1, mockWeaverTreeData)
+    const result = useBuildStore.getState().applyWeaverNodeChange('w-hub', -1, mockWeaverTreeData)
+    expect(result.success).toBe(true)
+    expect(useBuildStore.getState().activeBuild!.weaverAllocations['w-hub']).toBe(1)
+  })
+
+  it('does not go below 0', () => {
+    const result = useBuildStore.getState().applyWeaverNodeChange('w-hub', -1, mockWeaverTreeData)
+    expect(result.success).toBe(false)
+  })
+
+  it('does not affect nodeAllocations (passive tree)', () => {
+    useBuildStore.getState().applyWeaverNodeChange('w-hub', 1, mockWeaverTreeData)
+    expect(useBuildStore.getState().activeBuild!.nodeAllocations).toEqual({ 'node-a': 1, 'node-b': 2 })
+  })
+
+  it('pushes an undo snapshot on successful allocation', () => {
+    const before = useBuildStore.getState().undoStack.length
+    useBuildStore.getState().applyWeaverNodeChange('w-hub', 1, mockWeaverTreeData)
+    expect(useBuildStore.getState().undoStack.length).toBe(before + 1)
+  })
+
+  it('blocks allocation when budget is exceeded (budgetEnforced=true)', () => {
+    // Fill all 53 weaver points using w-hub (maxPoints: 1) by stuffing the store directly
+    const filledAllocations: Record<string, number> = {}
+    for (let i = 0; i < 53; i++) filledAllocations[`fake-node-${i}`] = 1
+    useBuildStore.getState().setActiveBuild({
+      ...mockBuild,
+      budgetEnforced: true,
+      weaverAllocations: filledAllocations,
+    })
+    const result = useBuildStore.getState().applyWeaverNodeChange('w-hub', 1, mockWeaverTreeData)
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('buildStore — resetActiveTree("weaver")', () => {
+  beforeEach(() => {
+    useBuildStore.setState(initialState, true)
+    useBuildStore.getState().setActiveBuild({ ...mockBuild, weaverAllocations: { 'w-hub': 1, 'w-ring1': 2 } })
+  })
+
+  it('clears weaverAllocations', () => {
+    useBuildStore.getState().resetActiveTree('weaver')
+    expect(useBuildStore.getState().activeBuild!.weaverAllocations).toEqual({})
+  })
+
+  it('does not clear nodeAllocations (passive tree)', () => {
+    useBuildStore.getState().resetActiveTree('weaver')
+    expect(useBuildStore.getState().activeBuild!.nodeAllocations).toEqual({ 'node-a': 1, 'node-b': 2 })
+  })
+
+  it('pushes an undo snapshot', () => {
+    const before = useBuildStore.getState().undoStack.length
+    useBuildStore.getState().resetActiveTree('weaver')
+    expect(useBuildStore.getState().undoStack.length).toBe(before + 1)
+  })
+
+  it('does nothing when activeBuild is null', () => {
+    useBuildStore.setState({ activeBuild: null })
+    expect(() => useBuildStore.getState().resetActiveTree('weaver')).not.toThrow()
   })
 })

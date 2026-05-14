@@ -1,6 +1,6 @@
 interface UnspentCounterProps {
   count: number
-  treeType: 'passive' | 'skill'
+  treeType: 'passive' | 'skill' | 'weaver'
   budgetEnforced: boolean
 }
 

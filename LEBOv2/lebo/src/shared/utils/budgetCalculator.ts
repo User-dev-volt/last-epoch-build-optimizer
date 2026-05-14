@@ -18,3 +18,12 @@ export function calculateSkillPoints(level: number): number {
 }
 
 export const MAX_SKILL_POINTS = calculateSkillPoints(MAX_SKILL_LEVEL)
+
+// Approximate formula: 13 points from Woven faction ranks + ~40 from Woven Echo completions.
+// Exact formula unknown; capped at 53 as best confirmed total (docs/weaver-tree-spike.md §3).
+// _level is reserved for when the formula is confirmed — Weaver points are not currently level-gated.
+export const WEAVER_TOTAL_POINTS = 53
+
+export function calculateWeaverPoints(_level: number): number {
+  return WEAVER_TOTAL_POINTS
+}

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useMemo, useImperativeHandle } from 'react'
 import type { SkillTreeCanvasProps, RendererCallbacks, RendererInstance } from './types'
-import { initRenderer, NODE_RADIUS } from './pixiRenderer'
+import { initRenderer, NODE_RADIUS, type RendererConfig } from './pixiRenderer'
 import { useReducedMotion } from '../../shared/hooks/useReducedMotion'
 
 type NodeButton = { id: string; screenX: number; screenY: number; r: number }
@@ -12,6 +12,7 @@ const VIEWPORT_SCALE_EPS = 0.001
 export function SkillTreeCanvas({
   ref,
   treeData,
+  treeLayout,
   nodeAllocations,
   highlightedNodes,
   iconTextures,
@@ -36,6 +37,7 @@ export function SkillTreeCanvas({
   const lastViewportRef = useRef({ x: 0, y: 0, scale: 1 })
   // Chains init promises so React StrictMode's double-mount never runs two concurrent app.init() calls
   const initChainRef = useRef<Promise<unknown>>(Promise.resolve())
+  const rendererConfigRef = useRef<RendererConfig>({ treeLayout })
 
   const [nodeButtons, setNodeButtons] = useState<NodeButton[]>([])
   const reducedMotion = useReducedMotion()
@@ -153,7 +155,7 @@ export function SkillTreeCanvas({
     const thisChain = prevChain
       .then(async () => {
         if (cancelled) return undefined
-        return initRenderer(canvas, callbacksRef)
+        return initRenderer(canvas, callbacksRef, rendererConfigRef.current)
       })
       .then((r) => {
         if (!r) return

@@ -27,6 +27,7 @@ export interface BuildState {
   nodeAllocations: Record<string, number>
   skillNodeAllocations: Record<string, Record<string, number>>
   activeSkillLevels: Record<string, number>
+  weaverAllocations: Record<string, number>
   contextData: {
     gear: GearItem[]
     skills: ActiveSkill[]

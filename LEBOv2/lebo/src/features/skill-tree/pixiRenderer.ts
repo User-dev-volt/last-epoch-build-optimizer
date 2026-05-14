@@ -90,10 +90,16 @@ function drawSearchHighlight(g: Graphics, x: number, y: number, r: number) {
   g.circle(x, y, r + 4).stroke({ color: 0xc9a84c, width: 2 })
 }
 
+export interface RendererConfig {
+  treeLayout?: 'standard' | 'weaver'
+}
+
 export async function initRenderer(
   canvas: HTMLCanvasElement,
-  callbacksRef: { current: RendererCallbacks }
+  callbacksRef: { current: RendererCallbacks },
+  config: RendererConfig = {}
 ): Promise<RendererInstance> {
+  const treeLayout = config.treeLayout ?? 'standard'
   const app = new Application()
   await app.init({
     canvas,
@@ -458,8 +464,10 @@ export async function initRenderer(
     const scaleY = canvasH / treeH
     const newScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(scaleX, scaleY)))
     worldContainer.scale.set(newScale)
-    const treeCenterX = (minX + maxX) / 2
-    const treeCenterY = (minY + maxY) / 2
+    // Weaver tree: radial hub is at world (0,0) — center the viewport there.
+    // Standard tree: center on bounding box midpoint.
+    const treeCenterX = treeLayout === 'weaver' ? 0 : (minX + maxX) / 2
+    const treeCenterY = treeLayout === 'weaver' ? 0 : (minY + maxY) / 2
     worldContainer.x = canvasW / 2 - treeCenterX * newScale
     worldContainer.y = canvasH / 2 - treeCenterY * newScale
   }

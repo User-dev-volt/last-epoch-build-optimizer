@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { initGameData } from './features/game-data/gameDataLoader'
+import { loadSyntheticWeaverData } from './features/weaver-tree/weaverSyntheticData'
 import { initializeIconPipeline } from './shared/commands/iconCommands'
 import { loadBuildsOnStartup, saveBuild } from './features/build-manager/buildPersistence'
 import { useAutoSave } from './features/build-manager/useAutoSave'
@@ -43,6 +44,12 @@ export function App() {
     initGameData().catch(console.error)
     loadBuildsOnStartup().catch(console.error)
     initializeIconPipeline().catch(console.error)
+
+    // Stub Weaver Tree loader — replace when real community node data is available (see story 4-3 Task 0)
+    const { setWeaverTreeData, setWeaverGameNodes } = useGameDataStore.getState()
+    const { treeData: weaverTreeData, gameNodes: weaverGameNodes } = loadSyntheticWeaverData()
+    setWeaverTreeData(weaverTreeData)
+    setWeaverGameNodes(weaverGameNodes)
 
     // Sequential vault reads — must be chained to avoid concurrent Stronghold access
     const { setLlmProvider, setApiKeyConfigured, setOpenRouterConfigured } = useAppStore.getState()

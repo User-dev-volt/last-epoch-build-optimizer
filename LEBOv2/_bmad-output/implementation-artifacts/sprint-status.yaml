@@ -70,7 +70,7 @@ development_status:
   epic-4: in-progress
   4-1-weaver-tree-research-spike: done
   4-2-weaver-tree-tab-and-placeholder-component: done  # code review complete 2026-05-13; 2 patches applied
-  4-3-weaver-tree-renderer-conditional-on-research-spike-go: ready-for-dev  # story created 2026-05-13; DEFERRED — NO-GO from spike 4.1; implement only when Weaver node data becomes available
+  4-3-weaver-tree-renderer-conditional-on-research-spike-go: review  # implemented 2026-05-13 in AUTONOMOUS MODE with synthetic stub data; all tasks 0-7 complete; 641 tests passing
   epic-4-retrospective: optional
 
   # Epic 5: Item Database & Structured Gear Input

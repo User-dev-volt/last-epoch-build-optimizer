@@ -37,6 +37,7 @@ export interface SkillTreeCanvasHandle {
 
 export interface SkillTreeCanvasProps {
   treeData: TreeData
+  treeLayout?: 'standard' | 'weaver'
   nodeAllocations: Record<string, number>
   highlightedNodes: HighlightedNodes
   iconTextures: Map<string, Texture>

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { GameData } from '../types/gameData'
+import type { GameData, GameNode } from '../types/gameData'
 import type { TreeData } from '../types/treeData'
 
 interface GameDataStore {
@@ -20,7 +20,9 @@ interface GameDataStore {
   setIsLoading: (loading: boolean) => void
   setIsUpdating: (updating: boolean) => void
   weaverTreeData: TreeData | null
+  weaverGameNodes: Record<string, GameNode>
   setWeaverTreeData: (data: TreeData | null) => void
+  setWeaverGameNodes: (nodes: Record<string, GameNode>) => void
 }
 
 export const useGameDataStore = create<GameDataStore>()((set) => ({
@@ -33,6 +35,7 @@ export const useGameDataStore = create<GameDataStore>()((set) => ({
   isLoading: false,
   isUpdating: false,
   weaverTreeData: null,
+  weaverGameNodes: {},
   setGameData: (data) => set({ gameData: data }),
   setDataVersion: (version) => set({ dataVersion: version }),
   setDataUpdatedAt: (date) => set({ dataUpdatedAt: date }),
@@ -42,4 +45,5 @@ export const useGameDataStore = create<GameDataStore>()((set) => ({
   setIsLoading: (loading) => set({ isLoading: loading }),
   setIsUpdating: (updating) => set({ isUpdating: updating }),
   setWeaverTreeData: (data) => set({ weaverTreeData: data }),
+  setWeaverGameNodes: (nodes) => set({ weaverGameNodes: nodes }),
 }))
