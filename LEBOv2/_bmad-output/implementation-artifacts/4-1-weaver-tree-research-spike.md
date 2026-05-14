@@ -1,6 +1,6 @@
 # Story 4.1: Weaver Tree Research Spike
 
-Status: review
+Status: done
 
 ## Story
 
@@ -182,6 +182,25 @@ claude-sonnet-4-6
 
 docs/weaver-tree-spike.md
 
+### Review Findings
+
+- [ ] [Review][Patch] Echo math inconsistency — report states "~40 echo points" but provides data implying a higher figure; grand total "53" should be "~53" [docs/weaver-tree-spike.md §3]
+- [ ] [Review][Patch] Three guide sources absent from Section 1 table — aoeah.com, eld.gg, mmojugg.com cited in §2 body but not in the sources evaluated table [docs/weaver-tree-spike.md §1]
+- [ ] [Review][Patch] "~70 nodes" figure has no specific source citation — attributed generically to "community strategy guides" [docs/weaver-tree-spike.md §2]
+- [ ] [Review][Patch] Per-node spending cost (1 pt/node) mentioned parenthetically in §2 but not confirmed in §3 Point Pool Mechanics [docs/weaver-tree-spike.md §3]
+- [ ] [Review][Patch] Story 1.3b cross-reference has no file path [docs/weaver-tree-spike.md §4]
+- [ ] [Review][Patch] lastepochtools.com "implemented Weaver Tree" claim lacks source — site was fully inaccessible during spike; claim needs qualifier [docs/weaver-tree-spike.md §5]
+- [ ] [Review][Patch] TreeNode schema snippet inaccurate — §4 shows idealized input schema (name, effects) but actual TreeNode at lebo/src/shared/types/treeData.ts has {id, x, y, size, maxPoints, connections: string[], state: NodeState} — no name/effects fields [docs/weaver-tree-spike.md §4]
+- [x] [Review][Defer] Official wiki ECONNREFUSED may be transient; no retry documented — deferred, pre-existing
+- [x] [Review][Defer] "Duel Destruction / Dual Destruction" node name ambiguity not flagged as data quality issue — deferred, pre-existing
+- [x] [Review][Defer] "Low-value node" / "endgame node" labels are editorial judgments without sourced basis — deferred, pre-existing
+- [x] [Review][Defer] Musholic repo version discrepancy — story spec referenced v0.11.0 (2026-04-02), WebFetch returned v0.12.0 (April 2025); current version uncertain — deferred, pre-existing
+- [x] [Review][Defer] prowner/last-epoch-data license risk not discussed — moot under NO-GO — deferred, pre-existing
+- [x] [Review][Defer] Re-evaluation triggers have no process owner or check schedule — deferred, pre-existing
+- [x] [Review][Defer] Echo point approximation creates Story 4.3 versioning gap — point counter UI needs to handle game patches changing echo rewards — deferred, pre-existing
+- [x] [Review][Defer] Weaver node prerequisites not addressed — whether Story 4.3 needs prerequisite validation logic is undocumented — deferred, pre-existing
+
 ## Change Log
 
-- 2026-05-13: Story implemented — all 7 research tasks complete; spike report written at `docs/weaver-tree-spike.md`; verdict NO-GO for Story 4.3; point pool formula confirmed (13 rank pts + ~40 echo pts = 53 total); no production code produced.
+- 2026-05-13: Story implemented — all 7 research tasks complete; spike report written at `docs/weaver-tree-spike.md`; verdict NO-GO for Story 4.3; point pool formula confirmed (13 rank pts + ~40 echo pts = ~53 total); no production code produced.
+- 2026-05-13: Code review complete — 7 patches applied to `docs/weaver-tree-spike.md` (echo math precision, 3 missing sources added to table, ~70-node citation sourced, per-node cost section added, Story 1.3b path added, lastepochtools claim qualified, TreeNode schema corrected to reflect actual interface). 8 items deferred to `deferred-work.md`. Story marked done.

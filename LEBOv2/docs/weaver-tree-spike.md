@@ -18,6 +18,9 @@
 | Last Epoch Fandom Wiki | https://lastepoch.fandom.com/wiki/Weaver_Tree | ❌ | — | — | ❌ HTTP 403 |
 | GitHub topic search | https://github.com/topics/last-epoch | ❌ No | — | — | ✅ Accessible |
 | maxroll.gg guides | https://maxroll.gg/last-epoch/resources/weaver-tree-strategies | Partial (human-readable node names only) | HTML | — | ✅ Accessible |
+| aoeah.com | https://www.aoeah.com/ | ❌ No (strategy guide only) | HTML | — | ✅ Accessible |
+| eld.gg | https://eld.gg/ | ❌ No (strategy guide only) | HTML | — | ✅ Accessible |
+| mmojugg.com | https://mmojugg.com/ | ❌ No (strategy guide only) | HTML | — | ✅ Accessible |
 
 **Summary:** No community source provides machine-readable Weaver Tree node data (node IDs, x/y positions, edge connections, or point costs per node). The lastepochtools.com planner is known to implement the Weaver Tree, but all access is blocked by Cloudflare — no data can be retrieved.
 
@@ -57,7 +60,7 @@ Community guides (maxroll.gg, aoeah.com, eld.gg, mmojugg.com) name individual We
 | Crystal Growth | Low-value node |
 | Primordial Ambush | Low-value node |
 
-This list is **incomplete** — community guides mention roughly 15–20 named nodes out of an estimated total of ~70. No source provides the complete node catalog with structural data.
+This list is **incomplete** — community guides (primarily maxroll.gg and aoeah.com strategy articles) mention roughly 15–20 named nodes out of an estimated total of ~70 (the ~70 figure comes from maxroll.gg's Weaver Tree guide, which states "roughly 70 nodes" — not machine-confirmed). No source provides the complete node catalog with structural data.
 
 ---
 
@@ -86,9 +89,13 @@ Formula: Ranks 1–8 yield 1 point each (8 points), Rank 9 yields 2 points, Rank
 
 **Source 2 — Woven Echoes (40 points total):**
 
-43 Woven Echoes exist (confirmed from tunklab.com `/woven-echoes`). Each completed-for-the-first-time echo grants Weaver Tree points. Most echoes give 1 point; "Tomb of Vessels" and "The Fading Brink" each give 2 points. Total from echoes: ~40 points.
+43 Woven Echoes exist (confirmed from tunklab.com `/woven-echoes`). Each completed-for-the-first-time echo grants Weaver Tree points. Most echoes give 1 point; "Tomb of Vessels" and "The Fading Brink" each give 2 points. Total from echoes: **~40 points** (approximate — the exact distribution of 0-point echoes is not confirmed; the tunklab page shows the total without a per-echo breakdown).
 
-**Grand total: 53 Weaver Tree points** (13 from ranks + ~40 from echoes).
+**Grand total: ~53 Weaver Tree points** (13 from ranks + ~40 from echoes — echo component is approximate).
+
+### Per-Node Spending Cost
+
+**All nodes cost 1 point each** (per community guides; no source provides a node with a different cost). This is consistent with the ~70 node count and ~53 total points — not all nodes can be allocated in a single playthrough.
 
 ### Separation from Passive Trees
 
@@ -104,20 +111,39 @@ The tree is described consistently across community sources as "web-based" — a
 
 **No coordinates exist in any accessible source — compatibility question is moot for GO/NO-GO.**
 
-The existing `TreeData` type at `src/shared/types/treeData.ts` expects:
+The existing `TreeData` type at `lebo/src/shared/types/treeData.ts` is:
 
 ```typescript
-// Each node:
-{ id: string, name: string, x: number, y: number, maxPoints: number, effects: {...}[] }
-// Each edge:
-{ fromId: string, toId: string }
+// Actual TreeNode interface:
+export interface TreeNode {
+  id: string
+  x: number
+  y: number
+  size: NodeSize          // 'small' | 'medium' | 'large'
+  maxPoints: number
+  connections: string[]   // IDs of adjacent nodes (replaces per-node edge list)
+  state: NodeState        // 'allocated' | 'available' | 'locked' | 'suggested'
+}
+
+// Actual TreeEdge interface:
+export interface TreeEdge {
+  fromId: string
+  toId: string
+}
+
+export interface TreeData {
+  nodes: TreeNode[]
+  edges: TreeEdge[]
+}
 ```
+
+**Important:** `TreeNode` has **no `name` or `effects` fields**. These are display-layer concerns provided by the game data pipeline separately. If Weaver Tree data is ever available, Story 4.3 would need to either (a) extend `TreeNode` with Weaver-specific display fields, or (b) supply a parallel lookup map `weaverId → {name, effects}` alongside the `TreeData` structure — consistent with how the passive tree pipeline works.
 
 Since no community source provides x/y coordinates:
 
 - **Direct use**: Not possible — no coordinate data exists.
 - **Algorithmic derivation**: Would require a complete node list with connection graph (edges). The connection graph does not exist in any accessible source either. Without edges, even a force-directed or radial layout algorithm cannot reconstruct the tree topology.
-- **Comparison with passive trees**: Story 1.3b derived passive tree positions algorithmically because the node IDs and edge list were available from the game data JSON. The Weaver Tree has neither.
+- **Comparison with passive trees**: Story 1.3b (`_bmad-output/_phase1-archive/implementation-artifacts/1-3b-game-data-pipeline-implementation.md`) derived passive tree positions algorithmically because the node IDs and edge list were available from the game data JSON. The Weaver Tree has neither.
 
 **Bottom line:** No coordinate derivation path is currently feasible because the prerequisite (node list + edge graph) does not exist in any accessible form.
 
@@ -127,7 +153,7 @@ Since no community source provides x/y coordinates:
 
 > **NO-GO for Story 4.3 (Weaver Tree Renderer).**
 
-**Reason:** No machine-readable Weaver Tree node data exists in any community source. The minimum required inputs for Story 4.3 — node IDs, a complete node list, and an edge/connection graph — are unavailable. Without these, neither direct coordinate use nor algorithmic layout derivation is possible. lastepochtools.com has implemented the Weaver Tree in their planner, meaning the data *exists* somewhere (likely extracted from game files directly), but their site is fully blocked by Cloudflare and the data format is unknown.
+**Reason:** No machine-readable Weaver Tree node data exists in any community source. The minimum required inputs for Story 4.3 — node IDs, a complete node list, and an edge/connection graph — are unavailable. Without these, neither direct coordinate use nor algorithmic layout derivation is possible. lastepochtools.com has implemented the Weaver Tree in their planner (per community reports; direct verification was not possible — the site is Cloudflare-protected and inaccessible to both automated and browser-based inspection during this spike), meaning the data *exists* somewhere (likely extracted from game files directly), but the data format is unknown.
 
 **What would change this to GO:**
 1. A community data dump (JSON/Lua) of Weaver Tree nodes with IDs and connection graph becomes publicly accessible, OR

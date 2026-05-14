@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Run `/bmad-dev-story` on the generated story file (`4-1-weaver-tree-research-spike.md`) to begin implementation.
+Mark Story 4-1 as `review` in sprint-status.yaml and route to code reviewer (recommend different LLM); prioritize Story 4.2 placeholder tab for next sprint if Weaver Tree data extraction via datamining tools becomes available.
 
 ---
 
