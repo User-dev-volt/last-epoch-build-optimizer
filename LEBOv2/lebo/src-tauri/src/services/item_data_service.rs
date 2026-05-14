@@ -13,23 +13,24 @@ pub fn ensure_item_data_dir(app_handle: &tauri::AppHandle) -> Result<PathBuf, St
     Ok(data_dir)
 }
 
-pub fn copy_bundled_item_resources(app_handle: &tauri::AppHandle) -> Result<(), String> {
+pub fn copy_bundled_item_resources(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
     let data_dir = ensure_item_data_dir(app_handle)?;
-    if data_dir.join("base-items.json").exists() {
-        return Ok(());
+    let files = ["base-items.json", "uniques.json", "affixes.json"];
+    if files.iter().all(|f| data_dir.join(f).exists()) {
+        return Ok(data_dir);
     }
     let resource_dir = app_handle
         .path()
         .resource_dir()
         .map_err(|e| format!("ITEM_DATA_ERROR: resource_dir: {}", e))?;
     let src = resource_dir.join("resources").join("items");
-    for filename in &["base-items.json", "uniques.json", "affixes.json"] {
+    for filename in &files {
         let src_path = src.join(filename);
         let dst_path = data_dir.join(filename);
         std::fs::copy(&src_path, &dst_path)
             .map_err(|e| format!("ITEM_DATA_ERROR: copy {}: {}", filename, e))?;
     }
-    Ok(())
+    Ok(data_dir)
 }
 
 pub fn load_item_database_from_dir(data_dir: &Path) -> Result<ItemDatabase, String> {

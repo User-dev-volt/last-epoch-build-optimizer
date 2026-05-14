@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Submit Story 5.1 for code review using a different LLM than the one that implemented it.
+Decide patch strategy: apply all three fixes now, leave as explicit action items, or review patch details before committing?
 
 ---
 
