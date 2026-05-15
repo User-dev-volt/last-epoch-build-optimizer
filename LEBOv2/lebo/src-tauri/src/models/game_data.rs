@@ -56,6 +56,7 @@ pub struct RawClassData {
     pub name: String,
     pub base_tree: RawTreeData,
     pub masteries: Vec<RawMastery>,
+    #[serde(default)]
     pub skills: Vec<RawSkillEntry>,
 }
 

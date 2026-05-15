@@ -19,16 +19,38 @@ pub fn ensure_game_data_dir(app_handle: &tauri::AppHandle) -> Result<PathBuf, St
 
 pub fn copy_bundled_resources(app_handle: &tauri::AppHandle) -> Result<(), String> {
     let data_dir = ensure_game_data_dir(app_handle)?;
-    let manifest_path = data_dir.join("manifest.json");
-    if manifest_path.exists() {
-        return Ok(());
-    }
 
     let resource_dir = app_handle
         .path()
         .resource_dir()
         .map_err(|e| format!("resource_dir error: {}", e))?;
     let bundled_data = resource_dir.join("resources").join("game-data");
+
+    // Re-copy whenever the bundled dataVersion differs from what's on disk.
+    // This ensures schema changes (new fields, restructured JSON) are picked up
+    // after an app update, even if the game version hasn't changed.
+    let manifest_path = data_dir.join("manifest.json");
+    if manifest_path.exists() {
+        let bundled_manifest_path = bundled_data.join("manifest.json");
+        let needs_update = if bundled_manifest_path.exists() {
+            match (
+                std::fs::read_to_string(&manifest_path),
+                std::fs::read_to_string(&bundled_manifest_path),
+            ) {
+                (Ok(local_raw), Ok(bundled_raw)) => {
+                    let local: serde_json::Value = serde_json::from_str(&local_raw).unwrap_or_default();
+                    let bundled: serde_json::Value = serde_json::from_str(&bundled_raw).unwrap_or_default();
+                    local["dataVersion"] != bundled["dataVersion"]
+                }
+                _ => false,
+            }
+        } else {
+            false
+        };
+        if !needs_update {
+            return Ok(());
+        }
+    }
 
     copy_dir_recursive(&bundled_data, &data_dir)
         .map_err(|e| format!("copy resources error: {}", e))?;

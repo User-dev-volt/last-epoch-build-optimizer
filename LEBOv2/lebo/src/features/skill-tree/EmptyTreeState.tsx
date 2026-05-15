@@ -11,6 +11,7 @@ function expandAndFocus(setPanelState: (panel: 'left' | 'right', state: 'expande
 
 export function EmptyTreeState() {
   const setPanelState = useAppStore((s) => s.setPanelState)
+  const isLoading = useGameDataStore((s) => s.isLoading)
   const gameDataLoaded = useGameDataStore((s) => s.gameData !== null)
 
   return (
@@ -50,12 +51,24 @@ export function EmptyTreeState() {
             color: 'var(--color-text-primary)',
             border: '1px solid var(--color-bg-elevated)',
           }}
-          disabled={!gameDataLoaded}
+          disabled={isLoading}
           onClick={() => expandAndFocus(setPanelState, 'class-selector-btn')}
         >
-          {gameDataLoaded ? 'Create New Build' : 'Loading data…'}
+          {isLoading ? 'Loading data…' : 'Create New Build'}
         </button>
       </div>
+
+      {isLoading && (
+        <p className="mt-4 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+          Loading game data…
+        </p>
+      )}
+
+      {!isLoading && !gameDataLoaded && (
+        <p className="mt-4 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+          Game data unavailable — check the status bar for details.
+        </p>
+      )}
     </div>
   )
 }
