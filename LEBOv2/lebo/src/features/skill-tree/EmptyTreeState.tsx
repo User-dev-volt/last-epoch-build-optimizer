@@ -1,4 +1,5 @@
 import { useAppStore } from '../../shared/stores/appStore'
+import { useGameDataStore } from '../../shared/stores/gameDataStore'
 
 function expandAndFocus(setPanelState: (panel: 'left' | 'right', state: 'expanded' | 'collapsed') => void, targetId: string) {
   setPanelState('left', 'expanded')
@@ -10,6 +11,7 @@ function expandAndFocus(setPanelState: (panel: 'left' | 'right', state: 'expande
 
 export function EmptyTreeState() {
   const setPanelState = useAppStore((s) => s.setPanelState)
+  const gameDataLoaded = useGameDataStore((s) => s.gameData !== null)
 
   return (
     <div
@@ -29,7 +31,7 @@ export function EmptyTreeState() {
       <div className="flex gap-4">
         <button
           type="button"
-          className="px-5 py-2 text-sm font-medium rounded"
+          className="px-5 py-2 text-sm font-medium rounded transition-opacity hover:opacity-75 active:opacity-60"
           style={{
             border: '1px solid var(--color-accent-gold)',
             color: 'var(--color-accent-gold)',
@@ -42,15 +44,16 @@ export function EmptyTreeState() {
 
         <button
           type="button"
-          className="px-5 py-2 text-sm font-medium rounded"
+          className="px-5 py-2 text-sm font-medium rounded transition-opacity hover:opacity-75 active:opacity-60 disabled:opacity-40 disabled:cursor-not-allowed"
           style={{
             backgroundColor: 'var(--color-bg-elevated)',
             color: 'var(--color-text-primary)',
             border: '1px solid var(--color-bg-elevated)',
           }}
+          disabled={!gameDataLoaded}
           onClick={() => expandAndFocus(setPanelState, 'class-selector-btn')}
         >
-          Create New Build
+          {gameDataLoaded ? 'Create New Build' : 'Loading data…'}
         </button>
       </div>
     </div>

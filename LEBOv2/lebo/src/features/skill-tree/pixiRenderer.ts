@@ -171,6 +171,7 @@ export async function initRenderer(
     panOrigin = { x: worldContainer.x, y: worldContainer.y }
   })
   app.stage.on('pointermove', (e) => {
+    if (e.buttons === 0) return
     if (!dragging) {
       const dx = e.global.x - dragOrigin.x
       const dy = e.global.y - dragOrigin.y
