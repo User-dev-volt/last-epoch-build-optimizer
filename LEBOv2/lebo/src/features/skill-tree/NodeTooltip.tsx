@@ -2,9 +2,8 @@ import { createPortal } from 'react-dom'
 import type { GameNode } from '../../shared/types/gameData'
 
 const TOOLTIP_WIDTH = 240
-// Generous estimate to prevent clipping of keystones with long multi-line effect descriptions
-const TOOLTIP_HEIGHT_APPROX = 320
-const OFFSET = 16
+const TOOLTIP_HEIGHT_APPROX = 200
+const OFFSET = 20
 
 interface NodeTooltipProps {
   gameNode: GameNode

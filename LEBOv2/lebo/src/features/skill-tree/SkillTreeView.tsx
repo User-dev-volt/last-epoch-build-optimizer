@@ -12,7 +12,6 @@ import { buildTreeData, buildSkillTreeData } from './treeDataTransformer'
 import { SkillTreeCanvas } from './SkillTreeCanvas'
 import { EmptyTreeState } from './EmptyTreeState'
 import { NodeTooltip } from './NodeTooltip'
-import { NodeContextMenu } from './NodeContextMenu'
 import { SkillTreeTabBar } from './SkillTreeTabBar'
 import { useSkillTree } from './useSkillTree'
 import { SkillPickerGrid } from '../skill-picker/SkillPickerGrid'
@@ -191,13 +190,18 @@ export function SkillTreeView() {
     [skillNodes, slotAllocations]
   )
 
-  const filteredSkills = useMemo(
-    () =>
-      classData?.skills.filter(
-        (s) => s.masteryId === null || s.masteryId === selectedMasteryId
-      ) ?? [],
-    [classData, selectedMasteryId]
-  )
+  const filteredSkills = useMemo(() => {
+    if (!classData) return []
+    const currentSlotId = pickerState ? `slot-${pickerState.slotIndex}` : null
+    const assignedElsewhere = new Set(
+      activeSkills.filter((s) => s.slotId !== currentSlotId).map((s) => s.skillId)
+    )
+    return classData.skills.filter(
+      (s) =>
+        (s.masteryId === null || s.masteryId === selectedMasteryId) &&
+        !assignedElsewhere.has(s.skillId)
+    )
+  }, [classData, selectedMasteryId, activeSkills, pickerState])
 
   const activeTreeData = isPassiveTab ? treeData : skillTreeData
 
@@ -206,7 +210,11 @@ export function SkillTreeView() {
     const q = searchQuery.toLowerCase()
     return new Set(
       activeTreeData.nodes
-        .filter((n) => (activeGameNodes[n.id]?.name ?? '').toLowerCase().includes(q))
+        .filter((n) => {
+          const gn = activeGameNodes[n.id]
+          return (gn?.name ?? '').toLowerCase().includes(q) ||
+            (gn?.effectDescription ?? '').toLowerCase().includes(q)
+        })
         .map((n) => n.id)
     )
   }, [searchQuery, activeTreeData, activeGameNodes])
@@ -216,7 +224,13 @@ export function SkillTreeView() {
     const q = searchQuery.toLowerCase()
     return new Set(
       activeTreeData.nodes
-        .filter((n) => !(activeGameNodes[n.id]?.name ?? '').toLowerCase().includes(q))
+        .filter((n) => {
+          const gn = activeGameNodes[n.id]
+          return !(
+            (gn?.name ?? '').toLowerCase().includes(q) ||
+            (gn?.effectDescription ?? '').toLowerCase().includes(q)
+          )
+        })
         .map((n) => n.id)
     )
   }, [searchQuery, activeTreeData, activeGameNodes])
@@ -236,7 +250,11 @@ export function SkillTreeView() {
     const q = searchQuery.toLowerCase()
     return new Set(
       weaverTreeData.nodes
-        .filter((n) => (weaverGameNodes[n.id]?.name ?? '').toLowerCase().includes(q))
+        .filter((n) => {
+          const gn = weaverGameNodes[n.id]
+          return (gn?.name ?? '').toLowerCase().includes(q) ||
+            (gn?.effectDescription ?? '').toLowerCase().includes(q)
+        })
         .map((n) => n.id)
     )
   }, [searchQuery, weaverTreeData, weaverGameNodes])
@@ -246,7 +264,13 @@ export function SkillTreeView() {
     const q = searchQuery.toLowerCase()
     return new Set(
       weaverTreeData.nodes
-        .filter((n) => !(weaverGameNodes[n.id]?.name ?? '').toLowerCase().includes(q))
+        .filter((n) => {
+          const gn = weaverGameNodes[n.id]
+          return !(
+            (gn?.name ?? '').toLowerCase().includes(q) ||
+            (gn?.effectDescription ?? '').toLowerCase().includes(q)
+          )
+        })
         .map((n) => n.id)
     )
   }, [searchQuery, weaverTreeData, weaverGameNodes])
@@ -269,12 +293,10 @@ export function SkillTreeView() {
     keyboardFocusedNodeId,
     keyboardPosition,
     flashNodeIds,
-    contextMenu,
     handleNodeClick,
     handleNodeSelect,
     handleNodeHover,
     handleNodeContextMenu,
-    handleContextMenuClose,
     handlePointerMove,
     handleKeyboardNavigate,
   } = isPassiveTab ? passiveInteraction : skillInteraction
@@ -357,10 +379,6 @@ export function SkillTreeView() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [undoNodeChange])
 
-  // Context menu actions — allocate/remove delegate to handleNodeClick
-  const handleContextMenuAllocate = useCallback((nodeId: string) => handleNodeClick(nodeId, 0), [handleNodeClick])
-  const handleContextMenuRemove = useCallback((nodeId: string) => handleNodeClick(nodeId, 2), [handleNodeClick])
-
   if (isWeaverTab) {
     const {
       hoveredNodeId: weaverHoveredNodeId,
@@ -371,10 +389,8 @@ export function SkillTreeView() {
       handleNodeSelect: handleWeaverNodeSelect,
       handleNodeHover: handleWeaverNodeHover,
       handleNodeContextMenu: handleWeaverNodeContextMenu,
-      handleContextMenuClose: handleWeaverContextMenuClose,
       handlePointerMove: handleWeaverPointerMove,
       handleKeyboardNavigate: handleWeaverKeyboardNavigate,
-      contextMenu: weaverContextMenu,
     } = weaverInteraction
 
     const weaverHoveredGameNode = weaverHoveredNodeId ? weaverGameNodes[weaverHoveredNodeId] ?? null : null
@@ -462,15 +478,6 @@ export function SkillTreeView() {
                 />
               )}
 
-              {weaverContextMenu && (
-                <NodeContextMenu
-                  nodeId={weaverContextMenu.nodeId}
-                  position={{ x: weaverContextMenu.x, y: weaverContextMenu.y }}
-                  onAllocate={(nodeId) => handleWeaverNodeClick(nodeId, 0)}
-                  onRemove={(nodeId) => handleWeaverNodeClick(nodeId, 2)}
-                  onClose={handleWeaverContextMenuClose}
-                />
-              )}
             </div>
           ) : (
             <WeaverTreePlaceholder />
@@ -723,17 +730,6 @@ export function SkillTreeView() {
           </div>
         )}
       </div>
-
-      {/* Context menu — appears on right-click over a node */}
-      {contextMenu && (
-        <NodeContextMenu
-          nodeId={contextMenu.nodeId}
-          position={{ x: contextMenu.x, y: contextMenu.y }}
-          onAllocate={handleContextMenuAllocate}
-          onRemove={handleContextMenuRemove}
-          onClose={handleContextMenuClose}
-        />
-      )}
 
       {pickerState?.isPopover && (
         <>

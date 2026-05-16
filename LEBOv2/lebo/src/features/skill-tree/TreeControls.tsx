@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 
 interface TreeControlsProps {
   searchQuery: string
@@ -9,6 +9,16 @@ interface TreeControlsProps {
 
 export function TreeControls({ searchQuery, onSearchChange, onReset, onFit }: TreeControlsProps) {
   const [focused, setFocused] = useState(false)
+  const [confirming, setConfirming] = useState(false)
+
+  const btnBase: React.CSSProperties = {
+    height: 28,
+    background: 'transparent',
+    borderRadius: 4,
+    padding: '0 8px',
+    fontSize: 12,
+    cursor: 'pointer',
+  }
 
   return (
     <div
@@ -22,22 +32,33 @@ export function TreeControls({ searchQuery, onSearchChange, onReset, onFit }: Tr
         borderBottom: '1px solid var(--color-bg-elevated)',
       }}
     >
-      <button
-        type="button"
-        onClick={onReset}
-        style={{
-          height: 28,
-          background: 'transparent',
-          border: '1px solid var(--color-accent-gold-soft)',
-          borderRadius: 4,
-          padding: '0 8px',
-          fontSize: 12,
-          color: 'var(--color-accent-gold-soft)',
-          cursor: 'pointer',
-        }}
-      >
-        Reset
-      </button>
+      {!confirming ? (
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          style={{ ...btnBase, border: '1px solid var(--color-accent-gold-soft)', color: 'var(--color-accent-gold-soft)' }}
+        >
+          Reset
+        </button>
+      ) : (
+        <>
+          <span style={{ fontSize: 12, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>Reset tree?</span>
+          <button
+            type="button"
+            onClick={() => { onReset(); setConfirming(false) }}
+            style={{ ...btnBase, border: '1px solid #e05252', color: '#e05252' }}
+          >
+            Yes
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirming(false)}
+            style={{ ...btnBase, border: '1px solid var(--color-bg-elevated)', color: 'var(--color-text-secondary)' }}
+          >
+            No
+          </button>
+        </>
+      )}
 
       {onFit && (
         <button

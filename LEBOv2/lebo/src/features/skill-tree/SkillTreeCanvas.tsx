@@ -352,7 +352,7 @@ export function SkillTreeCanvas({
               onClick={() => onNodeClick(id, 0)}
               onContextMenu={(e) => {
                 e.preventDefault()
-                onNodeContextMenu?.(id, e.clientX, e.clientY)
+                onNodeClick(id, 2)
               }}
             />
           )

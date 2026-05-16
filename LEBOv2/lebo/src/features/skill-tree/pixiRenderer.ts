@@ -208,11 +208,6 @@ export async function initRenderer(
     { passive: false }
   )
 
-  // Double-click detection for allocate; single-click for select
-  let lastClickedId: string | null = null
-  let lastClickTime = 0
-  const DOUBLE_CLICK_DELAY = 300
-
   let lastRenderedNodeMap: Map<string, TreeNode> = new Map()
   let iconTexturesMap: Map<string, Texture> = new Map()
   let lastRenderedIconIds = new Set<string>()
@@ -260,8 +255,6 @@ export async function initRenderer(
     if (currentTreeId !== lastTreeId) {
       lastRenderedIconIds = new Set()
       lastTreeId = currentTreeId
-      lastClickedId = null
-      lastClickTime = 0
       fitToTree(data.nodes)
     }
     const prevIconIds = lastRenderedIconIds
@@ -407,29 +400,15 @@ export async function initRenderer(
         dragOrigin = { x: e.global.x, y: e.global.y }
         panOrigin = { x: worldContainer.x, y: worldContainer.y }
         if (e.button === 2) {
-          // Right-click → context menu; reset double-click state so RMB doesn't prime the LMB detector
-          lastClickedId = null
-          lastClickTime = 0
-          const rect = canvas.getBoundingClientRect()
-          callbacksRef.current.onNodeContextMenu?.(node.id, rect.left + e.global.x, rect.top + e.global.y)
+          callbacksRef.current.onNodeClick(node.id, 2)
           return
-        }
-        const now = performance.now()
-        if (lastClickedId === node.id && now - lastClickTime < DOUBLE_CLICK_DELAY) {
-          // Double-click → allocate immediately on second pointerdown
-          lastClickedId = null
-          lastClickTime = 0
-          callbacksRef.current.onNodeClick(node.id, 0)
-        } else {
-          // Record first click; select fires on pointerup only if no drag occurred
-          lastClickedId = node.id
-          lastClickTime = now
         }
       })
       hit.on('pointerup', (e) => {
         if (e.button !== 0) return
-        // Only select if this was a clean click (no drag exceeded threshold)
-        if (!dragging && lastClickedId === node.id) {
+        // Only allocate+select if this was a clean click (no drag exceeded threshold)
+        if (!dragging) {
+          callbacksRef.current.onNodeClick(node.id, 0)
           callbacksRef.current.onNodeSelect?.(node.id)
         }
       })
