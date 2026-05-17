@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Story file is ready for dev agent pickup. Assign to implementation phase.
+Run code-review on story 5-6 using Claude or Grok
 
 ---
 

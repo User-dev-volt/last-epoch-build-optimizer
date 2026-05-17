@@ -1,5 +1,15 @@
 # Deferred Work
 
+## Deferred from: code review of 5-6-item-data-freshness-check-and-stalenessbar-extension (2026-05-17)
+
+- Partial write leaves mixed-version item DB when network fails mid-loop (`item_commands.rs`). `update_item_data` downloads and commits files sequentially — if the 2nd or 3rd file fails after the 1st is already renamed, the item DB on disk has mixed versions. Fixing requires a two-phase pattern (download all to temp, then rename all). Spec prescribed sequential atomic-per-file; risk is low and banner retries are available.
+- `itemDataStaleAcknowledged` never resets after a successful update (`gameDataStore.ts`). After `setIsItemDataStale(false)`, the acknowledged flag remains `true`. If `checkItemDataFreshness` fires again in the same session (currently it doesn't — startup-only), a new stale condition would be silently suppressed. Same structural pattern as the existing game data banner.
+- `schemaVersion` bumped from 1 to 2 in `manifest.json` with no migration guard. Old installs with v1 manifests deserialize cleanly via `#[serde(default)]` on the new `item_data_version` field. No active migration path needed unless future code branches on `schemaVersion`.
+- TOCTOU: `check_item_data_freshness` and `update_item_data` each fetch the remote manifest independently. A remote release between the two calls could cause the version written to disk to differ from the files downloaded. Inherent to the command-per-operation architecture; cosmetic version mismatch only.
+- `versions_behind` in `DataVersionCheckResult` is always 0 or 1 for item data (semver comparison yields no real count). Matches the existing game data check pattern; no regression.
+- `http_client()` in `game_data_service.rs` promoted to `pub` for reuse by `item_commands.rs`. Acceptable DRY choice per dev notes; no hidden coupling risk given the single timeout setting.
+- `copy_bundled_item_resources` all-or-nothing existence check: once all three item files exist, bundled resources are never refreshed. A prior partial update could leave a mixed-version state that persists forever. Pre-existing behavior; item data freshness check (this story) is the intended remedy.
+
 ## Deferred from: code review of 3-3-enforce-level-budget-toggle-and-allocation-enforcement (2026-05-13)
 
 - Budget check in `applyNodeChange` / `applySkillNodeChange` only verifies ≥1 unspent point exists, not that `delta` points are available. A caller passing `delta > 1` could allocate multiple points past the budget ceiling (`buildStore.ts:165`). In practice the UI always passes `delta = ±1`; spec doesn't address multi-delta; fix would add complexity for a theoretical case.

@@ -291,6 +291,19 @@ claude-sonnet-4-6
 - `lebo/src/features/game-data/DataStalenessBar.test.tsx` — added 9 new item banner tests
 - `lebo/src/features/item-database/itemDatabaseLoader.test.ts` — added `checkItemDataFreshness` and `triggerItemDataUpdate` tests
 
+### Review Findings
+
+- [ ] [Review][Patch] `update_item_data` writes empty string to manifest when remote has no `itemDataVersion` [lebo/src-tauri/src/commands/item_commands.rs]
+- [ ] [Review][Patch] No `clearTimeout` on unmount — stale setState + acknowledgeItemDataStaleness fires after component teardown [lebo/src/features/game-data/DataStalenessBar.tsx]
+- [ ] [Review][Patch] Double-click can dispatch two concurrent `update_item_data` Tauri calls before `isItemDataUpdating` re-render disables button [lebo/src/features/game-data/DataStalenessBar.tsx]
+- [x] [Review][Defer] Partial write leaves mixed-version item DB when network fails mid-loop — deferred, spec-prescribed sequential architecture; recoverable by retry
+- [x] [Review][Defer] `itemDataStaleAcknowledged` never resets after successful update — deferred, matches existing game data banner pattern; only startup check fires
+- [x] [Review][Defer] `schemaVersion` bumped to 2 with no migration guard — deferred, `#[serde(default)]` handles backward compat
+- [x] [Review][Defer] TOCTOU: remote manifest fetched independently by check and update commands — deferred, inherent to command-per-operation architecture
+- [x] [Review][Defer] `versions_behind` always 0 or 1 in item freshness check — deferred, matches game data check pattern
+- [x] [Review][Defer] `http_client()` promoted to `pub` for reuse — deferred, DRY choice per dev notes; acceptable
+- [x] [Review][Defer] `copy_bundled_item_resources` all-or-nothing check can preserve partial state from prior run — deferred, pre-existing behavior
+
 ## Change Log
 
 - 2026-05-17: Implemented story 5-6 — item data freshness check and StalenessBar extension. Rust commands (`check_item_data_freshness`, `update_item_data`) added to `item_commands.rs`. `GameDataManifest` extended with `item_data_version`. TypeScript store, loader, and UI updated to mirror the existing game data staleness pattern. 22 new tests added, all passing.
