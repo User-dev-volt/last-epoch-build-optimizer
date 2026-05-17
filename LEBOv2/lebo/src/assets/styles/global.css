@@ -48,7 +48,7 @@
 
   /* Item tier pips */
   --color-tier-pip-active:   #C9A84C; /* PixiJS: 0xC9A84C — matches --color-accent-gold */
-  --color-tier-pip-inactive: #1c1c21; /* PixiJS: 0x1C1C21 — matches --color-bg-elevated; border added via element style */
+  --color-tier-pip-inactive: #1C1C21; /* PixiJS: 0x1C1C21 — matches --color-bg-elevated; border added via element style */
 
   /* Text */
   --color-text-primary:   #F0EAE0;

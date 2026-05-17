@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Run `/bmad-code-review` on story 5-3 using a different LLM before starting story 5-4 (GearSlot typeahead + item search integration).
+- Wait for Blind Hunter and Edge Case Hunter subagent results; triage all three layers; synthesize actionable findings with severity/effort tagging
 
 ---
 

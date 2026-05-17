@@ -90,6 +90,22 @@ describe('AffixTierControl', () => {
     expect(slider).toHaveAttribute('aria-valuetext', 'Tier 1: 10')
   })
 
+  test('single-tier: Left and Right arrow both do NOT call onChange', async () => {
+    const onChange = vi.fn()
+    const singleTierAffix: AffixEntry = {
+      ...mockAffixEntry,
+      tiers: [{ tier: 1, minValue: 10, maxValue: 10 }],
+    }
+    render(
+      <AffixTierControl affixEntry={singleTierAffix} currentTier={1} onChange={onChange} />
+    )
+    const slider = screen.getByRole('slider')
+    slider.focus()
+    await userEvent.keyboard('{ArrowRight}')
+    await userEvent.keyboard('{ArrowLeft}')
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
   test('axe accessibility: zero violations', async () => {
     const { container } = renderControl(2)
     expect(await axe(container)).toHaveNoViolations()

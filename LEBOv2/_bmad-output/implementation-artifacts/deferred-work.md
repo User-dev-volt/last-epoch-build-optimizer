@@ -25,6 +25,16 @@
 - Redundant double-guard: `useEffect` at line ~99 resets `activeTabIndex > 6` redundantly with inline clamp at line ~161 — defensive, pre-existing pattern from old tab count guard.
 - `handleReset` has no explicit Weaver guard but is implicitly safe because `TreeControls` never renders on the Weaver tab early-return path — fragile implicit dependency if JSX structure changes.
 
+## Deferred from: code review of 5-3-affixtiercontrol-pip-based-tier-selection (2026-05-16)
+
+- Out-of-range `currentTier` crash risk: `affixEntry.tiers[currentTier - 1]` throws if caller passes 0, negative, or > tiers.length. Spec-deliberate — "caller guarantees within [1, tiers.length]"; Story 5.4 GearSlot owns clamping. Add a defensive guard if any runtime crash is observed.
+- Gap mismatch: AC #1 says "4px gap" but Dev Notes example and implementation use `gap: 8` (8px). Dev Notes are authoritative; AC text has minor inconsistency. Cosmetic only.
+- Missing Home/End key support: WAI-ARIA Authoring Practices slider pattern recommends Home (go to min) and End (go to max) keys. Story only specifies Left/Right. Address in an accessibility polish story post-MVP.
+- Inline pip style objects recreated per render: `Array.from` map creates new style object literals every render. Project-wide inline style pattern; benign for small pip counts. Optimize with CSS classes if profiling shows cost.
+- No `userEvent.setup()` in tests: tests use v14+ legacy direct API. Tests pass. Project-wide concern to address in bulk test refactor.
+- `width: 40` overflow risk: the 40px monospace span may silently clip very large tier value strings. Spec-specified value. Acceptable for current Last Epoch affix data range.
+- `aria-valuemin={1}` hardcoded: assumes all affix tier numbering starts at 1. Current data always uses 1-based tiers; theoretical type concern if future data changes.
+
 ## Deferred from: code review of 4-1-weaver-tree-research-spike (2026-05-13)
 
 - Official wiki (wiki.lastepoch.com) returned ECONNREFUSED — may be a transient outage rather than permanently offline. A future spike or re-evaluation should retry this source.

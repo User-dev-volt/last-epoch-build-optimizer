@@ -1,6 +1,6 @@
 # Story 5.3: AffixTierControl — Pip-Based Tier Selection
 
-Status: review
+Status: done
 
 ## Story
 
@@ -65,6 +65,19 @@ so that I can quickly set affix tiers to match my actual item rolls without typi
   - [x] Test: `expect(await axe(container)).toHaveNoViolations()`
   - [x] No `vi.mock` needed (no Tauri/IPC imports in component)
   - [x] No snapshot tests — explicit `expect` assertions only
+
+### Review Findings
+
+- [x] [Review][Patch] CSS hex case — `--color-tier-pip-inactive` uses lowercase `#1c1c21`; all other tokens use uppercase [lebo/src/assets/styles/global.css:51]
+- [x] [Review][Patch] Pip click same-tier fires onChange — clicking an already-selected pip emits `onChange(currentTier)` (same value); keyboard handler correctly no-ops at boundary; add `if (pip !== currentTier)` guard for consistency with AC #4 spirit [lebo/src/features/item-database/AffixTierControl.tsx:46]
+- [x] [Review][Patch] Missing test: single-tier Left/Right boundary — single-tier test only checks aria-valuetext; Left and Right arrows both no-op when tierCount=1 is untested [lebo/src/features/item-database/AffixTierControl.test.tsx]
+- [x] [Review][Defer] Out-of-range `currentTier` crash risk — `affixEntry.tiers[currentTier - 1]` is unguarded; throws if caller passes 0, negative, or > tiers.length — deferred, spec-deliberate; spec says "caller guarantees within [1, tiers.length]"; clamping is Story 5.4 GearSlot's responsibility
+- [x] [Review][Defer] Gap mismatch: AC #1 says 4px gap, Dev Notes example and component use 8px — deferred, Dev Notes are authoritative implementation guide; AC text inconsistency; cosmetic only
+- [x] [Review][Defer] Missing Home/End key support for ARIA slider pattern — WAI-ARIA recommends Home (min) and End (max) keys; story only specifies Left/Right — deferred, outside story scope; address in accessibility polish
+- [x] [Review][Defer] Inline pip style objects recreated per render — style literals in Array.from map allocate new objects every render — deferred, project-wide inline style pattern; benign for small pip counts
+- [x] [Review][Defer] No userEvent.setup() — direct userEvent API is v14+ legacy — deferred, tests pass; project-wide concern
+- [x] [Review][Defer] width: 40 overflow risk — monospace span may clip large tier value strings — deferred, spec-specified; acceptable for current data range
+- [x] [Review][Defer] aria-valuemin={1} hardcoded — assumes 1-based tier numbering — deferred, all current data uses 1-based tiers; theoretical
 
 ## Dev Notes
 

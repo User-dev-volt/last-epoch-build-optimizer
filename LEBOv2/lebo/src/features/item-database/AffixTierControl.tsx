@@ -43,7 +43,7 @@ export function AffixTierControl({ affixEntry, currentTier, onChange }: AffixTie
           <div
             key={pip}
             aria-hidden={true}
-            onClick={() => onChange(pip)}
+            onClick={() => { if (pip !== currentTier) onChange(pip) }}
             style={
               filled
                 ? {
