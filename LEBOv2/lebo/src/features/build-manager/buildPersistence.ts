@@ -40,6 +40,10 @@ export function migrateBuildState(raw: unknown): BuildState {
     updatedAt: String(obj.updatedAt ?? new Date().toISOString()),
   }
 
+  if (typeof obj.schemaVersion === 'number' && obj.schemaVersion !== 1 && obj.schemaVersion !== 2) {
+    throw new Error(`STORAGE_ERROR: unknown schemaVersion ${obj.schemaVersion}`)
+  }
+
   // Idempotency: v2 builds pass through with defaults re-applied for safety
   if (obj.schemaVersion === 2) {
     return {
@@ -66,7 +70,9 @@ export function migrateBuildState(raw: unknown): BuildState {
             ? s.affixes.map((a: unknown): AffixEntryV2 =>
                 typeof a === 'string'
                   ? { name: a, tier: undefined, value: undefined }
-                  : (a as AffixEntryV2)
+                  : typeof a === 'object' && a !== null && typeof (a as Record<string, unknown>).name === 'string'
+                    ? (a as AffixEntryV2)
+                    : { name: '', tier: undefined, value: undefined }
               )
             : [],
         }

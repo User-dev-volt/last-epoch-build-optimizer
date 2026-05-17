@@ -1,6 +1,6 @@
 # Story 6.1: BuildState v2 TypeScript Types and Core Migration Function
 
-Status: review
+Status: done
 
 ## Story
 
@@ -281,9 +281,9 @@ claude-sonnet-4-6
 ### Review Findings
 
 - [x] [Review][Defer] `value` field intentionally absent from `buildAffixEntries` — deferred to story 7-5 (structured gear context in optimization payload). `AffixEntryV2.value?: number` cannot represent the old min–max range anyway; `affixId + tier` is sufficient for 7-5 to reconstruct full values from the item DB. Patch applied: clarifying comments added to `buildAffixEntries` and `AffixEntryV2.value` so future devs don't repeat this debate.
-- [ ] [Review][Patch] Unsafe non-string affix object cast without `name` validation — `buildPersistence.ts` v1 migration path casts any non-string affix as `AffixEntryV2` without checking that `name` exists. An object `{ affixId: 'x' }` with no `name` would produce a corrupt entry that propagates into the optimization scoring engine. [`buildPersistence.ts:63-68`]
-- [ ] [Review][Patch] No guard for unknown schemaVersion (> 2) — if a schemaVersion 3 build is loaded into this code, it falls silently through the `=== 2` check and is treated as v1, running the migration and downgrading data. Add an error throw for unrecognized versions. [`buildPersistence.ts`]
-- [ ] [Review][Patch] v2 passthrough test missing `affixId` coverage — the idempotency test only verifies `{ name, tier }` affixes pass through. An affix with `affixId` set is not tested; if the passthrough branch ever inadvertently strips `affixId`, no test catches it. [`buildPersistence.test.ts`]
+- [x] [Review][Patch] Unsafe non-string affix object cast without `name` validation — fixed: non-string objects without a valid `name` string now coerce to `{ name: '', tier: undefined, value: undefined }`. [`buildPersistence.ts:63-68`]
+- [x] [Review][Patch] No guard for unknown schemaVersion (> 2) — fixed: throws `STORAGE_ERROR: unknown schemaVersion N` for any numeric version outside `[1, 2]`. [`buildPersistence.ts`]
+- [x] [Review][Patch] v2 passthrough test missing `affixId` coverage — fixed: added tests for affixId passthrough, unknown schemaVersion throw, and nameless object affix coercion. [`buildPersistence.test.ts`]
 - [x] [Review][Defer] v2 passthrough gear items not structurally validated — `schemaVersion === 2` branch casts gear/skills/idols without field-level validation; a corrupted v2 build passes through silently [`buildPersistence.ts:46-54`] — deferred, pre-existing trust assumption; full validation layer is out of scope for this story
 - [x] [Review][Defer] AC5 "unchanged" letter vs. intent — `sharedFields` re-applies `String(...)` coercions even for v2 passthrough; spec says "returned unchanged" but auditor notes this is a spec-intent deviation not a functional bug [`buildPersistence.ts`] — deferred, low impact
 - [x] [Review][Defer] `AffixEntryV2.value` semantics undocumented — no invariant on whether `value` is min, max, or resolved scalar; will cause divergent interpretations across codebase [`build.ts`] — deferred, document in a future story

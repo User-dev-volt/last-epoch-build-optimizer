@@ -191,6 +191,51 @@ describe('migrateBuildState — v2 migration', () => {
     expect(result.schemaVersion).toBe(2)
     expect(result.contextData.gear[0].affixes).toEqual([{ name: 'Health', tier: 2 }])
   })
+
+  it('v2 passthrough preserves affixId on affix entries', () => {
+    const v2Build = {
+      schemaVersion: 2,
+      id: 'build-v2b',
+      name: 'V2 Build',
+      classId: 'sentinel',
+      masteryId: 'void_knight',
+      characterLevel: 10,
+      budgetEnforced: false,
+      nodeAllocations: {},
+      skillNodeAllocations: {},
+      activeSkillLevels: {},
+      weaverAllocations: {},
+      contextData: {
+        gear: [{ slotId: 'chest', itemName: 'Plate', affixes: [{ affixId: 'added_armor_15', name: 'Added Armor', tier: 3 }] }],
+        skills: [],
+        idols: [],
+      },
+      isPersisted: true,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+    }
+    const result = migrateBuildState(v2Build)
+    expect(result.contextData.gear[0].affixes).toEqual([{ affixId: 'added_armor_15', name: 'Added Armor', tier: 3 }])
+  })
+
+  it('throws STORAGE_ERROR for unknown schemaVersion', () => {
+    expect(() => migrateBuildState({ schemaVersion: 3, id: 'x', name: 'x' })).toThrow('STORAGE_ERROR: unknown schemaVersion 3')
+  })
+
+  it('v1 migration coerces object affix missing name to empty string name', () => {
+    const raw = {
+      schemaVersion: 1,
+      id: 'x',
+      name: 'Test',
+      contextData: {
+        gear: [{ slotId: 'chest', itemName: 'Plate', affixes: [{ affixId: 'orphan' }] }],
+        skills: [],
+        idols: [],
+      },
+    }
+    const result = migrateBuildState(raw)
+    expect(result.contextData.gear[0].affixes).toEqual([{ name: '', tier: undefined, value: undefined }])
+  })
 })
 
 describe('saveBuild', () => {
