@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react'
 import { useAppStore } from '../../shared/stores/appStore'
 import { useBuildStore } from '../../shared/stores/buildStore'
 import { useOptimizationStore } from '../../shared/stores/optimizationStore'
+import { useGameDataStore } from '../../shared/stores/gameDataStore'
 import { startOptimization } from '../../shared/stores/useOptimizationStream'
 import { PanelCollapseToggle } from './PanelCollapseToggle'
 import { ScoreGauge } from '../optimization/ScoreGauge'
 import { GoalSelector } from '../optimization/GoalSelector'
 import { OptimizeButton } from '../optimization/OptimizeButton'
 import { SuggestionsList } from '../optimization/SuggestionsList'
+import { GearSlot } from '../item-database/GearSlot'
+import { GEAR_SLOTS } from '../context-panel/gearData'
 
 export function RightPanel() {
   const isCollapsed = useAppStore((s) => s.activePanel.right === 'collapsed')
@@ -20,6 +23,7 @@ export function RightPanel() {
   const currentModel = useOptimizationStore((s) => s.currentModel)
   const previewSuggestionRank = useOptimizationStore((s) => s.previewSuggestionRank)
   const suggestions = useOptimizationStore((s) => s.suggestions)
+  const itemDatabase = useGameDataStore((s) => s.itemDatabase)
 
   const previewScore =
     previewSuggestionRank !== null
@@ -28,14 +32,13 @@ export function RightPanel() {
 
   const [isBannerDismissed, setIsBannerDismissed] = useState(false)
 
-  // Reset banner when build changes so each new build shows the warning if needed
   useEffect(() => {
     setIsBannerDismissed(false)
   }, [activeBuild?.id])
 
   const isEmptyContext =
     !!activeBuild &&
-    activeBuild.contextData.gear.length === 0 &&
+    activeBuild.contextData.gear.every((g) => g.itemName.trim() === '') &&
     activeBuild.contextData.skills.length === 0 &&
     activeBuild.contextData.idols.length === 0
 
@@ -68,68 +71,92 @@ export function RightPanel() {
           </span>
         </div>
       ) : (
-        <div className="p-4 overflow-y-auto flex flex-col gap-4">
-          {activeBuild ? (
-            <>
-              <ScoreGauge baselineScore={scores} previewScore={previewScore} />
-              <GoalSelector />
-            </>
-          ) : (
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              Select a build to see scores
-            </p>
-          )}
-
-          <OptimizeButton
-            onOptimize={startOptimization}
-            disabled={!activeBuild || !isOnline}
-            isOptimizing={isOptimizing}
-          />
-
-          {isOptimizing && currentModel && (
+        <div className="flex flex-col h-full overflow-hidden">
+          {/* Upper: Gear Context — independently scrollable */}
+          <div className="overflow-y-auto flex-1 min-h-0 flex flex-col gap-0 pt-3 pb-1">
             <p
-              className="text-xs"
+              className="px-4 pb-2 text-[11px] font-semibold uppercase tracking-wide"
               style={{ color: 'var(--color-text-muted)' }}
-              data-testid="current-model-indicator"
             >
-              Using: {currentModel}
+              Gear
             </p>
-          )}
+            {GEAR_SLOTS.map(({ slotId, label }) => (
+              <GearSlot
+                key={slotId}
+                slotId={slotId}
+                slotName={label}
+                itemDatabase={itemDatabase}
+              />
+            ))}
+          </div>
 
-          {isOnlineChecked && !isOnline && (
-            <p
-              className="text-xs"
-              style={{ color: 'var(--color-text-muted)' }}
-              data-testid="offline-note"
-            >
-              AI optimization requires internet connectivity. Connect to the internet and retry.
-            </p>
-          )}
+          {/* Lower: Optimization — pinned, never scrolls off */}
+          <div
+            className="shrink-0 flex flex-col gap-4 p-4 overflow-y-auto border-t"
+            style={{ borderColor: 'var(--color-bg-elevated)' }}
+          >
+            {activeBuild ? (
+              <>
+                <ScoreGauge baselineScore={scores} previewScore={previewScore} />
+                <GoalSelector />
+              </>
+            ) : (
+              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                Select a build to see scores
+              </p>
+            )}
 
-          {showContextNote && (
-            <div
-              className="flex items-start gap-2 px-3 py-2 rounded text-xs"
-              style={{
-                backgroundColor: 'var(--color-bg-elevated)',
-                color: 'var(--color-text-muted)',
-              }}
-              data-testid="context-note"
-            >
-              <span className="flex-1">
-                Add gear, skills, and idols in the context panel for more relevant suggestions.
-              </span>
-              <button
-                onClick={() => setIsBannerDismissed(true)}
-                aria-label="Dismiss"
-                className="shrink-0 leading-none"
+            <OptimizeButton
+              onOptimize={startOptimization}
+              disabled={!activeBuild || !isOnline}
+              isOptimizing={isOptimizing}
+            />
+
+            {isOptimizing && currentModel && (
+              <p
+                className="text-xs"
                 style={{ color: 'var(--color-text-muted)' }}
+                data-testid="current-model-indicator"
               >
-                ×
-              </button>
-            </div>
-          )}
+                Using: {currentModel}
+              </p>
+            )}
 
-          <SuggestionsList onRetry={startOptimization} />
+            {isOnlineChecked && !isOnline && (
+              <p
+                className="text-xs"
+                style={{ color: 'var(--color-text-muted)' }}
+                data-testid="offline-note"
+              >
+                AI optimization requires internet connectivity. Connect to the internet and retry.
+              </p>
+            )}
+
+            {showContextNote && (
+              <div
+                className="flex items-start gap-2 px-3 py-2 rounded text-xs"
+                style={{
+                  backgroundColor: 'var(--color-bg-elevated)',
+                  color: 'var(--color-text-muted)',
+                }}
+                data-testid="context-note"
+              >
+                <span className="flex-1">
+                  Add gear, skills, and idols in the context panel for more relevant suggestions.
+                </span>
+                <button
+                  onClick={() => setIsBannerDismissed(true)}
+                  aria-label="Dismiss"
+                  className="shrink-0 leading-none"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
+            <SuggestionsList onRetry={startOptimization} />
+          </div>
         </div>
       )}
     </aside>

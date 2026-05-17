@@ -78,7 +78,7 @@ development_status:
   5-1-item-database-load-and-typescript-types: done  # code review complete 2026-05-14; 3 patches applied
   5-2-in-memory-item-search-algorithm: done  # code review complete 2026-05-16; story approved
   5-3-affixtiercontrol-pip-based-tier-selection: done  # code review complete 2026-05-16; 3 patches applied
-  5-4-gearslot-component-with-typeahead-item-search: ready-for-dev
+  5-4-gearslot-component-with-typeahead-item-search: review
   5-5-custom-affix-addition-and-free-text-fallback: backlog
   5-6-item-data-freshness-check-and-stalenessbar-extension: backlog
   epic-5-retrospective: optional

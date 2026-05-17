@@ -1,6 +1,6 @@
 # Story 5.4: GearSlot Component with Typeahead Item Search
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -34,47 +34,41 @@ so that I can quickly represent my actual equipped gear without manual data entr
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Modify `RightPanel.tsx` to add the Gear Context / Optimization split layout (AC: #7)
-  - [ ] Replace the single `overflow-y-auto flex flex-col gap-4` content div with two sibling divs:
+- [x] Task 1: Modify `RightPanel.tsx` to add the Gear Context / Optimization split layout (AC: #7)
+  - [x] Replace the single `overflow-y-auto flex flex-col gap-4` content div with two sibling divs:
     - Upper: `<div className="overflow-y-auto flex-1 min-h-0 flex flex-col gap-2 p-4">` — Gear Context section
     - Lower: `<div className="shrink-0 flex flex-col gap-4 p-4 border-t">` — Optimization section (pinned)
-  - [ ] Upper section renders: section label ("Gear") in `--color-text-muted` at 11px + 600 weight + uppercase, then one `<GearSlot>` per `GEAR_SLOTS` entry (11 slots)
-  - [ ] Lower section renders: all existing optimization content (ScoreGauge, GoalSelector, OptimizeButton, model indicator, offline note, context note, SuggestionsList)
-  - [ ] Collapsed state (`isCollapsed`) is unchanged — keep existing icon rail
-  - [ ] Import `GearSlot` from `'../item-database/GearSlot'` and `GEAR_SLOTS` from `'../context-panel/gearData'`
-  - [ ] Import `useGameDataStore` from `'../../shared/stores/gameDataStore'` to pass `itemDatabase` to GearSlot
-  - [ ] Border on lower section: `borderColor: 'var(--color-bg-elevated)'`
+  - [x] Upper section renders: section label ("Gear") in `--color-text-muted` at 11px + 600 weight + uppercase, then one `<GearSlot>` per `GEAR_SLOTS` entry (11 slots)
+  - [x] Lower section renders: all existing optimization content (ScoreGauge, GoalSelector, OptimizeButton, model indicator, offline note, context note, SuggestionsList)
+  - [x] Collapsed state (`isCollapsed`) is unchanged — keep existing icon rail
+  - [x] Import `GearSlot` from `'../item-database/GearSlot'` and `GEAR_SLOTS` from `'../context-panel/gearData'`
+  - [x] Import `useGameDataStore` from `'../../shared/stores/gameDataStore'` to pass `itemDatabase` to GearSlot
+  - [x] Border on lower section: `borderColor: 'var(--color-bg-elevated)'`
 
-- [ ] Task 2: Create `GearSlot.tsx` at `src/features/item-database/GearSlot.tsx` (AC: #1–#6)
-  - [ ] Named export: `export function GearSlot({ slotId, slotName, itemDatabase }: GearSlotProps)`
-  - [ ] Props interface: `{ slotId: string; slotName: string; itemDatabase: ItemDatabase | null }`
-  - [ ] Imports: `Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption` from `'@headlessui/react'`; `AffixTierControl` from `'./AffixTierControl'`; types from `'../../shared/types/itemDatabase'`; `useBuildStore` from `'../../shared/stores/buildStore'`; `searchItems` from `'./itemSearch'`; `useEffect, useState, useMemo` from `'react'`
-  - [ ] Local state:
-    - `query: string` — Combobox input value (init `''`)
-    - `selectedItem: SearchResult | null` — currently selected item (init `null`)
-    - `affixTiers: Record<string, number>` — maps affixId → current tier (init `{}`)
-  - [ ] Derived `activeBuildId` via `useBuildStore((s) => s.activeBuild?.id ?? null)` — used only for reset effect
-  - [ ] `useEffect` on `activeBuildId`: reset `query → ''`, `selectedItem → null`, `affixTiers → {}` (clear on build switch)
-  - [ ] `searchResults`: derived via `useMemo(() => { if (!itemDatabase || query.trim().length < 1) return []; return searchItems(query, itemDatabase).slice(0, 6) }, [query, itemDatabase])`
-  - [ ] `resolvedAffixes`: derived via `useMemo(...)` when `selectedItem` changes — see Dev Notes for affix resolution logic
-  - [ ] `handleSelect(item: SearchResult | null)`: set `selectedItem = item`, reset `query = ''`, set `affixTiers` to median tiers for all resolved affixes, then call `writeToStore(item, resolvedAffixesForItem)`
-  - [ ] `handleClear()`: set `selectedItem = null`, `query = ''`, `affixTiers = {}`, then call `writeToStore(null, [])`
-  - [ ] `handleTierChange(affixId: string, tier: number)`: update `affixTiers[affixId] = tier`, then call `writeToStore(selectedItem, resolvedAffixes)` with updated tiers
-  - [ ] `writeToStore(item, affixes)`: call `useBuildStore.getState().updateContextGear(...)` — see Dev Notes for exact encoding
-  - [ ] **Empty state JSX** (`selectedItem === null`): outer `role="group"` div + Combobox with `value={query}` and `onChange={setQuery}`, `onClose={() => {}}`, `immediate`. Render `ComboboxInput` with placeholder `"Search items…"`, `displayValue={() => query}`. Render `ComboboxOptions` when `searchResults.length > 0`: each `ComboboxOption` shows item name + base type badge. Select a result → `handleSelect(result)`. If `itemDatabase === null`: skip Combobox, render a small muted label `"Database unavailable"` with a plain text input for item name instead.
-  - [ ] **Populated-database state JSX** (`selectedItem !== null`): item card with item name (14px, 600 weight, `--color-text-primary`) + base type label (12px, `--color-text-muted`); × clear button (`aria-label="Clear {slotName}"`); affix list — one row per resolved affix: affix name label (flex-grow, 13px, `--color-text-secondary`) + `<AffixTierControl>` component
-  - [ ] Outer wrapper: `<div role="group" aria-label="{slotName} slot" className="flex flex-col gap-1 py-2 px-3" style={{ borderBottom: '1px solid var(--color-bg-elevated)' }}>`
+- [x] Task 2: Create `GearSlot.tsx` at `src/features/item-database/GearSlot.tsx` (AC: #1–#6)
+  - [x] Named export: `export function GearSlot({ slotId, slotName, itemDatabase }: GearSlotProps)`
+  - [x] Props interface: `{ slotId: string; slotName: string; itemDatabase: ItemDatabase | null }`
+  - [x] Imports: `Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption` from `'@headlessui/react'`; `AffixTierControl` from `'./AffixTierControl'`; types from `'../../shared/types/itemDatabase'`; `useBuildStore` from `'../../shared/stores/buildStore'`; `searchItems` from `'./itemSearch'`; `useEffect, useState, useMemo` from `'react'`
+  - [x] Local state: `query`, `selectedItem`, `affixTiers`
+  - [x] Derived `activeBuildId` via `useBuildStore((s) => s.activeBuild?.id ?? null)` — used only for reset effect
+  - [x] `useEffect` on `activeBuildId`: reset state on build switch
+  - [x] `searchResults` via `useMemo` — capped at 6, requires ≥1 char
+  - [x] `resolvedAffixes` via `useMemo` — base items use implicitAffixIds; unique items use affixes array
+  - [x] `handleSelect`, `handleClear`, `handleTierChange` implemented
+  - [x] `writeToStore` uses `useBuildStore.getState().updateContextGear(...)` with string-encoded affix values
+  - [x] **Empty state JSX** — Combobox with `immediate` prop; "Database unavailable" fallback when `itemDatabase === null`
+  - [x] **Populated-database state JSX** — item card + × clear button + AffixTierControl rows
+  - [x] Outer wrapper: `role="group"` + `aria-label="{slotName} slot"`
 
-- [ ] Task 3: Create `GearSlot.test.tsx` at `src/features/item-database/GearSlot.test.tsx` (AC: #6)
-  - [ ] Mock `useBuildStore` — see Dev Notes for mock pattern
-  - [ ] Mock `useGameDataStore` — see Dev Notes
-  - [ ] Build a minimal `mockItemDatabase: ItemDatabase` with 2 base items + 1 unique item + 3 affix entries
-  - [ ] Test: empty state renders Combobox input with placeholder "Search items…"
-  - [ ] Test: typing ≥1 char shows matching results (up to 6), each with item name and base type
-  - [ ] Test: selecting a result transitions to populated-database state showing item name, base type, and AffixTierControl rows
-  - [ ] Test: clicking × returns to empty state and calls `updateContextGear`
-  - [ ] Test: `itemDatabase = null` renders "Database unavailable" label
-  - [ ] Test: `expect(await axe(container)).toHaveNoViolations()`
+- [x] Task 3: Create `GearSlot.test.tsx` at `src/features/item-database/GearSlot.test.tsx` (AC: #6)
+  - [x] Real `useBuildStore` used (same pattern as GearInput.test.tsx)
+  - [x] `mockItemDatabase` with 2 base items + 1 unique item + 3 affix entries
+  - [x] Test: empty state renders Combobox input with placeholder "Search items…"
+  - [x] Test: typing ≥1 char shows matching results (up to 6), each with item name and base type
+  - [x] Test: selecting a result transitions to populated-database state showing item name, base type, and AffixTierControl rows
+  - [x] Test: clicking × returns to empty state and calls `updateContextGear`
+  - [x] Test: `itemDatabase = null` renders "Database unavailable" label
+  - [x] Test: `expect(await axe(container)).toHaveNoViolations()` — two axe tests (empty + null db states)
 
 ## Dev Notes
 
@@ -303,3 +297,39 @@ AffixTierControl is a controlled component: it receives `currentTier` and `onCha
 - The "Free text mode" ghost link is Story 5.5
 - `aria-activedescendant` on the Combobox input is managed by Headless UI automatically — no manual wiring needed
 - If `baseItem.implicitAffixIds` is empty (very common for base items), the populated-database state shows the item card with NO affix rows — that is correct behavior; Story 5.5 adds the `+` button for custom affix addition
+
+## Dev Agent Record
+
+### Implementation Notes
+
+**Task 1 — RightPanel split layout:**
+- Outer expanded div changed from `p-4 overflow-y-auto flex flex-col gap-4` to `flex flex-col h-full overflow-hidden`
+- Upper child: `overflow-y-auto flex-1 min-h-0` for independent scrolling of 11 GearSlot rows
+- Lower child: `shrink-0 overflow-y-auto border-t` for pinned optimization section
+- `isEmptyContext` check updated from `gear.length === 0` to `gear.every(g => g.itemName.trim() === '')` — critical for GearSlot's write pattern (empty slots now write `itemName: ''` stubs)
+- `useGameDataStore` imported to pass `itemDatabase` down to each GearSlot
+
+**Task 2 — GearSlot component:**
+- Used `val as unknown as SearchResult` cast in Combobox onChange — necessary because Combobox generic is inferred as `string` from `value={query}`, but ComboboxOption values are `SearchResult` objects
+- `resolveAffixes` is a pure function (not a hook) called both in the `useMemo` and in `handleSelect` to avoid stale closure issues when initializing tier state on selection
+- `buildAffixStrings` extracted as pure helper for both initial write and tier-change writes
+- `writeToStore` signature takes explicit `resolved` and `tiers` args to avoid closure staleness when called from `handleSelect` with freshly computed state
+
+**Task 3 — Tests:**
+- Used real Zustand store (same as GearInput.test.tsx pattern) — `useBuildStore.setState` + `setActiveBuild` in beforeEach
+- 12 tests covering: empty state, role/aria-label, typeahead results, selection, store write, clear, null database, unique item affixes, base item with no implicits, two axe checks
+- Pre-existing failures (ProviderSelector, SkillTreeCanvas, TreeControls) are unrelated to this story
+
+### Completion Notes
+
+All 3 tasks complete. 54 tests pass (GearSlot: 12, AffixTierControl: 9, RightPanel: 23, plus item-database integration tests). TypeScript strict mode passes with no source-file errors. The 4 pre-existing test failures in unrelated files are unchanged.
+
+## File List
+
+- `lebo/src/features/layout/RightPanel.tsx` — modified: split into Gear Context (upper, scrollable) + Optimization (lower, pinned); isEmptyContext logic updated
+- `lebo/src/features/item-database/GearSlot.tsx` — created: typeahead Combobox + populated state + AffixTierControl rows
+- `lebo/src/features/item-database/GearSlot.test.tsx` — created: 12 tests + axe checks
+
+## Change Log
+
+- 2026-05-16: Implemented story 5-4 — GearSlot component with Headless UI Combobox typeahead, affix resolution and tier selection, RightPanel split layout (Gear Context + Optimization sections), 12 unit/integration/axe tests
