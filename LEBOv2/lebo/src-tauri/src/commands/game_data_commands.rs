@@ -69,8 +69,16 @@ pub async fn download_game_data_update(
         &remote.classes,
     )
     .await?;
-    // Write manifest last — only once class files are successfully written
-    let manifest_json = serde_json::to_string_pretty(&remote)
+    // Write manifest last — only once class files are successfully written.
+    // Preserve local-only fields (icon_source, icon_cache_version, item_data_version) that the
+    // remote CDN manifest has no knowledge of; load local first and carry them forward.
+    let mut merged = remote;
+    if let Ok(local) = game_data_service::load_manifest(&data_dir) {
+        merged.icon_source = local.icon_source;
+        merged.icon_cache_version = local.icon_cache_version;
+        merged.item_data_version = local.item_data_version;
+    }
+    let manifest_json = serde_json::to_string_pretty(&merged)
         .map_err(|e| format!("STORAGE_ERROR: serialize manifest: {}", e))?;
     game_data_service::atomic_write_file(&data_dir.join("manifest.json"), manifest_json.as_bytes()).await?;
     Ok(())
