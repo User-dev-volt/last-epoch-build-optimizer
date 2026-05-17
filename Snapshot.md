@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Complete the detail pass and testing walkthrough to validate the scoring thresholds and result ordering against real item corpus before Story 5.4 integration.
+Run `/bmad-code-review` on story 5-3 using a different LLM before starting story 5-4 (GearSlot typeahead + item search integration).
 
 ---
 
