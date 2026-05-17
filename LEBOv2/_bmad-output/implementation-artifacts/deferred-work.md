@@ -9,6 +9,13 @@
 - `weaverSearchHighlighted`/`weaverSearchDimmed` memos depend on `weaverGameNodes` Zustand selector reference (`SkillTreeView.tsx`). If any unrelated `gameDataStore` update fires, both memos re-run unnecessarily. Benign in practice (weaverGameNodes set once at startup) — pre-existing project-wide selector pattern.
 - `migrateBuildState` for `weaverAllocations` uses object-shape check + type cast without validating individual value types (`buildPersistence.ts`). A corrupted save with string values would produce NaN for unspent point count. Same pattern as all other allocation fields — pre-existing project-wide issue.
 
+## Deferred from: code review of 5-4-gearslot-component-with-typeahead-item-search (2026-05-16)
+
+- `ComboboxButton` (▾) added to GearSlot without AC coverage — functional but undocumented scope creep (`GearSlot.tsx`). Pre-existing.
+- Inline style + Tailwind mixing — `var(--color-bg-elevated)` used for both slot border and dropdown background; border may be invisible when dropdown is open (`GearSlot.tsx`). Pre-existing project-wide pattern.
+- Off-by-one tier stale reference if DB hot-reloads while item is selected — `resolvedAffixes` memo updates but `affixTiers` retains old keys, leading to mismatched tier state (`GearSlot.tsx:81–84`). Pre-existing edge case, out of scope for this story.
+- `isEmptyContext` `.trim()` throws if `itemName` is null/undefined — schema violation that TypeScript should prevent at compile time (`RightPanel.tsx:40`). Pre-existing project-wide concern.
+
 ## Deferred from: code review of 5-1-item-database-load-and-typescript-types (2026-05-14)
 
 - Version staleness: `copy_bundled_item_resources` skips copy if `base-items.json` exists, so updated bundled data after an app upgrade will never overwrite the cached copy (`item_data_service.rs:18`). Story 5.6 handles data freshness; no version/hash mechanism added in this story.
