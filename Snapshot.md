@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Review the six findings from BMAD output and prioritize which gaps to fix in story 5-4 (likely: null-DB store write, tier-change coverage, and AC #2 performance assertion).
+Begin Story 5.6 (`item-data-freshness-check-and-stalenessbar-extension`) or confirm backlog priority for deferred findings.
 
 ---
 
