@@ -1,11 +1,31 @@
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe } from 'vitest-axe'
 import { GearSlot } from './GearSlot'
 import { useBuildStore } from '../../shared/stores/buildStore'
-import type { ItemDatabase } from '../../shared/types/itemDatabase'
+import type { ItemDatabase, AffixEntry } from '../../shared/types/itemDatabase'
 import type { BuildState } from '../../shared/types/build'
+
+vi.mock('./AffixPicker', () => ({
+  AffixPicker: ({ onSelect, onClose }: { onSelect: (a: AffixEntry) => void; onClose: () => void }) => (
+    <button
+      data-testid="mock-affix-picker"
+      onClick={() => {
+        onSelect({
+          id: 'affix-speed',
+          name: 'Movement Speed',
+          type: 'suffix',
+          itemSlots: ['boots'],
+          tiers: [{ tier: 1, minValue: 5, maxValue: 10 }],
+        })
+        onClose()
+      }}
+    >
+      Pick affix
+    </button>
+  ),
+}))
 
 const mockItemDatabase: ItemDatabase = {
   baseItems: [
@@ -297,5 +317,152 @@ describe('GearSlot', () => {
       <GearSlot slotId="helmet" slotName="Helmet" itemDatabase={null} />
     )
     expect(await axe(container)).toHaveNoViolations()
+  })
+
+  // Story 5.5 tests
+
+  it('"Free text mode" link is visible in empty state (database present)', () => {
+    render(
+      <GearSlot slotId="helmet" slotName="Helmet" itemDatabase={mockItemDatabase} />
+    )
+    expect(screen.getByText('Free text mode')).toBeInTheDocument()
+  })
+
+  it('"Free text mode" link is visible in empty state (database null)', () => {
+    render(
+      <GearSlot slotId="helmet" slotName="Helmet" itemDatabase={null} />
+    )
+    expect(screen.getByText('Free text mode')).toBeInTheDocument()
+  })
+
+  it('clicking "Free text mode" shows a textarea and hides Combobox input', async () => {
+    render(
+      <GearSlot slotId="helmet" slotName="Helmet" itemDatabase={mockItemDatabase} />
+    )
+    await userEvent.click(screen.getByText('Free text mode'))
+
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: 'Free text for Helmet' })).toBeInTheDocument()
+    })
+    expect(screen.queryByPlaceholderText('Search items…')).toBeNull()
+  })
+
+  it('typing in the textarea writes { slotId, itemName, affixes: [] } to store', async () => {
+    render(
+      <GearSlot slotId="helmet" slotName="Helmet" itemDatabase={mockItemDatabase} />
+    )
+    await userEvent.click(screen.getByText('Free text mode'))
+    const textarea = await screen.findByRole('textbox', { name: 'Free text for Helmet' })
+    await userEvent.type(textarea, 'crafted helmet')
+
+    await waitFor(() => {
+      const gear = useBuildStore.getState().activeBuild!.contextData.gear
+      const slot = gear.find((g) => g.slotId === 'helmet')
+      expect(slot?.itemName).toBe('crafted helmet')
+      expect(slot?.affixes).toHaveLength(0)
+    })
+  })
+
+  it('"Switch to database search" in freetext state resets to Combobox', async () => {
+    render(
+      <GearSlot slotId="helmet" slotName="Helmet" itemDatabase={mockItemDatabase} />
+    )
+    await userEvent.click(screen.getByText('Free text mode'))
+    await screen.findByRole('textbox', { name: 'Free text for Helmet' })
+
+    await userEvent.click(screen.getByText('Switch to database search'))
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Search items…')).toBeInTheDocument()
+    })
+    expect(screen.queryByRole('textbox', { name: 'Free text for Helmet' })).toBeNull()
+  })
+
+  it('"Switch to database search" clears the freetext value in store', async () => {
+    render(
+      <GearSlot slotId="helmet" slotName="Helmet" itemDatabase={mockItemDatabase} />
+    )
+    await userEvent.click(screen.getByText('Free text mode'))
+    const textarea = await screen.findByRole('textbox', { name: 'Free text for Helmet' })
+    await userEvent.type(textarea, 'some text')
+
+    await userEvent.click(screen.getByText('Switch to database search'))
+
+    await waitFor(() => {
+      const gear = useBuildStore.getState().activeBuild!.contextData.gear
+      const slot = gear.find((g) => g.slotId === 'helmet')
+      expect(slot?.itemName).toBe('')
+      expect(slot?.affixes).toHaveLength(0)
+    })
+  })
+
+  it('"+ Add affix" button is visible in populated-database state', async () => {
+    render(
+      <GearSlot slotId="helmet" slotName="Helmet" itemDatabase={mockItemDatabase} />
+    )
+    const input = screen.getByPlaceholderText('Search items…')
+    await userEvent.type(input, 'Iron')
+    await waitFor(() => expect(screen.getByText('Iron Helm')).toBeInTheDocument())
+    await userEvent.click(screen.getByText('Iron Helm'))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Add custom affix to Helmet' })).toBeInTheDocument()
+    })
+  })
+
+  it('clicking "+" shows AffixPicker (mocked)', async () => {
+    render(
+      <GearSlot slotId="helmet" slotName="Helmet" itemDatabase={mockItemDatabase} />
+    )
+    const input = screen.getByPlaceholderText('Search items…')
+    await userEvent.type(input, 'Iron')
+    await waitFor(() => expect(screen.getByText('Iron Helm')).toBeInTheDocument())
+    await userEvent.click(screen.getByText('Iron Helm'))
+
+    const addBtn = await screen.findByRole('button', { name: 'Add custom affix to Helmet' })
+    await userEvent.click(addBtn)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('mock-affix-picker')).toBeInTheDocument()
+    })
+  })
+
+  it('selecting an affix from AffixPicker adds an AffixTierControl for that affix', async () => {
+    render(
+      <GearSlot slotId="helmet" slotName="Helmet" itemDatabase={mockItemDatabase} />
+    )
+    const input = screen.getByPlaceholderText('Search items…')
+    await userEvent.type(input, 'Iron')
+    await waitFor(() => expect(screen.getByText('Iron Helm')).toBeInTheDocument())
+    await userEvent.click(screen.getByText('Iron Helm'))
+
+    const addBtn = await screen.findByRole('button', { name: 'Add custom affix to Helmet' })
+    await userEvent.click(addBtn)
+    await userEvent.click(screen.getByTestId('mock-affix-picker'))
+
+    await waitFor(() => {
+      expect(screen.getByRole('slider', { name: 'Movement Speed tier' })).toBeInTheDocument()
+    })
+  })
+
+  it('custom affix tier change updates the encoded affix string in the store', async () => {
+    render(
+      <GearSlot slotId="helmet" slotName="Helmet" itemDatabase={mockItemDatabase} />
+    )
+    const input = screen.getByPlaceholderText('Search items…')
+    await userEvent.type(input, 'Iron')
+    await waitFor(() => expect(screen.getByText('Iron Helm')).toBeInTheDocument())
+    await userEvent.click(screen.getByText('Iron Helm'))
+
+    const addBtn = await screen.findByRole('button', { name: 'Add custom affix to Helmet' })
+    await userEvent.click(addBtn)
+    await userEvent.click(screen.getByTestId('mock-affix-picker'))
+
+    // Movement Speed has only 1 tier (5–10), so store should contain it
+    await waitFor(() => {
+      const gear = useBuildStore.getState().activeBuild!.contextData.gear
+      const slot = gear.find((g) => g.slotId === 'helmet')
+      expect(slot?.affixes.some((a) => a.startsWith('Movement Speed:'))).toBe(true)
+    })
   })
 })

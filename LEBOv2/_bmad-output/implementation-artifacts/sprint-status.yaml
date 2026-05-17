@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-06
-last_updated: 2026-05-16 (story 5-3 done; story 5-4 done; story 5-5 created ready-for-dev)
+last_updated: 2026-05-16 (story 5-3 done; story 5-4 done; story 5-5 review)
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -79,7 +79,7 @@ development_status:
   5-2-in-memory-item-search-algorithm: done  # code review complete 2026-05-16; story approved
   5-3-affixtiercontrol-pip-based-tier-selection: done  # code review complete 2026-05-16; 3 patches applied
   5-4-gearslot-component-with-typeahead-item-search: done  # code review complete 2026-05-16; 10 patches applied, 4 deferred
-  5-5-custom-affix-addition-and-free-text-fallback: ready-for-dev
+  5-5-custom-affix-addition-and-free-text-fallback: review
   5-6-item-data-freshness-check-and-stalenessbar-extension: backlog
   epic-5-retrospective: optional
 

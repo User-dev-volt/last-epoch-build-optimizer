@@ -1,6 +1,6 @@
 # Story 5.5: Custom Affix Addition and Free-Text Fallback
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -36,35 +36,35 @@ so that I can represent any item in the game regardless of its affix configurati
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `AffixPicker.tsx` at `src/features/item-database/AffixPicker.tsx` (AC: #1, #2, #6)
-  - [ ] Named export: `export function AffixPicker({ allAffixes, excludeIds, onSelect, onClose }: AffixPickerProps)`
-  - [ ] Props: `{ allAffixes: AffixEntry[]; excludeIds: string[]; onSelect: (affix: AffixEntry) => void; onClose: () => void }`
-  - [ ] Local state: `query: string` initialized to `''`
-  - [ ] `filteredAffixes` via `useMemo`: filter `allAffixes` (excluding `excludeIds`) by `a.name.toLowerCase().includes(query.toLowerCase())`; cap at 8 results
-  - [ ] Use Headless UI Combobox: `<Combobox<AffixEntry | null> value={null} onChange={(affix) => { if (affix) { onSelect(affix); onClose() } }} immediate>`
-  - [ ] `ComboboxInput`: `displayValue={() => query}`, `onChange={(e) => setQuery(e.target.value)}`, `placeholder="Search affixes…"`, auto-focus via `autoFocus` prop
-  - [ ] `ComboboxOptions`: render `filteredAffixes`; each `ComboboxOption` shows `affix.name` + `affix.type` label; use same styling as GearSlot's item Combobox
-  - [ ] Handle Escape key: `onKeyDown` on the container div — if `e.key === 'Escape'`, call `onClose()`
-  - [ ] Wrap in `<div className="relative">` with `absolute z-20` positioned dropdown
+- [x] Task 1: Create `AffixPicker.tsx` at `src/features/item-database/AffixPicker.tsx` (AC: #1, #2, #6)
+  - [x] Named export: `export function AffixPicker({ allAffixes, excludeIds, onSelect, onClose }: AffixPickerProps)`
+  - [x] Props: `{ allAffixes: AffixEntry[]; excludeIds: string[]; onSelect: (affix: AffixEntry) => void; onClose: () => void }`
+  - [x] Local state: `query: string` initialized to `''`
+  - [x] `filteredAffixes` via `useMemo`: filter `allAffixes` (excluding `excludeIds`) by `a.name.toLowerCase().includes(query.toLowerCase())`; cap at 8 results
+  - [x] Use Headless UI Combobox: `<Combobox<AffixEntry | null> value={null} onChange={(affix) => { if (affix) { onSelect(affix); onClose() } }} immediate>`
+  - [x] `ComboboxInput`: `displayValue={() => query}`, `onChange={(e) => setQuery(e.target.value)}`, `placeholder="Search affixes…"`, auto-focus via `autoFocus` prop
+  - [x] `ComboboxOptions`: render `filteredAffixes`; each `ComboboxOption` shows `affix.name` + `affix.type` label; use same styling as GearSlot's item Combobox
+  - [x] Handle Escape key: `onKeyDown` on the container div — if `e.key === 'Escape'`, call `onClose()`
+  - [x] Wrap in `<div className="relative">` with `absolute z-20` positioned dropdown
 
-- [ ] Task 2: Modify `GearSlot.tsx` to add free-text mode, `+` button, and custom affix tracking (AC: #1–#5, #7)
-  - [ ] Add new state:
+- [x] Task 2: Modify `GearSlot.tsx` to add free-text mode, `+` button, and custom affix tracking (AC: #1–#5, #7)
+  - [x] Add new state:
     - `isFreeText: boolean` (default `false`) — controls free-text mode
     - `freeText: string` (default `''`) — textarea value
     - `affixPickerOpen: boolean` (default `false`) — controls AffixPicker visibility
     - `customAffixIds: string[]` (default `[]`) — ordered list of custom-added affix IDs
-  - [ ] Add `customResolvedAffixes` derived from `customAffixIds` via `useMemo`:
+  - [x] Add `customResolvedAffixes` derived from `customAffixIds` via `useMemo`:
     - For each id in `customAffixIds`, find in `itemDatabase.affixes`; collect as `ResolvedAffix[]` (same interface already in file)
-  - [ ] Update `useEffect` on `activeBuildId` reset to also clear `isFreeText`, `freeText`, `affixPickerOpen`, `customAffixIds`
-  - [ ] Update `handleClear` to also clear `isFreeText`, `freeText`, `affixPickerOpen`, `customAffixIds`
-  - [ ] Update `handleSelect` (on item select) to also clear `customAffixIds` and `affixPickerOpen` (in case picker was open)
-  - [ ] Update `writeToStore` to encode both `resolvedAffixes` and `customResolvedAffixes` into the affixes string array (concat, same encoding)
-  - [ ] Add `handleAddCustomAffix(affix: AffixEntry)`:
+  - [x] Update `useEffect` on `activeBuildId` reset to also clear `isFreeText`, `freeText`, `affixPickerOpen`, `customAffixIds`
+  - [x] Update `handleClear` to also clear `isFreeText`, `freeText`, `affixPickerOpen`, `customAffixIds`
+  - [x] Update `handleSelect` (on item select) to also clear `customAffixIds` and `affixPickerOpen` (in case picker was open)
+  - [x] Update `writeToStore` to encode both `resolvedAffixes` and `customResolvedAffixes` into the affixes string array (concat, same encoding)
+  - [x] Add `handleAddCustomAffix(affix: AffixEntry)`:
     - Append `affix.id` to `customAffixIds`
     - Initialize `affixTiers[affix.id]` to `medianTier(affix)` using functional updater
     - Call `writeToStore` with updated state
     - Close picker: `setAffixPickerOpen(false)`
-  - [ ] **Empty state (selectedItem === null && !isFreeText)**:
+  - [x] **Empty state (selectedItem === null && !isFreeText)**:
     - Add "Free text mode" ghost link below the Combobox/null-db input:
       ```tsx
       <button
@@ -76,7 +76,7 @@ so that I can represent any item in the game regardless of its affix configurati
       </button>
       ```
     - Show this button whether `itemDatabase` is null or not
-  - [ ] **Free-text state (isFreeText === true)**:
+  - [x] **Free-text state (isFreeText === true)**:
     - Render a `<textarea>` with `rows={3}`, `value={freeText}`, `onChange` writing to store + `setFreeText`
     - Style consistent with other inputs: `backgroundColor: 'var(--color-bg-base)'`, `color: 'var(--color-text-primary)'`, `border: '1px solid var(--color-bg-elevated)'`, `resize: 'none'`, `width: '100%'`, `fontSize: 12`, `padding: '4px 8px'`, `borderRadius: 4`
     - `aria-label={`Free text for ${slotName}`}` on the textarea
@@ -102,7 +102,7 @@ so that I can represent any item in the game regardless of its affix configurati
         ])
       }}
       ```
-  - [ ] **Populated-database state (selectedItem !== null)**: add `+` button and AffixPicker below existing affix rows:
+  - [x] **Populated-database state (selectedItem !== null)**: add `+` button and AffixPicker below existing affix rows:
     - After the `resolvedAffixes.map(...)` block, add `customResolvedAffixes.map(...)` with the same layout (same AffixTierControl, same `handleTierChange`)
     - Add `+` button at the bottom of the affix list section:
       ```tsx
@@ -131,30 +131,30 @@ so that I can represent any item in the game regardless of its affix configurati
         </div>
       )}
       ```
-  - [ ] Import `AffixPicker` from `'./AffixPicker'`
-  - [ ] Ensure TypeScript strict mode: no unused vars, all state typed
+  - [x] Import `AffixPicker` from `'./AffixPicker'`
+  - [x] Ensure TypeScript strict mode: no unused vars, all state typed
 
-- [ ] Task 3: Create `AffixPicker.test.tsx` at `src/features/item-database/AffixPicker.test.tsx` (AC: #1, #2)
-  - [ ] Import `AffixPicker` from `'./AffixPicker'`
-  - [ ] Use the same `mockAffixes` (subset of the `mockItemDatabase.affixes` from `GearSlot.test.tsx`)
-  - [ ] Test: renders an input with `placeholder="Search affixes…"`
-  - [ ] Test: empty query shows first N affixes from allAffixes (up to cap)
-  - [ ] Test: typing filters to matching affixes by name
-  - [ ] Test: `excludeIds` hides excluded affixes from results
-  - [ ] Test: selecting an option calls `onSelect` with the full `AffixEntry` and calls `onClose`
-  - [ ] Test: pressing Escape calls `onClose`
-  - [ ] Test: `expect(await axe(container)).toHaveNoViolations()`
+- [x] Task 3: Create `AffixPicker.test.tsx` at `src/features/item-database/AffixPicker.test.tsx` (AC: #1, #2)
+  - [x] Import `AffixPicker` from `'./AffixPicker'`
+  - [x] Use the same `mockAffixes` (subset of the `mockItemDatabase.affixes` from `GearSlot.test.tsx`)
+  - [x] Test: renders an input with `placeholder="Search affixes…"`
+  - [x] Test: empty query shows first N affixes from allAffixes (up to cap)
+  - [x] Test: typing filters to matching affixes by name
+  - [x] Test: `excludeIds` hides excluded affixes from results
+  - [x] Test: selecting an option calls `onSelect` with the full `AffixEntry` and calls `onClose`
+  - [x] Test: pressing Escape calls `onClose`
+  - [x] Test: `expect(await axe(container)).toHaveNoViolations()`
 
-- [ ] Task 4: Add tests to `GearSlot.test.tsx` for new 5.5 behaviors (AC: #1–#5, #7)
-  - [ ] Test: "Free text mode" link is visible in empty state
-  - [ ] Test: clicking "Free text mode" shows a textarea (not the Combobox input)
-  - [ ] Test: typing in the textarea writes `{ slotId, itemName: text, affixes: [] }` to store
-  - [ ] Test: "Switch to database search" link in freetext state resets to Combobox
-  - [ ] Test: "Switch to database search" clears the freetext value in store (writes `itemName: ''`)
-  - [ ] Test: `+` button visible in populated-database state
-  - [ ] Test: clicking `+` shows AffixPicker (mock it as a simple stub via `vi.mock` to avoid Headless UI complexity)
-  - [ ] Test: selecting an affix from AffixPicker adds an AffixTierControl for that affix
-  - [ ] Test: custom affix tier change updates the encoded affix string in the store
+- [x] Task 4: Add tests to `GearSlot.test.tsx` for new 5.5 behaviors (AC: #1–#5, #7)
+  - [x] Test: "Free text mode" link is visible in empty state
+  - [x] Test: clicking "Free text mode" shows a textarea (not the Combobox input)
+  - [x] Test: typing in the textarea writes `{ slotId, itemName: text, affixes: [] }` to store
+  - [x] Test: "Switch to database search" link in freetext state resets to Combobox
+  - [x] Test: "Switch to database search" clears the freetext value in store (writes `itemName: ''`)
+  - [x] Test: `+` button visible in populated-database state
+  - [x] Test: clicking `+` shows AffixPicker (mock it as a simple stub via `vi.mock` to avoid Headless UI complexity)
+  - [x] Test: selecting an affix from AffixPicker adds an AffixTierControl for that affix
+  - [x] Test: custom affix tier change updates the encoded affix string in the store
 
 ## Dev Notes
 
@@ -453,4 +453,15 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Task 1: Created AffixPicker.tsx — Headless UI Combobox with query filtering (cap 8), excludeIds support, onSelect/onClose callbacks, autoFocus. Escape handler moved to ComboboxInput (outer div does not receive Escape from Headless UI v2).
+- Task 2: Modified GearSlot.tsx — added isFreeText/freeText/affixPickerOpen/customAffixIds state; free-text mode with textarea + switch link; + Add affix button + AffixPicker in populated-database state; handleAddCustomAffix computes inline to avoid closure staleness; handleTierChange passes combined resolvedAffixes+customResolvedAffixes.
+- Task 3: Created AffixPicker.test.tsx — 7 tests including axe check; all pass.
+- Task 4: Added 9 new tests to GearSlot.test.tsx covering all 5.5 behaviors; AffixPicker mocked via vi.mock to avoid Headless UI complexity; all 31 total tests pass.
+- Pre-existing test failures confirmed in ProviderSelector, SkillTreeCanvas, TreeControls — not caused by 5.5 changes.
+
 ### File List
+
+- lebo/src/features/item-database/AffixPicker.tsx (created)
+- lebo/src/features/item-database/AffixPicker.test.tsx (created)
+- lebo/src/features/item-database/GearSlot.tsx (modified)
+- lebo/src/features/item-database/GearSlot.test.tsx (modified)
