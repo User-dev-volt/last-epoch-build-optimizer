@@ -1,0 +1,164 @@
+# Story 6.4: Phase 2 Save Format and Settings Version Display
+
+Status: ready-for-dev
+
+## Story
+
+As a theory-crafter,
+I want all new builds I create and save in Phase 2 to use the v2 schema, and I want to see my current game data and item database versions in the settings panel,
+so that I know my data is current and my builds are saved in the latest format.
+
+## Acceptance Criteria
+
+**AC1 — New builds serialize with `schemaVersion: 2`:**
+Given a player creates a new build in Phase 2 or modifies an existing one,
+when `useBuildStore.saveBuild()` is called,
+then the build serializes with `schemaVersion: 2` and gear stored as `GearItemV2[]`; the Rust command writes the JSON to SQLite (FR52).
+
+**AC2 — v2 build passes through `migrateBuildState` unchanged:**
+Given a Phase 2 build (schemaVersion: 2) is loaded from SQLite,
+when `migrateBuildState` runs on it,
+then the build passes through unchanged (idempotency; FR54). *(This is already implemented in story 6-1 — verify it still holds, no new code needed.)*
+
+**AC3 — Settings panel shows game data and item database versions:**
+Given the player opens the settings panel,
+when the panel renders,
+then it shows:
+- "Game Data: {gameVersion} (last updated {generatedAt date})" as a read-only text label
+- "Item Database: {itemDataVersion}" as a read-only text label
+(FR55); both labels show "—" as a fallback when the manifest hasn't loaded yet.
+
+## Tasks / Subtasks
+
+- [ ] Task 1: Fix `createBuild` in `buildStore.ts` to initialize with `schemaVersion: 2` (AC1)
+  - [ ] 1.1: In `lebo/src/shared/stores/buildStore.ts`, in the `createBuild` action, change:
+    ```typescript
+    schemaVersion: 1,
+    ```
+    to:
+    ```typescript
+    schemaVersion: 2,
+    sliderPosition: 50,
+    fineTuneWeights: null,
+    ```
+  - [ ] 1.2: In `applyNodeChange`'s auto-create block (the fallback that creates a new build when `activeBuild` is null), apply the same change: `schemaVersion: 2`, add `sliderPosition: 50`, `fineTuneWeights: null`
+
+- [ ] Task 2: Update Settings panel to display version info (AC3)
+  - [ ] 2.1: In `lebo/src/features/settings/Settings.tsx`, import `useGameDataStore` from `../../shared/stores/gameDataStore`
+  - [ ] 2.2: In the component body, read:
+    ```typescript
+    const dataVersion = useGameDataStore((s) => s.dataVersion)
+    const dataUpdatedAt = useGameDataStore((s) => s.dataUpdatedAt)
+    const itemDataVersion = useGameDataStore((s) => s.gameData?.manifest.itemDataVersion ?? null)
+    ```
+  - [ ] 2.3: In the "Data Sources" section of the JSX, add two read-only labels below the existing icon source line:
+    - "Game Data: {dataVersion} (last updated {formatted date})" — format `dataUpdatedAt` as a short date string (e.g. `new Date(dataUpdatedAt).toLocaleDateString()`); show "—" when `dataVersion` is null
+    - "Item Database: {itemDataVersion}" — show "—" when `itemDataVersion` is null
+    - Use `data-testid="game-data-version"` and `data-testid="item-data-version"` on these elements
+
+- [ ] Task 3: Tests (AC1, AC3)
+  - [ ] 3.1: In `lebo/src/shared/stores/buildStore.test.ts`, add a test under `buildStore`:
+    - `createBuild initializes with schemaVersion 2`: set `selectedClassId` and `selectedMasteryId`, call `createBuild('VoidKnight')`, assert `activeBuild.schemaVersion === 2`, `activeBuild.sliderPosition === 50`, `activeBuild.fineTuneWeights === null`
+  - [ ] 3.2: In `lebo/src/features/build-manager/buildPersistence.test.ts`, add a test under `saveBuild`:
+    - `saves a v2 build with schemaVersion 2 in invoke args`: call `saveBuild` with a v2 build object (`schemaVersion: 2`), assert `mockInvoke` was called with `schemaVersion: 2` in the args
+  - [ ] 3.3: In `lebo/src/features/settings/Settings.test.tsx`, add tests:
+    - `shows game data version when store has data`: set `useGameDataStore` state with `dataVersion: '1.4.4'` and `dataUpdatedAt: '2026-04-22T00:00:00Z'`, render `<Settings />`, assert `data-testid="game-data-version"` contains "1.4.4"
+    - `shows item data version when manifest has itemDataVersion`: set `useGameDataStore` state with `gameData: { manifest: { ..., itemDataVersion: '1.0.0' }, classes: {} }`, render, assert `data-testid="item-data-version"` contains "1.0.0"
+    - `shows em-dash when versions not yet loaded`: render with default (null) store state, assert both version labels show "—"
+
+## Dev Notes
+
+### CRITICAL: `schemaVersion: 1` appears in two places in `buildStore.ts`
+
+Both must be changed to `schemaVersion: 2`. Missing either one means certain code paths still create v1 builds:
+
+1. **`createBuild` action** — the normal path when a user picks a mastery and gets a new build.
+2. **`applyNodeChange` auto-create block** — the fallback path at line ~134 that creates an implicit build when `activeBuild` is null but class/mastery are selected. This path is a safety net but still needs v2 schema.
+
+Since `BuildState` defines `sliderPosition?: number` and `fineTuneWeights?: FineTuneWeights | null` as optional, omitting them from the new build object is technically valid TypeScript. However, adding them explicitly (`sliderPosition: 50, fineTuneWeights: null`) makes the v2 defaults consistent with `migrateBuildState`'s own defaults and prevents the v2 passthrough from applying defaults on first load.
+
+### `saveBuild` needs no changes
+
+`buildPersistence.ts:saveBuild()` already passes `schemaVersion: build.schemaVersion` to the Rust command. Once `createBuild` starts producing v2 builds, `saveBuild` will automatically write `schemaVersion: 2` to SQLite — no changes needed in that file.
+
+### Settings panel: version data is already in the store
+
+`useGameDataStore.dataVersion` and `useGameDataStore.dataUpdatedAt` are populated by `loadAllClasses()` in `gameDataLoader.ts` (which calls `setDataVersion(manifest.gameVersion)` and `setDataUpdatedAt(manifest.generatedAt)`).
+
+`itemDataVersion` is NOT a separate store field — it lives on `gameData.manifest.itemDataVersion` (optional field added in story 6-3). Access it as:
+```typescript
+useGameDataStore((s) => s.gameData?.manifest.itemDataVersion ?? null)
+```
+
+Do NOT add a new field to `gameDataStore.ts` for `itemDataVersion` — it's already accessible via `gameData.manifest`.
+
+### Date formatting in Settings
+
+`dataUpdatedAt` is an ISO 8601 string (e.g. `"2026-04-22T00:00:00Z"`). Use `new Date(dataUpdatedAt).toLocaleDateString()` for a short locale-appropriate display. Guard against null:
+```tsx
+{dataVersion
+  ? `${dataVersion} (last updated ${new Date(dataUpdatedAt ?? '').toLocaleDateString()})`
+  : '—'}
+```
+
+If `dataUpdatedAt` is null, `new Date('')` is an Invalid Date — use a fallback: `dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleDateString() : ''`.
+
+### `BuildState` TypeScript type — `schemaVersion: 1 | 2`
+
+The type already allows both values. Changing `createBuild` to emit `2` requires no type changes.
+
+### Test setup for `Settings.test.tsx` with `useGameDataStore`
+
+Follow the same pattern as `useAppStore` in the existing test: capture initial state in a `const initialGameDataState = useGameDataStore.getState()` outside the describe, then `useGameDataStore.setState(initialGameDataState, true)` in `beforeEach`. Setting specific values is then `useGameDataStore.setState({ dataVersion: '1.4.4', ... })`.
+
+The existing `vi.mock('@tauri-apps/api/core', ...)` at the top of `Settings.test.tsx` already covers the `ProviderSelector` sub-component's IPC calls. No additional mocking needed for `useGameDataStore` — it's a plain Zustand store, not an IPC call.
+
+### No Rust changes
+
+This story makes no Rust changes. The Rust `save_build` command already stores whatever JSON it receives; `schemaVersion` is just a field inside the `data` TEXT column. No `lib.rs` changes needed.
+
+### Previous Story Learnings (from 6-3)
+
+- **Optional fields in manifest**: `itemDataVersion` is `?: string` in `GameDataManifest`. It may be `undefined` when the manifest is an older cached version that predates story 6-3. Always use `?? null` or `?? '—'` when reading it.
+- **No barrel files**: Do NOT create `index.ts` in any feature folder. Import directly.
+- **TypeScript strict mode**: Every unused import is a compile error. Only import what's used.
+- **Test co-location**: Tests sit next to their source file. Do not create new test directories.
+
+### Project Structure Notes
+
+Files to modify (all existing — no new files):
+
+| File | Change |
+|------|--------|
+| `lebo/src/shared/stores/buildStore.ts` | Change `schemaVersion: 1` to `schemaVersion: 2` + add `sliderPosition`/`fineTuneWeights` defaults in two places |
+| `lebo/src/features/settings/Settings.tsx` | Add `useGameDataStore` reads; add two version labels to "Data Sources" section |
+| `lebo/src/shared/stores/buildStore.test.ts` | Add `createBuild initializes with schemaVersion 2` test |
+| `lebo/src/features/build-manager/buildPersistence.test.ts` | Add `saveBuild saves v2 build with schemaVersion 2` test |
+| `lebo/src/features/settings/Settings.test.tsx` | Add three version display tests |
+
+No new files. No Rust changes. No `lib.rs` changes.
+
+### References
+
+- [Source: _bmad-output/planning-artifacts/epics.md#Story 6.4] — ACs, user story, FR52, FR54, FR55
+- [Source: lebo/src/shared/stores/buildStore.ts:70-95] — `createBuild` action with `schemaVersion: 1` to fix
+- [Source: lebo/src/shared/stores/buildStore.ts:130-152] — `applyNodeChange` auto-create block with `schemaVersion: 1` to fix
+- [Source: lebo/src/features/build-manager/buildPersistence.ts:122-158] — `saveBuild` (already correct — no changes needed)
+- [Source: lebo/src/features/build-manager/buildPersistence.ts:30-120] — `migrateBuildState` (idempotency already implemented)
+- [Source: lebo/src/features/settings/Settings.tsx:1-99] — Settings component to extend with version labels
+- [Source: lebo/src/shared/stores/gameDataStore.ts:1-66] — `dataVersion`, `dataUpdatedAt`, `gameData` fields already present
+- [Source: lebo/src/shared/types/gameData.ts:28-37] — `GameDataManifest` with `itemDataVersion?: string` already present
+- [Source: lebo/src/features/game-data/gameDataLoader.ts:49-56] — `loadAllClasses` sets `dataVersion` and `dataUpdatedAt`
+- [Source: _bmad-output/project-context.md#Critical Implementation Rules] — no barrel files, strict TypeScript, four stores only
+
+## Dev Agent Record
+
+### Agent Model Used
+
+claude-sonnet-4-6
+
+### Debug Log References
+
+### Completion Notes List
+
+### File List
