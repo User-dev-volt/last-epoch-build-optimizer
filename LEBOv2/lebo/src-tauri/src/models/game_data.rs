@@ -70,6 +70,10 @@ pub struct GameDataManifest {
     pub classes: Vec<String>,
     #[serde(default)]
     pub item_data_version: Option<String>,
+    #[serde(default)]
+    pub icon_cache_version: Option<String>,
+    #[serde(default)]
+    pub icon_source: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

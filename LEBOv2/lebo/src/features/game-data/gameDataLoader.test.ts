@@ -176,6 +176,36 @@ describe('initGameData', () => {
 
     expect(useGameDataStore.getState().dataUpdatedAt).toBe('2026-04-22T00:00:00Z')
   })
+
+  it('awaits both staleness checks before resolving', async () => {
+    // With Promise.all, initGameData must not resolve until both async checks complete.
+    // Each check introduces a real async tick; if fire-and-forget were used, the flags
+    // would still be false when initGameData resolves.
+    let checkDataVersionDone = false
+    let checkItemFreshnessDone = false
+
+    mockInvoke.mockImplementation(async (cmd) => {
+      if (cmd === 'load_game_data') return mockRawClasses
+      if (cmd === 'get_manifest') return mockManifest
+      if (cmd === 'check_data_version') {
+        await Promise.resolve() // yield to event loop
+        checkDataVersionDone = true
+        return { isStale: false, localVersion: '1.4.4', remoteVersion: '1.4.4', versionsBehind: 0 } as DataVersionCheckResult
+      }
+      if (cmd === 'check_item_data_freshness') {
+        await Promise.resolve() // yield to event loop
+        checkItemFreshnessDone = true
+        return { isStale: false, localVersion: '1.0.0', remoteVersion: '1.0.0', versionsBehind: 0 } as DataVersionCheckResult
+      }
+      return undefined
+    })
+
+    await initGameData()
+
+    expect(checkDataVersionDone).toBe(true)
+    expect(checkItemFreshnessDone).toBe(true)
+    expect(useGameDataStore.getState().isLoading).toBe(false)
+  })
 })
 
 describe('checkDataVersion', () => {

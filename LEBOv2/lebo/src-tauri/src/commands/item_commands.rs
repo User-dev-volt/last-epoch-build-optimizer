@@ -64,13 +64,7 @@ pub async fn update_item_data(app_handle: tauri::AppHandle) -> Result<(), String
             .map_err(|e| format!("NETWORK_ERROR: read item file {} body: {}", filename, e))?;
 
         let dest_path = item_data_dir.join(filename);
-        let temp_path = dest_path.with_extension("tmp");
-        tokio::fs::write(&temp_path, &content)
-            .await
-            .map_err(|e| format!("ITEM_DATA_ERROR: write temp {}: {}", filename, e))?;
-        tokio::fs::rename(&temp_path, &dest_path)
-            .await
-            .map_err(|e| format!("ITEM_DATA_ERROR: rename temp {}: {}", filename, e))?;
+        game_data_service::atomic_write_file(&dest_path, &content).await?;
     }
 
     // Surgically update only itemDataVersion in local manifest — do not overwrite game data fields
@@ -78,14 +72,7 @@ pub async fn update_item_data(app_handle: tauri::AppHandle) -> Result<(), String
     local.item_data_version = Some(remote_version);
     let manifest_json = serde_json::to_string_pretty(&local)
         .map_err(|e| format!("ITEM_DATA_ERROR: serialize manifest: {}", e))?;
-    let manifest_path = game_data_dir.join("manifest.json");
-    let temp_manifest = manifest_path.with_extension("tmp");
-    tokio::fs::write(&temp_manifest, &manifest_json)
-        .await
-        .map_err(|e| format!("ITEM_DATA_ERROR: write temp manifest: {}", e))?;
-    tokio::fs::rename(&temp_manifest, &manifest_path)
-        .await
-        .map_err(|e| format!("ITEM_DATA_ERROR: rename temp manifest: {}", e))?;
+    game_data_service::atomic_write_file(&game_data_dir.join("manifest.json"), manifest_json.as_bytes()).await?;
 
     Ok(())
 }

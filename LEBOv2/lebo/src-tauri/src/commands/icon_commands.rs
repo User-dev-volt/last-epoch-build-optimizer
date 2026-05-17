@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::{Emitter, Manager};
+use crate::services::game_data_service;
 
 /// Tauri managed state for the parsed skill-icon-map, cached after first load.
 pub struct IconMapCache(pub Mutex<Option<HashMap<String, String>>>);
@@ -86,12 +87,25 @@ fn resolve_icon_path(
     }
 }
 
+/// Best-effort: records iconSource and iconCacheVersion in manifest.json.
+/// Silently skips if the manifest doesn't exist yet (startup race condition).
+async fn update_manifest_icon_source(app_handle: &tauri::AppHandle, icon_source: &str) {
+    let Ok(data_dir) = game_data_service::ensure_game_data_dir(app_handle) else { return };
+    let Ok(mut manifest) = game_data_service::load_manifest(&data_dir) else { return };
+    manifest.icon_source = Some(icon_source.to_string());
+    manifest.icon_cache_version = Some("1.0.0".to_string());
+    if let Ok(json) = serde_json::to_string_pretty(&manifest) {
+        let _ = game_data_service::atomic_write_file(&data_dir.join("manifest.json"), json.as_bytes()).await;
+    }
+}
+
 #[tauri::command]
 pub async fn initialize_icon_pipeline(app_handle: tauri::AppHandle) -> Result<(), String> {
     let icon_dir = ensure_icon_cache_dir(&app_handle)?;
 
     // Idempotent — both the skip path and the copy path emit { "iconSource": "game-files" }.
     if icon_dir.join("skill-icon-map.json").exists() {
+        update_manifest_icon_source(&app_handle, "game-files").await;
         app_handle
             .emit(
                 "icon-pipeline:initialized",
@@ -109,6 +123,7 @@ pub async fn initialize_icon_pipeline(app_handle: tauri::AppHandle) -> Result<()
 
     copy_icon_resources(&src_icons, &icon_dir)?;
 
+    update_manifest_icon_source(&app_handle, "game-files").await;
     app_handle
         .emit(
             "icon-pipeline:initialized",

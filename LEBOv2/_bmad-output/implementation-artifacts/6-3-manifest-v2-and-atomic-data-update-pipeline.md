@@ -1,6 +1,6 @@
 # Story 6.3: Manifest v2 and Atomic Data Update Pipeline
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -34,56 +34,56 @@ then the manifest's `itemDataVersion` is updated to the new version, `useGameDat
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `iconCacheVersion` and `iconSource` fields to Rust `GameDataManifest` (AC1)
-  - [ ] 1.1: In `lebo/src-tauri/src/models/game_data.rs`, add to `GameDataManifest`:
+- [x] Task 1: Add `iconCacheVersion` and `iconSource` fields to Rust `GameDataManifest` (AC1)
+  - [x] 1.1: In `lebo/src-tauri/src/models/game_data.rs`, add to `GameDataManifest`:
     ```rust
     #[serde(default)]
     pub icon_cache_version: Option<String>,
     #[serde(default)]
     pub icon_source: Option<String>,
     ```
-  - [ ] 1.2: Update bundled manifest at `lebo/src-tauri/resources/game-data/manifest.json` to include `"iconCacheVersion": "1.0.0"` and `"iconSource": "placeholder"` (default before icon pipeline runs)
+  - [x] 1.2: Update bundled manifest at `lebo/src-tauri/resources/game-data/manifest.json` to include `"iconCacheVersion": "1.0.0"` and `"iconSource": "placeholder"` (default before icon pipeline runs)
 
-- [ ] Task 2: Extract a shared atomic write helper into `game_data_service.rs` (AC2, AC3)
-  - [ ] 2.1: Add `pub async fn atomic_write_file(path: &Path, data: &[u8]) -> Result<(), String>` to `lebo/src-tauri/src/services/game_data_service.rs`:
+- [x] Task 2: Extract a shared atomic write helper into `game_data_service.rs` (AC2, AC3)
+  - [x] 2.1: Add `pub async fn atomic_write_file(path: &Path, data: &[u8]) -> Result<(), String>` to `lebo/src-tauri/src/services/game_data_service.rs`:
     - Write to `path.with_extension("tmp")` via `tokio::fs::write`
     - On write failure: best-effort remove the `.tmp` file, return error
     - On rename failure: best-effort remove the `.tmp` file, return error
     - On success: return `Ok(())`
-  - [ ] 2.2: Error message prefix: `"STORAGE_ERROR: ..."` (consistent with existing patterns)
+  - [x] 2.2: Error message prefix: `"STORAGE_ERROR: ..."` (consistent with existing patterns)
 
-- [ ] Task 3: Fix `download_class_files` to use atomic writes (AC2, AC3)
-  - [ ] 3.1: In `game_data_service.rs:download_class_files`, replace `std::fs::write(&dest, &text)` with `atomic_write_file(&dest, text.as_bytes()).await`
-  - [ ] 3.2: This is an `async fn` — use `.await` (already done in the helper)
+- [x] Task 3: Fix `download_class_files` to use atomic writes (AC2, AC3)
+  - [x] 3.1: In `game_data_service.rs:download_class_files`, replace `std::fs::write(&dest, &text)` with `atomic_write_file(&dest, text.as_bytes()).await`
+  - [x] 3.2: This is an `async fn` — use `.await` (already done in the helper)
 
-- [ ] Task 4: Fix `download_game_data_update` manifest write to use atomic writes (AC2, AC3)
-  - [ ] 4.1: In `lebo/src-tauri/src/commands/game_data_commands.rs:download_game_data_update`, replace the final `std::fs::write(data_dir.join("manifest.json"), manifest_json)` with `game_data_service::atomic_write_file(&data_dir.join("manifest.json"), manifest_json.as_bytes()).await`
+- [x] Task 4: Fix `download_game_data_update` manifest write to use atomic writes (AC2, AC3)
+  - [x] 4.1: In `lebo/src-tauri/src/commands/game_data_commands.rs:download_game_data_update`, replace the final `std::fs::write(data_dir.join("manifest.json"), manifest_json)` with `game_data_service::atomic_write_file(&data_dir.join("manifest.json"), manifest_json.as_bytes()).await`
 
-- [ ] Task 5: Update `update_item_data` to use the shared helper (AC2, AC3)
-  - [ ] 5.1: In `lebo/src-tauri/src/commands/item_commands.rs`, replace the per-item `tokio::fs::write` + `tokio::fs::rename` + manual cleanup calls with `game_data_service::atomic_write_file(&dest_path, &content).await`
-  - [ ] 5.2: Replace the manifest `tokio::fs::write` + `tokio::fs::rename` calls with `game_data_service::atomic_write_file(&manifest_path, manifest_json.as_bytes()).await`
-  - [ ] 5.3: Remove the now-redundant manual temp variable declarations for items and manifest in `update_item_data`
+- [x] Task 5: Update `update_item_data` to use the shared helper (AC2, AC3)
+  - [x] 5.1: In `lebo/src-tauri/src/commands/item_commands.rs`, replace the per-item `tokio::fs::write` + `tokio::fs::rename` + manual cleanup calls with `game_data_service::atomic_write_file(&dest_path, &content).await`
+  - [x] 5.2: Replace the manifest `tokio::fs::write` + `tokio::fs::rename` calls with `game_data_service::atomic_write_file(&manifest_path, manifest_json.as_bytes()).await`
+  - [x] 5.3: Remove the now-redundant manual temp variable declarations for items and manifest in `update_item_data`
 
-- [ ] Task 6: Update `initialize_icon_pipeline` to record `iconSource` in manifest (AC1)
-  - [ ] 6.1: In `lebo/src-tauri/src/commands/icon_commands.rs`, at the point where `iconSource` is determined (before emitting the event), call a new private helper `update_manifest_icon_source(&app_handle, icon_source_str)`
-  - [ ] 6.2: The helper:
+- [x] Task 6: Update `initialize_icon_pipeline` to record `iconSource` in manifest (AC1)
+  - [x] 6.1: In `lebo/src-tauri/src/commands/icon_commands.rs`, at the point where `iconSource` is determined (before emitting the event), call a new private helper `update_manifest_icon_source(&app_handle, icon_source_str)`
+  - [x] 6.2: The helper:
     - Calls `game_data_service::ensure_game_data_dir(&app_handle)` to get the manifest dir
     - Calls `game_data_service::load_manifest(&data_dir)` — **wrap in `if let Ok(mut manifest)` to silently skip if manifest doesn't exist yet** (startup race condition: `initialize_icon_pipeline` may fire before `initialize_game_data` creates the manifest)
     - Sets `manifest.icon_source = Some(icon_source_str.to_string())` and `manifest.icon_cache_version = Some("1.0.0".to_string())`
     - Serializes and writes via `game_data_service::atomic_write_file` — any error is silently ignored (best-effort; the manifest will be correct on next launch)
-  - [ ] 6.3: Import `crate::services::game_data_service` at the top of `icon_commands.rs` (it's not currently imported)
+  - [x] 6.3: Import `crate::services::game_data_service` at the top of `icon_commands.rs` (it's not currently imported)
 
-- [ ] Task 7: Add optional fields to TypeScript `GameDataManifest` type (AC1)
-  - [ ] 7.1: In `lebo/src/shared/types/gameData.ts`, add to the `GameDataManifest` interface:
+- [x] Task 7: Add optional fields to TypeScript `GameDataManifest` type (AC1)
+  - [x] 7.1: In `lebo/src/shared/types/gameData.ts`, add to the `GameDataManifest` interface:
     ```typescript
     itemDataVersion?: string
     iconCacheVersion?: string
     iconSource?: string
     ```
-  - [ ] 7.2: These are optional (`?`) because older cached manifests won't have them; existing code that reads the manifest won't break
+  - [x] 7.2: These are optional (`?`) because older cached manifests won't have them; existing code that reads the manifest won't break
 
-- [ ] Task 8: Change `initGameData` staleness checks from fire-and-forget to `await Promise.all` (final AC)
-  - [ ] 8.1: In `lebo/src/features/game-data/gameDataLoader.ts:initGameData`, replace:
+- [x] Task 8: Change `initGameData` staleness checks from fire-and-forget to `await Promise.all` (final AC)
+  - [x] 8.1: In `lebo/src/features/game-data/gameDataLoader.ts:initGameData`, replace:
     ```typescript
     checkDataVersion().catch(() => {})
     checkItemDataFreshness().catch(() => {})
@@ -95,15 +95,14 @@ then the manifest's `itemDataVersion` is updated to the new version, `useGameDat
       checkItemDataFreshness().catch(() => {}),
     ])
     ```
-  - [ ] 8.2: Both still swallow network errors silently (the `.catch(() => {})` is preserved)
+  - [x] 8.2: Both still swallow network errors silently (the `.catch(() => {})` is preserved)
 
-- [ ] Task 9: Tests (AC1–AC4)
-  - [ ] 9.1: **Rust: Add unit tests for `atomic_write_file` in `game_data_service.rs`** (follow the existing temp-dir pattern from `icon_commands.rs` tests):
-    - `atomic_write_success_replaces_file`: write to a temp dir path, verify final file exists with correct content and no `.tmp` sibling
-    - `atomic_write_rename_failure_leaves_original_intact`: use a read-only or non-existent parent dir scenario to force rename failure and confirm no corruption (this is hard to force reliably in unit tests — a simpler test: verify the function returns `Err` when `path` points to a non-writable location)
-  - [ ] 9.2: **TypeScript: Update `gameDataLoader.test.ts`** — add a test that `initGameData` awaits both staleness checks before resolving:
-    - Mock `check_data_version` and `check_item_data_freshness` with controlled Promises
-    - Verify that `initGameData` resolves only after both mocked Promises resolve
+- [x] Task 9: Tests (AC1–AC4)
+  - [x] 9.1: **Rust: Add unit tests for `atomic_write_file` in `game_data_service.rs`**:
+    - `atomic_write_success_creates_final_file`: verifies final file exists with correct content and no `.tmp` sibling
+    - `atomic_write_fails_when_parent_dir_missing`: verifies `Err` with `STORAGE_ERROR:` prefix when parent dir is missing
+  - [x] 9.2: **TypeScript: Updated `gameDataLoader.test.ts`** — added test `awaits both staleness checks before resolving`:
+    - Mocks both checks with async yields; verifies both completed when `initGameData` resolves
 
 ## Dev Notes
 
@@ -279,4 +278,21 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Extracted `atomic_write_file` as a single shared helper in `game_data_service.rs`; all three write sites (`download_class_files`, `download_game_data_update`, `update_item_data`) now use it — eliminates duplicated temp-file-rename logic and adds consistent cleanup on failure.
+- `update_item_data` manual temp variable declarations removed; 3 item file writes + 1 manifest write now each a single `atomic_write_file` call.
+- Added `update_manifest_icon_source` async helper in `icon_commands.rs` that best-effort updates `iconSource` and `iconCacheVersion` in the manifest; silently skips if manifest doesn't exist yet (startup race condition).
+- `initGameData` changed from fire-and-forget staleness checks to `await Promise.all([...])` so both checks complete before `setIsLoading(false)`.
+- Pre-existing test failures confirmed unrelated: `openrouter_service::models_list_has_four_entries` (count drift), `ProviderSelector` data-testid issues, `SkillTreeCanvas`/`TreeControls` canvas getContext() in jsdom.
+- AC4 verified still working: `update_item_data` sets `local.item_data_version` before writing manifest via `atomic_write_file`.
+
 ### File List
+
+- lebo/src-tauri/src/models/game_data.rs
+- lebo/src-tauri/src/services/game_data_service.rs
+- lebo/src-tauri/src/commands/game_data_commands.rs
+- lebo/src-tauri/src/commands/icon_commands.rs
+- lebo/src-tauri/src/commands/item_commands.rs
+- lebo/src/shared/types/gameData.ts
+- lebo/src/features/game-data/gameDataLoader.ts
+- lebo/src/features/game-data/gameDataLoader.test.ts
+- lebo/src-tauri/resources/game-data/manifest.json

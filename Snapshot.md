@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Address findings 1–4 in story 6-2: fix completion notes arithmetic, add non-null `fineTuneWeights` preservation test, add regression tests for `saveBuild`/`renameBuild`/`deleteBuild` with `goalPreset` payloads, add unrecognized preset string test case.
+Dev agent picks up story 6-3 from ready-for-dev status; begins with extracting `atomic_write_file` helper into `game_data_service.rs` (enables all downstream fixes)
 
 ---
 

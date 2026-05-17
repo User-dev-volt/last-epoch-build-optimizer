@@ -31,6 +31,9 @@ export interface GameDataManifest {
   dataVersion: string
   generatedAt: string
   classes: string[]
+  itemDataVersion?: string
+  iconCacheVersion?: string
+  iconSource?: string
 }
 
 export interface GameData {

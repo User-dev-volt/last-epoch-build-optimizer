@@ -11,9 +11,10 @@ export async function initGameData(): Promise<void> {
   try {
     await invokeCommand('initialize_game_data')
     await loadAllClasses()
-    // Non-blocking version checks — silently swallow network errors
-    checkDataVersion().catch(() => {})
-    checkItemDataFreshness().catch(() => {})
+    await Promise.all([
+      checkDataVersion().catch(() => {}),
+      checkItemDataFreshness().catch(() => {}),
+    ])
   } catch (error) {
     setIsLoading(false)
     throw normalizeAppError(error)

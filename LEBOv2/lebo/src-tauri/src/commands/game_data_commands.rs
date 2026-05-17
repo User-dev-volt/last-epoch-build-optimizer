@@ -72,7 +72,6 @@ pub async fn download_game_data_update(
     // Write manifest last — only once class files are successfully written
     let manifest_json = serde_json::to_string_pretty(&remote)
         .map_err(|e| format!("STORAGE_ERROR: serialize manifest: {}", e))?;
-    std::fs::write(data_dir.join("manifest.json"), manifest_json)
-        .map_err(|e| format!("STORAGE_ERROR: write manifest: {}", e))?;
+    game_data_service::atomic_write_file(&data_dir.join("manifest.json"), manifest_json.as_bytes()).await?;
     Ok(())
 }

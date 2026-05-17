@@ -114,6 +114,19 @@ pub async fn fetch_remote_manifest(base_url: &str) -> Result<GameDataManifest, S
         .map_err(|e| format!("STORAGE_ERROR: parse remote manifest: {}", e))
 }
 
+pub async fn atomic_write_file(path: &Path, data: &[u8]) -> Result<(), String> {
+    let temp = path.with_extension("tmp");
+    if let Err(e) = tokio::fs::write(&temp, data).await {
+        let _ = std::fs::remove_file(&temp);
+        return Err(format!("STORAGE_ERROR: write temp {}: {}", path.display(), e));
+    }
+    if let Err(e) = tokio::fs::rename(&temp, path).await {
+        let _ = std::fs::remove_file(&temp);
+        return Err(format!("STORAGE_ERROR: rename temp {}: {}", path.display(), e));
+    }
+    Ok(())
+}
+
 pub async fn download_class_files(
     base_url: &str,
     data_dir: &Path,
@@ -142,8 +155,49 @@ pub async fn download_class_files(
         serde_json::from_str::<RawClassData>(&text)
             .map_err(|e| format!("STORAGE_ERROR: validate class {}: {}", class_id, e))?;
         let dest = classes_dir.join(format!("{}.json", class_id));
-        std::fs::write(&dest, &text)
-            .map_err(|e| format!("STORAGE_ERROR: write class {}: {}", class_id, e))?;
+        atomic_write_file(&dest, text.as_bytes()).await?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    fn temp_dir(label: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "lebo_gds_{}_{}_{}", std::process::id(), label,
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .subsec_nanos()
+        ));
+        fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[tokio::test]
+    async fn atomic_write_success_creates_final_file() {
+        let dir = temp_dir("atomic_success");
+        let path = dir.join("test.json");
+        atomic_write_file(&path, b"{\"ok\":true}").await.unwrap();
+        assert!(path.exists(), "final file should exist after atomic write");
+        assert!(!path.with_extension("tmp").exists(), ".tmp should be gone after rename");
+        let content = fs::read_to_string(&path).unwrap();
+        assert_eq!(content, "{\"ok\":true}");
+        fs::remove_dir_all(&dir).ok();
+    }
+
+    #[tokio::test]
+    async fn atomic_write_fails_when_parent_dir_missing() {
+        let dir = temp_dir("atomic_no_parent");
+        // Use a path whose parent does not exist — write will fail
+        let path = dir.join("nonexistent").join("test.json");
+        let result = atomic_write_file(&path, b"{}").await;
+        assert!(result.is_err(), "should return Err when parent dir is missing");
+        let msg = result.unwrap_err();
+        assert!(msg.starts_with("STORAGE_ERROR:"), "error should use STORAGE_ERROR prefix; got: {}", msg);
+        fs::remove_dir_all(&dir).ok();
+    }
 }
