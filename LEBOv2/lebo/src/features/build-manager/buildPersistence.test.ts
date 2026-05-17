@@ -256,6 +256,7 @@ describe('migrateBuildState — goalPreset migration', () => {
     const result = migrateBuildState({ ...base, goalPreset: 'Maximize Damage' })
     expect(result.sliderPosition).toBe(100)
     expect(result.fineTuneWeights).toBeNull()
+    expect(result).not.toHaveProperty('goalPreset')
   })
 
   it('maps "Maximize Survivability" to sliderPosition 0 (AC2)', () => {
@@ -286,6 +287,31 @@ describe('migrateBuildState — goalPreset migration', () => {
     const result = migrateBuildState({ ...base })
     expect(result.sliderPosition).toBe(50)
     expect(result.fineTuneWeights).toBeNull()
+  })
+
+  it('v2 passthrough preserves non-null fineTuneWeights (AC6)', () => {
+    const v2 = {
+      schemaVersion: 2 as const,
+      id: 'v2',
+      name: 'V2',
+      classId: '',
+      masteryId: '',
+      characterLevel: 1,
+      budgetEnforced: false,
+      nodeAllocations: {},
+      skillNodeAllocations: {},
+      activeSkillLevels: {},
+      weaverAllocations: {},
+      contextData: { gear: [], skills: [], idols: [] },
+      isPersisted: true,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+      sliderPosition: 50,
+      fineTuneWeights: { damage: 25, survivability: 0, speed: 75 },
+    }
+    const result = migrateBuildState(v2)
+    expect(result.sliderPosition).toBe(50)
+    expect(result.fineTuneWeights).toEqual({ damage: 25, survivability: 0, speed: 75 })
   })
 
   it('v2 passthrough preserves existing sliderPosition and fineTuneWeights (AC6)', () => {
@@ -463,6 +489,32 @@ describe('loadBuild', () => {
     mockInvoke.mockResolvedValue(JSON.stringify({ ...mockBuild, isPersisted: false }))
     await loadBuild('build-1')
     expect(useBuildStore.getState().activeBuild?.isPersisted).toBe(true)
+  })
+
+  it('preserves sliderPosition and fineTuneWeights on a v2 build loaded from disk', async () => {
+    const v2Payload = {
+      schemaVersion: 2,
+      id: 'build-v2',
+      name: 'V2 Build',
+      classId: 'sentinel',
+      masteryId: 'void_knight',
+      characterLevel: 50,
+      budgetEnforced: false,
+      nodeAllocations: {},
+      skillNodeAllocations: {},
+      activeSkillLevels: {},
+      weaverAllocations: {},
+      contextData: { gear: [], skills: [], idols: [] },
+      isPersisted: true,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+      sliderPosition: 75,
+      fineTuneWeights: { damage: 50, survivability: 25, speed: 25 },
+    }
+    mockInvoke.mockResolvedValue(JSON.stringify(v2Payload))
+    await loadBuild('build-v2')
+    expect(useBuildStore.getState().activeBuild?.sliderPosition).toBe(75)
+    expect(useBuildStore.getState().activeBuild?.fineTuneWeights).toEqual({ damage: 50, survivability: 25, speed: 25 })
   })
 })
 

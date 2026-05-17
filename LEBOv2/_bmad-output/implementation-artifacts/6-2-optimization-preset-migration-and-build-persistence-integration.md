@@ -1,6 +1,6 @@
 # Story 6.2: Optimization Preset Migration and Build Persistence Integration
 
-Status: review
+Status: done
 
 ## Story
 
@@ -259,12 +259,12 @@ claude-sonnet-4-6
 
 ### Review Findings
 
-- [ ] [Review][Patch] `sliderPosition` not clamped and accepts `NaN` on v2 passthrough — `typeof obj.sliderPosition === 'number'` accepts `NaN` and out-of-range values; add `isNaN` guard and clamp to [0, 100] [lebo/src/features/build-manager/buildPersistence.ts:82]
-- [ ] [Review][Patch] `isFineTuneWeights` accepts `NaN` weight values — `typeof NaN === 'number'` is true; guard must reject `NaN` on all three fields [lebo/src/features/build-manager/buildPersistence.ts:20-27]
-- [ ] [Review][Patch] `GearItem` TODO comment references story number — `// TODO: remove after story 6-4 ships` violates CLAUDE.md (no task refs in code); remove the comment [lebo/src/shared/types/build.ts:3]
-- [ ] [Review][Patch] Missing v2 round-trip test: `saveBuild` followed by `loadBuild` with `sliderPosition`/`fineTuneWeights` populated — `mockBuild` fixture is v1 with no slider fields so `saveBuild` tests never exercise the new fields [lebo/src/features/build-manager/buildPersistence.test.ts]
-- [ ] [Review][Patch] AC1 missing assertion: no test checks that `goalPreset` is absent from the returned `BuildState` — AC1 spec says "goalPreset does not appear on the returned BuildState"; add `expect(result).not.toHaveProperty('goalPreset')` to the AC1 test [lebo/src/features/build-manager/buildPersistence.test.ts]
-- [ ] [Review][Patch] AC6 test cannot distinguish preserved from defaulted `fineTuneWeights` — test passes `fineTuneWeights: null` which is also the default; add a case with a non-null `FineTuneWeights` object to prove actual preservation [lebo/src/features/build-manager/buildPersistence.test.ts]
+- [x] [Review][Patch] `sliderPosition` not clamped and accepts `NaN` on v2 passthrough — `typeof obj.sliderPosition === 'number'` accepts `NaN` and out-of-range values; add `isNaN` guard and clamp to [0, 100] [lebo/src/features/build-manager/buildPersistence.ts:82]
+- [x] [Review][Patch] `isFineTuneWeights` accepts `NaN` weight values — `typeof NaN === 'number'` is true; guard must reject `NaN` on all three fields [lebo/src/features/build-manager/buildPersistence.ts:20-27]
+- [x] [Review][Patch] `GearItem` TODO comment references story number — `// TODO: remove after story 6-4 ships` violates CLAUDE.md (no task refs in code); remove the comment [lebo/src/shared/types/build.ts:3]
+- [x] [Review][Patch] Missing v2 round-trip test: `saveBuild` followed by `loadBuild` with `sliderPosition`/`fineTuneWeights` populated — `mockBuild` fixture is v1 with no slider fields so `saveBuild` tests never exercise the new fields [lebo/src/features/build-manager/buildPersistence.test.ts]
+- [x] [Review][Patch] AC1 missing assertion: no test checks that `goalPreset` is absent from the returned `BuildState` — AC1 spec says "goalPreset does not appear on the returned BuildState"; add `expect(result).not.toHaveProperty('goalPreset')` to the AC1 test [lebo/src/features/build-manager/buildPersistence.test.ts]
+- [x] [Review][Patch] AC6 test cannot distinguish preserved from defaulted `fineTuneWeights` — test passes `fineTuneWeights: null` which is also the default; add a case with a non-null `FineTuneWeights` object to prove actual preservation [lebo/src/features/build-manager/buildPersistence.test.ts]
 - [x] [Review][Defer] Schema version guard runs after `sharedFields` construction — `crypto.randomUUID()` may fire before the throw; no behavioral impact, just ordering noise [lebo/src/features/build-manager/buildPersistence.ts:68] — deferred, pre-existing
 - [x] [Review][Defer] String `schemaVersion` (e.g., `"2"`) bypasses the v2 branch and falls to v1 migration — strict equality `=== 2` rejects strings; theoretical with normal JSON serialization [lebo/src/features/build-manager/buildPersistence.ts:68-73] — deferred, pre-existing
 - [x] [Review][Defer] v2 passthrough gear arrays cast without structural validation — `ctx!.gear as GearItemV2[]` trusts array contents blindly; also present in 6-1 defer list [lebo/src/features/build-manager/buildPersistence.ts:78] — deferred, pre-existing

@@ -18,11 +18,12 @@ function migrateGoalPreset(
 }
 
 function isFineTuneWeights(v: unknown): v is FineTuneWeights {
+  if (typeof v !== 'object' || v === null) return false
+  const w = v as Record<string, unknown>
   return (
-    typeof v === 'object' && v !== null &&
-    typeof (v as Record<string, unknown>).damage === 'number' &&
-    typeof (v as Record<string, unknown>).survivability === 'number' &&
-    typeof (v as Record<string, unknown>).speed === 'number'
+    typeof w.damage === 'number' && !isNaN(w.damage) &&
+    typeof w.survivability === 'number' && !isNaN(w.survivability) &&
+    typeof w.speed === 'number' && !isNaN(w.speed)
   )
 }
 
@@ -79,7 +80,7 @@ export function migrateBuildState(raw: unknown): BuildState {
         skills: Array.isArray(ctx?.skills) ? ctx!.skills as BuildState['contextData']['skills'] : [],
         idols: Array.isArray(ctx?.idols) ? ctx!.idols as BuildState['contextData']['idols'] : [],
       },
-      sliderPosition: typeof obj.sliderPosition === 'number' ? obj.sliderPosition : 50,
+      sliderPosition: typeof obj.sliderPosition === 'number' && !isNaN(obj.sliderPosition) ? Math.max(0, Math.min(100, obj.sliderPosition)) : 50,
       fineTuneWeights: isFineTuneWeights(obj.fineTuneWeights) ? obj.fineTuneWeights : null,
     }
   }
