@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-06
-last_updated: 2026-05-17 (story 6-2 code review complete; done)
+last_updated: 2026-05-17 (story 6-3 created; ready-for-dev)
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -87,7 +87,7 @@ development_status:
   epic-6: in-progress
   6-1-buildstate-v2-typescript-types-and-core-migration-function: done  # code review complete 2026-05-17; 3 patches applied, 1 deferred to 7-5
   6-2-optimization-preset-migration-and-build-persistence-integration: done  # code review complete 2026-05-17; 6 patches applied, 6 deferred
-  6-3-manifest-v2-and-atomic-data-update-pipeline: backlog
+  6-3-manifest-v2-and-atomic-data-update-pipeline: ready-for-dev
   6-4-phase-2-save-format-and-settings-version-display: backlog
   epic-6-retrospective: optional
 
