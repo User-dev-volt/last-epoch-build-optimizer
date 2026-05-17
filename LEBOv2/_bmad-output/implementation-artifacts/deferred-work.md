@@ -8,7 +8,7 @@
 - `AffixEntryV2.value` semantics undocumented — no invariant on whether `value` is min, max, or resolved scalar; will cause divergent interpretations across codebase. Document in a future story (`build.ts`).
 - `GearSlot.test.tsx` hardcodes `tier: 3` — assertion depends on game data fixture stability; if median tier calculation changes the test fails for the wrong reason (`GearSlot.test.tsx:282`).
 - `characterLevel` has no bounds validation — negative or >100 values accepted in `sharedFields`; pre-existing project-wide pattern (`buildPersistence.ts`).
-- `tier: 0` possible from `medianTier` when tiers array is empty — pre-existing GearSlot concern (`GearSlot.tsx`).
+- `tier: 0` possible from `medianTier` when tiers array is empty (`GearSlot.tsx:buildAffixEntries`). Story 7-5 (structured gear context in optimization payload) will serialize affix tiers into the AI prompt — a `tier: 0` would produce output like "Health T0 (+0 HP)" which is wrong. Fix `buildAffixEntries` to guard against `tier <= 0` and either omit the tier or clamp to 1 before 7-5 ships.
 - `isPersisted: true` hardcoded in `sharedFields` — can't distinguish freshly-constructed from loaded builds; pre-existing behavior (`buildPersistence.ts`).
 - `GearItem` kept with no deprecation marker or removal plan — creates dead type alongside `GearItemV2`; intentional per dev notes. Schedule removal in a future cleanup story (`build.ts`).
 
