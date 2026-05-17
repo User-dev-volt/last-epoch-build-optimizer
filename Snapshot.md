@@ -23,9 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-- Dev agent uses Story 6-1 file to implement BuildStateV2 type migration with embedded guardrails
-- Search codebase for `.affixes` consumers before writing migration code
-- Run test suite against old test assertion before committing
+Submit to external code review (different LLM or peer) before merge.
 
 ---
 
