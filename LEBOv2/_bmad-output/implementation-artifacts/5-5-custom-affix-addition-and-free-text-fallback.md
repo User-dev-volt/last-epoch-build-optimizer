@@ -1,6 +1,6 @@
 # Story 5.5: Custom Affix Addition and Free-Text Fallback
 
-Status: review
+Status: done
 
 ## Story
 
@@ -442,6 +442,14 @@ All new files go inside the already-established `src/features/item-database/` fo
 - Architecture Decision 4 (Item Database Architecture): [architecture.md — Decision 4] — "Item search is TypeScript-only after initial load; never IPC round-trip"
 - UX-DR4 (GearSlot ARIA pattern): [epics.md — UX-DR4]
 - FR27, FR28, FR29, FR30: [epics.md — Functional Requirements]
+
+### Review Findings
+
+- [x] [Review][Patch] AffixPicker outer `<div>` has no `relative` class — `ComboboxOptions` (`absolute z-20`) will anchor to GearSlot's `<div className="relative mt-1">` wrapper, creating an implicit positioning dependency. If AffixPicker is ever rendered outside that wrapper the dropdown will misposition. Fix: add `relative` to AffixPicker's root `<div>`. [`AffixPicker.tsx:28`]
+- [x] [Review][Defer] No removal mechanism for custom affixes [`GearSlot.tsx`] — deferred, out of scope for 5.5; only `handleClear` resets the full slot
+- [x] [Review][Defer] `excludeIds.includes()` is O(n×m) — could use a `Set` for O(1) lookup [`AffixPicker.tsx:22`] — deferred, handful of IDs in practice; premature optimization
+- [x] [Review][Defer] `+ Add affix` button rendered even when `itemDatabase` is null post-selection — clicking it shows nothing with no feedback [`GearSlot.tsx`] — deferred, game-data failure scenario; `selectedItem` can only be set while `itemDatabase !== null`
+- [x] [Review][Defer] `AffixPicker value={null}` + `immediate` prop — if `onClose` doesn't fire synchronously, Headless UI may re-open dropdown on next focus [`AffixPicker.tsx:29`] — deferred, theoretical concurrent-mode edge; tests pass
 
 ## Dev Agent Record
 

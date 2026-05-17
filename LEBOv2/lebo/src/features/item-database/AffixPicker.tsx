@@ -25,7 +25,7 @@ export function AffixPicker({ allAffixes, excludeIds, onSelect, onClose }: Affix
   }, [allAffixes, excludeIds, query])
 
   return (
-    <div>
+    <div className="relative">
       <Combobox<AffixEntry | null>
         value={null}
         onChange={(affix) => {

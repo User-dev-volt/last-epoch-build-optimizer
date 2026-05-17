@@ -9,6 +9,13 @@
 - `weaverSearchHighlighted`/`weaverSearchDimmed` memos depend on `weaverGameNodes` Zustand selector reference (`SkillTreeView.tsx`). If any unrelated `gameDataStore` update fires, both memos re-run unnecessarily. Benign in practice (weaverGameNodes set once at startup) — pre-existing project-wide selector pattern.
 - `migrateBuildState` for `weaverAllocations` uses object-shape check + type cast without validating individual value types (`buildPersistence.ts`). A corrupted save with string values would produce NaN for unspent point count. Same pattern as all other allocation fields — pre-existing project-wide issue.
 
+## Deferred from: code review of 5-5-custom-affix-addition-and-free-text-fallback (2026-05-17)
+
+- No removal mechanism for individual custom affixes — `customAffixIds` can only grow; only `handleClear` resets the slot entirely (`GearSlot.tsx`). Out of scope for 5.5.
+- `excludeIds.includes()` in `AffixPicker` is O(n×m) — a `Set` conversion would give O(1) lookup (`AffixPicker.tsx:22`). With only a handful of excluded IDs in practice this is premature optimization.
+- `+ Add affix` button rendered whenever `selectedItem !== null`, even if `itemDatabase` becomes null post-selection — button has no visible feedback when picker can't open (`GearSlot.tsx`). Game-data failure scenario; `selectedItem` can only be set while `itemDatabase !== null` so this requires an in-session reload failure.
+- `AffixPicker value={null}` + `immediate` prop — if `onClose` doesn't fire synchronously, Headless UI may re-open the dropdown on the next focus event (`AffixPicker.tsx:29`). Theoretical concurrent-mode edge; all tests pass.
+
 ## Deferred from: code review of 5-4-gearslot-component-with-typeahead-item-search (2026-05-16)
 
 - `ComboboxButton` (▾) added to GearSlot without AC coverage — functional but undocumented scope creep (`GearSlot.tsx`). Pre-existing.
