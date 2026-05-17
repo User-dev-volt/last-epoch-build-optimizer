@@ -68,6 +68,8 @@ pub struct GameDataManifest {
     pub data_version: String,
     pub generated_at: String,
     pub classes: Vec<String>,
+    #[serde(default)]
+    pub item_data_version: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

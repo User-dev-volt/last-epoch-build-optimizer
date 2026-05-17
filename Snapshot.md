@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Begin Story 5.6 (`item-data-freshness-check-and-stalenessbar-extension`) or confirm backlog priority for deferred findings.
+Story file is ready for dev agent pickup. Assign to implementation phase.
 
 ---
 

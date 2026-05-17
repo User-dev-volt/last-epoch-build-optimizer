@@ -89,7 +89,7 @@ pub fn load_class_data(data_dir: &Path, class_id: &str) -> Result<RawClassData, 
         .map_err(|e| format!("STORAGE_ERROR: parse class {}: {}", class_id, e))
 }
 
-fn http_client() -> Result<reqwest::Client, String> {
+pub fn http_client() -> Result<reqwest::Client, String> {
     reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
         .build()

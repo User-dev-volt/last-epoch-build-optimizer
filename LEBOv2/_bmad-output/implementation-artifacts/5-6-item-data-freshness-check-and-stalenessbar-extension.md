@@ -1,6 +1,6 @@
 # Story 5.6: Item Data Freshness Check and StalenessBar Extension
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -38,43 +38,43 @@ then existing item data files are intact (no corruption, atomic pattern guarante
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Extend `GameDataManifest` Rust struct and bundled manifest (AC1, AC5)
-  - [ ] 1.1: Add `item_data_version: Option<String>` with `#[serde(default)]` to `GameDataManifest` in `src-tauri/src/models/game_data.rs`
-  - [ ] 1.2: Add `"itemDataVersion": "1.0.0"` field to `src-tauri/resources/game-data/manifest.json` (bump `schemaVersion` to 2)
+- [x] Task 1: Extend `GameDataManifest` Rust struct and bundled manifest (AC1, AC5)
+  - [x] 1.1: Add `item_data_version: Option<String>` with `#[serde(default)]` to `GameDataManifest` in `src-tauri/src/models/game_data.rs`
+  - [x] 1.2: Add `"itemDataVersion": "1.0.0"` field to `src-tauri/resources/game-data/manifest.json` (bump `schemaVersion` to 2)
 
-- [ ] Task 2: Add `check_item_data_freshness()` and `update_item_data()` to `item_commands.rs` (AC1, AC3, AC4, AC5)
-  - [ ] 2.1: Implement `check_item_data_freshness()` — load local manifest, fetch remote manifest via `game_data_service::fetch_remote_manifest()`, compare `itemDataVersion`, return `DataVersionCheckResult`
-  - [ ] 2.2: Make `game_data_service::http_client()` pub (or duplicate it in `item_data_service.rs`) so item commands can make HTTP requests
-  - [ ] 2.3: Add `REMOTE_DATA_BASE_URL` re-export or import from `game_data_service` for use in item update downloads
-  - [ ] 2.4: Implement `update_item_data()` — download items atomically from remote (temp→rename per file), then surgically update only `itemDataVersion` in local manifest
+- [x] Task 2: Add `check_item_data_freshness()` and `update_item_data()` to `item_commands.rs` (AC1, AC3, AC4, AC5)
+  - [x] 2.1: Implement `check_item_data_freshness()` — load local manifest, fetch remote manifest via `game_data_service::fetch_remote_manifest()`, compare `itemDataVersion`, return `DataVersionCheckResult`
+  - [x] 2.2: Make `game_data_service::http_client()` pub (or duplicate it in `item_data_service.rs`) so item commands can make HTTP requests
+  - [x] 2.3: Add `REMOTE_DATA_BASE_URL` re-export or import from `game_data_service` for use in item update downloads
+  - [x] 2.4: Implement `update_item_data()` — download items atomically from remote (temp→rename per file), then surgically update only `itemDataVersion` in local manifest
 
-- [ ] Task 3: Register new commands in `lib.rs` (AC5)
-  - [ ] 3.1: Add `check_item_data_freshness` and `update_item_data` to `use commands::item_commands::` imports
-  - [ ] 3.2: Add both to `invoke_handler!` macro
+- [x] Task 3: Register new commands in `lib.rs` (AC5)
+  - [x] 3.1: Add `check_item_data_freshness` and `update_item_data` to `use commands::item_commands::` imports
+  - [x] 3.2: Add both to `invoke_handler!` macro
 
-- [ ] Task 4: Extend `gameDataStore.ts` with item data staleness slice (AC1, AC2, AC3)
-  - [ ] 4.1: Add `isItemDataStale: boolean`, `itemDataStaleAcknowledged: boolean`, `isItemDataUpdating: boolean` fields and corresponding setters
-  - [ ] 4.2: Initialize all three to `false` in the store
+- [x] Task 4: Extend `gameDataStore.ts` with item data staleness slice (AC1, AC2, AC3)
+  - [x] 4.1: Add `isItemDataStale: boolean`, `itemDataStaleAcknowledged: boolean`, `isItemDataUpdating: boolean` fields and corresponding setters
+  - [x] 4.2: Initialize all three to `false` in the store
 
-- [ ] Task 5: Add `checkItemDataFreshness()` and `triggerItemDataUpdate()` to `itemDatabaseLoader.ts` (AC1, AC3, AC4)
-  - [ ] 5.1: Implement `checkItemDataFreshness()` — `invokeCommand<DataVersionCheckResult>('check_item_data_freshness')`, update store `isItemDataStale`
-  - [ ] 5.2: Implement `triggerItemDataUpdate()` — `setIsItemDataUpdating(true)`, invoke `update_item_data`, call `loadItemDatabase()` to reload, clear `isItemDataStale` + `setIsItemDataUpdating(false)` in finally
-  - [ ] 5.3: Call `checkItemDataFreshness().catch(() => {})` (non-blocking, fire-and-forget) from `initGameData()` in `gameDataLoader.ts` — mirror the existing `checkDataVersion` pattern
+- [x] Task 5: Add `checkItemDataFreshness()` and `triggerItemDataUpdate()` to `itemDatabaseLoader.ts` (AC1, AC3, AC4)
+  - [x] 5.1: Implement `checkItemDataFreshness()` — `invokeCommand<DataVersionCheckResult>('check_item_data_freshness')`, update store `isItemDataStale`
+  - [x] 5.2: Implement `triggerItemDataUpdate()` — `setIsItemDataUpdating(true)`, invoke `update_item_data`, call `loadItemDatabase()` to reload, clear `isItemDataStale` + `setIsItemDataUpdating(false)` in finally
+  - [x] 5.3: Call `checkItemDataFreshness().catch(() => {})` (non-blocking, fire-and-forget) from `initGameData()` in `gameDataLoader.ts` — mirror the existing `checkDataVersion` pattern
 
-- [ ] Task 6: Extend `DataStalenessBar.tsx` with item data banner (AC2, AC3, AC4)
-  - [ ] 6.1: Add item data staleness state selectors from `useGameDataStore`
-  - [ ] 6.2: Add `showItemSuccess` local state (`boolean`, drives "Updated ✓" display)
-  - [ ] 6.3: Implement `handleItemUpdate()` — call `triggerItemDataUpdate()`, on resolve set `showItemSuccess(true)` + `setTimeout(() => { setShowItemSuccess(false); acknowledgeItemStaleness() }, 2000)`, on reject reset to error state inside banner
-  - [ ] 6.4: Render item data banner block **below** existing game data banner block when `isItemDataStale && !itemDataStaleAcknowledged`
-  - [ ] 6.5: Button must have `aria-busy="true"` during update; banner must have `role="status"` and `aria-live="polite"` (distinct from game data banner's `role="alert"` + `aria-live="assertive"`)
+- [x] Task 6: Extend `DataStalenessBar.tsx` with item data banner (AC2, AC3, AC4)
+  - [x] 6.1: Add item data staleness state selectors from `useGameDataStore`
+  - [x] 6.2: Add `showItemSuccess` local state (`boolean`, drives "Updated ✓" display)
+  - [x] 6.3: Implement `handleItemUpdate()` — call `triggerItemDataUpdate()`, on resolve set `showItemSuccess(true)` + `setTimeout(() => { setShowItemSuccess(false); acknowledgeItemStaleness() }, 2000)`, on reject reset to error state inside banner
+  - [x] 6.4: Render item data banner block **below** existing game data banner block when `isItemDataStale && !itemDataStaleAcknowledged`
+  - [x] 6.5: Button must have `aria-busy="true"` during update; banner must have `role="status"` and `aria-live="polite"` (distinct from game data banner's `role="alert"` + `aria-live="assertive"`)
 
-- [ ] Task 7: Wire startup in `App.tsx` (AC1)
-  - [ ] 7.1: Verify `checkItemDataFreshness` is called inside `initGameData()` (Task 5.3); no additional change needed in `App.tsx` if so. If wired differently, add non-blocking call alongside existing `checkDataVersion` in startup effect.
+- [x] Task 7: Wire startup in `App.tsx` (AC1)
+  - [x] 7.1: Verify `checkItemDataFreshness` is called inside `initGameData()` (Task 5.3); no additional change needed in `App.tsx` if so. If wired differently, add non-blocking call alongside existing `checkDataVersion` in startup effect.
 
-- [ ] Task 8: Tests
-  - [ ] 8.1: Add `checkItemDataFreshness` tests to `itemDatabaseLoader.test.ts` — stale result sets `isItemDataStale=true`, fresh result leaves it false
-  - [ ] 8.2: Add `triggerItemDataUpdate` tests to `itemDatabaseLoader.test.ts` — sets `isItemDataUpdating` true then false, calls `update_item_data` then `load_item_database`, clears `isItemDataStale` on success, clears `isItemDataUpdating` even on reject
-  - [ ] 8.3: Add item banner tests to `DataStalenessBar.test.tsx` — banner hidden when `isItemDataStale=false`, renders with correct text when stale, "Update" disabled during `isItemDataUpdating`, "Dismiss" calls `acknowledgeItemStaleness`, both banners render simultaneously when both data types are stale
+- [x] Task 8: Tests
+  - [x] 8.1: Add `checkItemDataFreshness` tests to `itemDatabaseLoader.test.ts` — stale result sets `isItemDataStale=true`, fresh result leaves it false
+  - [x] 8.2: Add `triggerItemDataUpdate` tests to `itemDatabaseLoader.test.ts` — sets `isItemDataUpdating` true then false, calls `update_item_data` then `load_item_database`, clears `isItemDataStale` on success, clears `isItemDataUpdating` even on reject
+  - [x] 8.3: Add item banner tests to `DataStalenessBar.test.tsx` — banner hidden when `isItemDataStale=false`, renders with correct text when stale, "Update" disabled during `isItemDataUpdating`, "Dismiss" calls `acknowledgeItemStaleness`, both banners render simultaneously when both data types are stale
 
 ## Dev Notes
 
@@ -265,6 +265,32 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+- `vi.useFakeTimers()` conflicts with `userEvent.click()` in this project's Vitest/jsdom setup. Workaround: spy on `globalThis.setTimeout` and pass through non-2000ms timeouts to `realSetTimeout` so `userEvent` internals continue to function.
+
 ### Completion Notes List
 
+- All 8 tasks and subtasks implemented and verified passing.
+- Rust: `GameDataManifest` extended with `#[serde(default)] item_data_version: Option<String>`; bundled `manifest.json` bumped to `schemaVersion: 2` with `itemDataVersion: "1.0.0"`.
+- Rust: `game_data_service::http_client()` made `pub`; `check_item_data_freshness()` and `update_item_data()` added to `item_commands.rs`; both registered in `lib.rs`.
+- TypeScript: `useGameDataStore` extended with `isItemDataStale`, `itemDataStaleAcknowledged`, `isItemDataUpdating` + setters.
+- TypeScript: `itemDatabaseLoader.ts` extended with `checkItemDataFreshness()` and `triggerItemDataUpdate()`. `initGameData()` in `gameDataLoader.ts` calls both version checks non-blocking at startup.
+- TypeScript: `DataStalenessBar.tsx` restructured to render two independent banners (game data: `role="alert"` assertive; item data: `role="status"` polite). Both visible simultaneously when both stale (AC2).
+- 22 new tests pass; 8 pre-existing failures (ProviderSelector, Settings, SkillTreeCanvas, TreeControls) unchanged.
+
 ### File List
+
+- `lebo/src-tauri/src/models/game_data.rs` — added `item_data_version: Option<String>` to `GameDataManifest`
+- `lebo/src-tauri/resources/game-data/manifest.json` — bumped `schemaVersion` to 2, added `itemDataVersion: "1.0.0"`
+- `lebo/src-tauri/src/services/game_data_service.rs` — made `http_client()` pub
+- `lebo/src-tauri/src/commands/item_commands.rs` — added `check_item_data_freshness` and `update_item_data` commands
+- `lebo/src-tauri/src/lib.rs` — registered both new commands in `invoke_handler!`
+- `lebo/src/shared/stores/gameDataStore.ts` — added item data staleness slice
+- `lebo/src/features/item-database/itemDatabaseLoader.ts` — added `checkItemDataFreshness` and `triggerItemDataUpdate`
+- `lebo/src/features/game-data/gameDataLoader.ts` — added `checkItemDataFreshness` call in `initGameData`
+- `lebo/src/features/game-data/DataStalenessBar.tsx` — extended with item data banner
+- `lebo/src/features/game-data/DataStalenessBar.test.tsx` — added 9 new item banner tests
+- `lebo/src/features/item-database/itemDatabaseLoader.test.ts` — added `checkItemDataFreshness` and `triggerItemDataUpdate` tests
+
+## Change Log
+
+- 2026-05-17: Implemented story 5-6 — item data freshness check and StalenessBar extension. Rust commands (`check_item_data_freshness`, `update_item_data`) added to `item_commands.rs`. `GameDataManifest` extended with `item_data_version`. TypeScript store, loader, and UI updated to mirror the existing game data staleness pattern. 22 new tests added, all passing.

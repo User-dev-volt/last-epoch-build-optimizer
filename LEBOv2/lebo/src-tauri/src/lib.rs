@@ -17,7 +17,7 @@ use commands::game_data_commands::{
     load_game_data,
 };
 use commands::icon_commands::{get_icon_cache_path, initialize_icon_pipeline, IconMapCache};
-use commands::item_commands::load_item_database;
+use commands::item_commands::{check_item_data_freshness, load_item_database, update_item_data};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -67,6 +67,8 @@ pub fn run() {
             check_openrouter_configured,
             validate_openrouter_key,
             load_item_database,
+            check_item_data_freshness,
+            update_item_data,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

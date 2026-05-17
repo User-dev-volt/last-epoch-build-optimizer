@@ -26,6 +26,12 @@ interface GameDataStore {
   setWeaverGameNodes: (nodes: Record<string, GameNode>) => void
   itemDatabase: ItemDatabase | null
   setItemDatabase: (db: ItemDatabase | null) => void
+  isItemDataStale: boolean
+  itemDataStaleAcknowledged: boolean
+  isItemDataUpdating: boolean
+  setIsItemDataStale: (stale: boolean) => void
+  acknowledgeItemDataStaleness: () => void
+  setIsItemDataUpdating: (updating: boolean) => void
 }
 
 export const useGameDataStore = create<GameDataStore>()((set) => ({
@@ -51,4 +57,10 @@ export const useGameDataStore = create<GameDataStore>()((set) => ({
   setWeaverGameNodes: (nodes) => set({ weaverGameNodes: nodes }),
   itemDatabase: null,
   setItemDatabase: (db) => set({ itemDatabase: db }),
+  isItemDataStale: false,
+  itemDataStaleAcknowledged: false,
+  isItemDataUpdating: false,
+  setIsItemDataStale: (stale) => set({ isItemDataStale: stale }),
+  acknowledgeItemDataStaleness: () => set({ itemDataStaleAcknowledged: true }),
+  setIsItemDataUpdating: (updating) => set({ isItemDataUpdating: updating }),
 }))

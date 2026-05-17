@@ -1,6 +1,7 @@
 import { invokeCommand } from '../../shared/utils/invokeCommand'
 import { normalizeAppError } from '../../shared/utils/errorNormalizer'
 import { useGameDataStore } from '../../shared/stores/gameDataStore'
+import { checkItemDataFreshness } from '../item-database/itemDatabaseLoader'
 import type { GameNode, GameData, ClassData, MasteryData, GameDataManifest, DataVersionCheckResult, SkillEntry } from '../../shared/types/gameData'
 import type { RawClassData, RawGameNode, RawEdge, RawMastery, RawSkillEntry } from './types'
 
@@ -10,8 +11,9 @@ export async function initGameData(): Promise<void> {
   try {
     await invokeCommand('initialize_game_data')
     await loadAllClasses()
-    // Non-blocking version check — silently swallow network errors
+    // Non-blocking version checks — silently swallow network errors
     checkDataVersion().catch(() => {})
+    checkItemDataFreshness().catch(() => {})
   } catch (error) {
     setIsLoading(false)
     throw normalizeAppError(error)
