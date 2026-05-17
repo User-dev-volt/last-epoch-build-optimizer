@@ -39,6 +39,9 @@ pub async fn update_item_data(app_handle: tauri::AppHandle) -> Result<(), String
 
     let remote = game_data_service::fetch_remote_manifest(REMOTE_DATA_BASE_URL).await?;
     let remote_version = remote.item_data_version.clone().unwrap_or_default();
+    if remote_version.is_empty() {
+        return Err("ITEM_DATA_ERROR: remote manifest has no itemDataVersion".to_string());
+    }
 
     let client = game_data_service::http_client()?;
     for filename in &["base-items.json", "uniques.json", "affixes.json"] {

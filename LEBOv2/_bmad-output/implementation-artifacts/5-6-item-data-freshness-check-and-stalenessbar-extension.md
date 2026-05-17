@@ -1,6 +1,6 @@
 # Story 5.6: Item Data Freshness Check and StalenessBar Extension
 
-Status: review
+Status: done
 
 ## Story
 
@@ -293,9 +293,9 @@ claude-sonnet-4-6
 
 ### Review Findings
 
-- [ ] [Review][Patch] `update_item_data` writes empty string to manifest when remote has no `itemDataVersion` [lebo/src-tauri/src/commands/item_commands.rs]
-- [ ] [Review][Patch] No `clearTimeout` on unmount — stale setState + acknowledgeItemDataStaleness fires after component teardown [lebo/src/features/game-data/DataStalenessBar.tsx]
-- [ ] [Review][Patch] Double-click can dispatch two concurrent `update_item_data` Tauri calls before `isItemDataUpdating` re-render disables button [lebo/src/features/game-data/DataStalenessBar.tsx]
+- [x] [Review][Patch] `update_item_data` writes empty string to manifest when remote has no `itemDataVersion` [lebo/src-tauri/src/commands/item_commands.rs]
+- [x] [Review][Patch] No `clearTimeout` on unmount — stale setState + acknowledgeItemDataStaleness fires after component teardown [lebo/src/features/game-data/DataStalenessBar.tsx]
+- [x] [Review][Patch] Double-click can dispatch two concurrent `update_item_data` Tauri calls before `isItemDataUpdating` re-render disables button [lebo/src/features/game-data/DataStalenessBar.tsx]
 - [x] [Review][Defer] Partial write leaves mixed-version item DB when network fails mid-loop — deferred, spec-prescribed sequential architecture; recoverable by retry
 - [x] [Review][Defer] `itemDataStaleAcknowledged` never resets after successful update — deferred, matches existing game data banner pattern; only startup check fires
 - [x] [Review][Defer] `schemaVersion` bumped to 2 with no migration guard — deferred, `#[serde(default)]` handles backward compat

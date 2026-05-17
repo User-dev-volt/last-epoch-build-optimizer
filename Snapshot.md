@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Run code-review on story 5-6 using Claude or Grok
+Choose review strategy: decide whether to **(1) apply all three patches now, (2) leave as backlog items, or (3) walk through each patch for discussion** before proceeding.
 
 ---
 

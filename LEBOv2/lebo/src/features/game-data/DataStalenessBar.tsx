@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useGameDataStore } from '../../shared/stores/gameDataStore'
 import { useOptimizationStore } from '../../shared/stores/optimizationStore'
 import { triggerDataUpdate } from './gameDataLoader'
@@ -21,6 +21,14 @@ export function DataStalenessBar() {
   const [updateError, setUpdateError] = useState<string | null>(null)
   const [itemUpdateError, setItemUpdateError] = useState<string | null>(null)
   const [showItemSuccess, setShowItemSuccess] = useState(false)
+  const itemUpdateInFlight = useRef(false)
+  const itemSuccessTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (itemSuccessTimer.current !== null) clearTimeout(itemSuccessTimer.current)
+    }
+  }, [])
 
   async function handleUpdate() {
     setUpdateError(null)
@@ -32,16 +40,20 @@ export function DataStalenessBar() {
   }
 
   async function handleItemUpdate() {
+    if (itemUpdateInFlight.current) return
+    itemUpdateInFlight.current = true
     setItemUpdateError(null)
     try {
       await triggerItemDataUpdate()
       setShowItemSuccess(true)
-      setTimeout(() => {
+      itemSuccessTimer.current = setTimeout(() => {
         setShowItemSuccess(false)
         acknowledgeItemDataStaleness()
       }, 2000)
     } catch (err) {
       setItemUpdateError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      itemUpdateInFlight.current = false
     }
   }
 
