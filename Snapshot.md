@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Dev agent picks up story 6-2 from `_bmad-output/implementation-artifacts/6-2-optimization-preset-migration-and-build-persistence-integration.md` and implements the 4-file changeset
+Address findings 1–4 in story 6-2: fix completion notes arithmetic, add non-null `fineTuneWeights` preservation test, add regression tests for `saveBuild`/`renameBuild`/`deleteBuild` with `goalPreset` payloads, add unrecognized preset string test case.
 
 ---
 
