@@ -278,4 +278,19 @@ claude-sonnet-4-6
 - _bmad-output/implementation-artifacts/sprint-status.yaml
 - _bmad-output/implementation-artifacts/6-1-buildstate-v2-typescript-types-and-core-migration-function.md
 
+### Review Findings
+
+- [ ] [Review][Decision] `value` field not populated in `buildAffixEntries` — `GearSlot.tsx` deleted the tier-data lookup and `valueStr` calculation; `buildAffixEntries` now returns `{ affixId, name, tier }` but never sets `value`. Is this an intentional deferral (value to be populated by a later story) or a regression? The GearSlot.test change from `startsWith('Movement Speed:')` to `a.name === 'Movement Speed'` also silently drops value checking. Decision needed before patches proceed.
+- [ ] [Review][Patch] Unsafe non-string affix object cast without `name` validation — `buildPersistence.ts` v1 migration path casts any non-string affix as `AffixEntryV2` without checking that `name` exists. An object `{ affixId: 'x' }` with no `name` would produce a corrupt entry that propagates into the optimization scoring engine. [`buildPersistence.ts:63-68`]
+- [ ] [Review][Patch] No guard for unknown schemaVersion (> 2) — if a schemaVersion 3 build is loaded into this code, it falls silently through the `=== 2` check and is treated as v1, running the migration and downgrading data. Add an error throw for unrecognized versions. [`buildPersistence.ts`]
+- [ ] [Review][Patch] v2 passthrough test missing `affixId` coverage — the idempotency test only verifies `{ name, tier }` affixes pass through. An affix with `affixId` set is not tested; if the passthrough branch ever inadvertently strips `affixId`, no test catches it. [`buildPersistence.test.ts`]
+- [x] [Review][Defer] v2 passthrough gear items not structurally validated — `schemaVersion === 2` branch casts gear/skills/idols without field-level validation; a corrupted v2 build passes through silently [`buildPersistence.ts:46-54`] — deferred, pre-existing trust assumption; full validation layer is out of scope for this story
+- [x] [Review][Defer] AC5 "unchanged" letter vs. intent — `sharedFields` re-applies `String(...)` coercions even for v2 passthrough; spec says "returned unchanged" but auditor notes this is a spec-intent deviation not a functional bug [`buildPersistence.ts`] — deferred, low impact
+- [x] [Review][Defer] `AffixEntryV2.value` semantics undocumented — no invariant on whether `value` is min, max, or resolved scalar; will cause divergent interpretations across codebase [`build.ts`] — deferred, document in a future story
+- [x] [Review][Defer] `GearSlot.test.tsx` hardcodes `tier: 3` — assertion depends on game data fixture stability; if median tier calculation changes the test fails for the wrong reason [`GearSlot.test.tsx:282`] — deferred, pre-existing test fragility
+- [x] [Review][Defer] `characterLevel` has no bounds validation — negative or >100 values accepted in `sharedFields` [`buildPersistence.ts`] — deferred, pre-existing project-wide pattern
+- [x] [Review][Defer] `tier: 0` possible from `medianTier` when tiers array is empty [`GearSlot.tsx:buildAffixEntries`] — deferred, pre-existing GearSlot concern
+- [x] [Review][Defer] `isPersisted: true` hardcoded in `sharedFields` — can't distinguish freshly-constructed from loaded builds [`buildPersistence.ts`] — deferred, pre-existing behavior
+- [x] [Review][Defer] `GearItem` kept with no deprecation marker or removal plan — creates dead type alongside `GearItemV2` [`build.ts`] — deferred, intentional per dev notes; schedule removal in a future cleanup story
+
 ### Change Log

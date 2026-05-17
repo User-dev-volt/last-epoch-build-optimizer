@@ -1,5 +1,16 @@
 # Deferred Work
 
+## Deferred from: code review of 6-1-buildstate-v2-typescript-types-and-core-migration-function (2026-05-17)
+
+- v2 passthrough gear items not structurally validated — `schemaVersion === 2` branch casts gear/skills/idols without field-level validation; a corrupted v2 build passes through silently (`buildPersistence.ts:46-54`). Full validation layer is out of scope for this story.
+- AC5 "unchanged" letter vs. intent — `sharedFields` re-applies `String(...)` coercions even for v2 passthrough; spec says "returned unchanged" but this is a spec-intent deviation not a functional bug (`buildPersistence.ts`).
+- `AffixEntryV2.value` semantics undocumented — no invariant on whether `value` is min, max, or resolved scalar; will cause divergent interpretations across codebase. Document in a future story (`build.ts`).
+- `GearSlot.test.tsx` hardcodes `tier: 3` — assertion depends on game data fixture stability; if median tier calculation changes the test fails for the wrong reason (`GearSlot.test.tsx:282`).
+- `characterLevel` has no bounds validation — negative or >100 values accepted in `sharedFields`; pre-existing project-wide pattern (`buildPersistence.ts`).
+- `tier: 0` possible from `medianTier` when tiers array is empty — pre-existing GearSlot concern (`GearSlot.tsx`).
+- `isPersisted: true` hardcoded in `sharedFields` — can't distinguish freshly-constructed from loaded builds; pre-existing behavior (`buildPersistence.ts`).
+- `GearItem` kept with no deprecation marker or removal plan — creates dead type alongside `GearItemV2`; intentional per dev notes. Schedule removal in a future cleanup story (`build.ts`).
+
 ## Deferred from: code review of 5-6-item-data-freshness-check-and-stalenessbar-extension (2026-05-17)
 
 - Partial write leaves mixed-version item DB when network fails mid-loop (`item_commands.rs`). `update_item_data` downloads and commits files sequentially — if the 2nd or 3rd file fails after the 1st is already renamed, the item DB on disk has mixed versions. Fixing requires a two-phase pattern (download all to temp, then rename all). Spec prescribed sequential atomic-per-file; risk is low and banner retries are available.
