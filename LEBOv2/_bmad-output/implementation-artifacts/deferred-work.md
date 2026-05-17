@@ -1,5 +1,14 @@
 # Deferred Work
 
+## Deferred from: code review of 6-2-optimization-preset-migration-and-build-persistence-integration (2026-05-17)
+
+- Schema version guard runs after `sharedFields` construction — `crypto.randomUUID()` may fire before the throw; no behavioral impact, just ordering noise (`buildPersistence.ts:68`).
+- String `schemaVersion` (e.g., `"2"`) bypasses the v2 branch and falls to v1 migration — strict equality `=== 2` rejects strings; theoretical with normal JSON serialization (`buildPersistence.ts:68-73`).
+- v2 passthrough gear arrays cast without structural validation — `ctx!.gear as GearItemV2[]` trusts array contents blindly; same pattern also in 6-1 defer list (`buildPersistence.ts:78`).
+- `slotId` empty-string fallback and `itemName` `String()` coercion in v1 gear migration — story 6-1 scope; corrupt data silently becomes blank strings (`buildPersistence.ts:93-95`).
+- `AffixEntryV2` blank-name fallback for unrecognized affix shapes — story 6-1 design choice; corrupt affix becomes `{ name: '' }` (`buildPersistence.ts:101-103`).
+- v2 builds with stale `goalPreset` field silently drop it — v2 passthrough ignores `goalPreset`; a corrupt v2 build with a stale key would silently default `sliderPosition` to 50 (`buildPersistence.ts:73-85`).
+
 ## Deferred from: code review of 6-1-buildstate-v2-typescript-types-and-core-migration-function (2026-05-17)
 
 - `AffixEntryV2.value` intentionally not populated by `buildAffixEntries` — deferred to story 7-5 (structured gear context in optimization payload). `value?: number` can't represent the old min–max range; `affixId + tier` is sufficient to reconstruct full values from the item DB when 7-5 runs. Clarifying comments added to `GearSlot.tsx` and `build.ts` as part of 6-1 review.
