@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-06
-last_updated: 2026-05-14 (story 5-2 ready-for-dev; epic-5 in-progress)
+last_updated: 2026-05-16 (story 5-2 done; 5-3 next)
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -76,7 +76,7 @@ development_status:
   # Epic 5: Item Database & Structured Gear Input
   epic-5: in-progress
   5-1-item-database-load-and-typescript-types: done  # code review complete 2026-05-14; 3 patches applied
-  5-2-in-memory-item-search-algorithm: review
+  5-2-in-memory-item-search-algorithm: done  # code review complete 2026-05-16; story approved
   5-3-affixtiercontrol-pip-based-tier-selection: backlog
   5-4-gearslot-component-with-typeahead-item-search: backlog
   5-5-custom-affix-addition-and-free-text-fallback: backlog
