@@ -51,6 +51,7 @@ function buildAffixEntries(
   resolved: ResolvedAffix[],
   tiers: Record<string, number>
 ): AffixEntryV2[] {
+  // value intentionally omitted — story 7-5 will resolve min/max from the item DB at prompt-build time.
   return resolved.map((r) => {
     const tier = tiers[r.affixId] ?? medianTier(r.affixEntry)
     return { affixId: r.affixId, name: r.name, tier }

@@ -2,6 +2,7 @@
 
 ## Deferred from: code review of 6-1-buildstate-v2-typescript-types-and-core-migration-function (2026-05-17)
 
+- `AffixEntryV2.value` intentionally not populated by `buildAffixEntries` — deferred to story 7-5 (structured gear context in optimization payload). `value?: number` can't represent the old min–max range; `affixId + tier` is sufficient to reconstruct full values from the item DB when 7-5 runs. Clarifying comments added to `GearSlot.tsx` and `build.ts` as part of 6-1 review.
 - v2 passthrough gear items not structurally validated — `schemaVersion === 2` branch casts gear/skills/idols without field-level validation; a corrupted v2 build passes through silently (`buildPersistence.ts:46-54`). Full validation layer is out of scope for this story.
 - AC5 "unchanged" letter vs. intent — `sharedFields` re-applies `String(...)` coercions even for v2 passthrough; spec says "returned unchanged" but this is a spec-intent deviation not a functional bug (`buildPersistence.ts`).
 - `AffixEntryV2.value` semantics undocumented — no invariant on whether `value` is min, max, or resolved scalar; will cause divergent interpretations across codebase. Document in a future story (`build.ts`).

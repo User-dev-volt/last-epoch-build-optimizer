@@ -8,6 +8,8 @@ export interface AffixEntryV2 {
   affixId?: string
   name: string
   tier?: number
+  // Reserved for story 7-5 (structured gear context in optimization payload).
+  // Not populated here — affixId+tier is enough to reconstruct min/max from the item DB.
   value?: number
 }
 
