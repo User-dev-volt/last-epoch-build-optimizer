@@ -1,6 +1,6 @@
 # Story 6.3: Manifest v2 and Atomic Data Update Pipeline
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -267,6 +267,13 @@ No new files. No `lib.rs` changes. No store changes. No UI changes.
 - [Source: lebo/src/features/game-data/gameDataLoader.ts:8-22] — `initGameData` to change fire-and-forget to `Promise.all`
 - [Source: lebo/src-tauri/resources/game-data/manifest.json] — bundled manifest to update with new fields
 - [Source: _bmad-output/project-context.md#Critical Implementation Rules] — no barrel files, strict TypeScript, atomic writes in Rust
+
+### Review Findings
+
+- [ ] [Review][Patch] `download_game_data_update` erases local manifest fields on game data sync [`lebo/src-tauri/src/commands/game_data_commands.rs`] — `download_game_data_update` fetches the remote manifest and writes it verbatim. The remote CDN manifest has no `iconCacheVersion`, `iconSource`, or `itemDataVersion`. After deserialization these fields are `None` and get wiped from disk. A game data update now silently resets the icon source that `update_manifest_icon_source` had set. Fix: load the local manifest first and carry its local-only fields forward (same surgical-merge pattern as `update_item_data`) before writing the updated manifest.
+- [x] [Review][Defer] Concurrent read-modify-write race on `manifest.json`, amplified by shared `.tmp` path [`icon_commands.rs: update_manifest_icon_source` + `item_commands.rs: update_item_data`] — deferred, pre-existing: spec accepts this as best-effort; both writers share `manifest.tmp` when running concurrently but the startup timing makes collision unlikely.
+- [x] [Review][Defer] No JSON validation on item file downloads before atomic write [`item_commands.rs: update_item_data`, download loop] — deferred, pre-existing: `download_class_files` validates before writing but `update_item_data` writes raw bytes; a truncated CDN response would atomically replace a good file. Pre-dates this story.
+- [x] [Review][Defer] `temp_dir` test helper uses `subsec_nanos` for uniqueness [`game_data_service.rs: tests::temp_dir`] — deferred, pre-existing: potential flakiness under high parallelism or low-resolution clocks; low risk in practice.
 
 ## Dev Agent Record
 

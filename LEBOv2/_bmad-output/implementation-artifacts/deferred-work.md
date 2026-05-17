@@ -1,5 +1,11 @@
 # Deferred Work
 
+## Deferred from: code review of 6-3-manifest-v2-and-atomic-data-update-pipeline (2026-05-17)
+
+- Concurrent read-modify-write race on `manifest.json`: `update_manifest_icon_source` and `update_item_data` both do load → mutate → atomic_write with no lock; they also share the same `manifest.tmp` path when running concurrently, so the last rename wins and the other's fields are silently lost. Spec accepts this as best-effort (`icon_commands.rs`, `item_commands.rs`).
+- No JSON validation on item file downloads before atomic write: `update_item_data` writes raw HTTP response bytes to disk without a `serde_json` parse step. A truncated CDN response atomically replaces a valid file with corrupt data. Contrast with `download_class_files`, which validates before writing. Pre-dates this story (`item_commands.rs`).
+- `temp_dir` test helper uniqueness via `subsec_nanos`: potential collision under high parallelism or low-resolution system clocks; `create_dir_all` would silently reuse a dirty directory. Low risk in practice (`game_data_service.rs` tests).
+
 ## Deferred from: code review of 6-2-optimization-preset-migration-and-build-persistence-integration (2026-05-17)
 
 - Schema version guard runs after `sharedFields` construction — `crypto.randomUUID()` may fire before the throw; no behavioral impact, just ordering noise (`buildPersistence.ts:68`).

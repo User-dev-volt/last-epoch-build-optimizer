@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Code review of Story 6.3 using a different LLM than Claude (per embedded advisory)
+User must confirm `proceed?` to launch the three parallel review layers against the 9-file diff.
 
 ---
 
