@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Submit to external code review (different LLM or peer) before merge.
+Execute the workflow's parallel adversarial review layers on the 9-file diff (focus: migration correctness, type safety in v1↔v2 boundary, test coverage of edge cases)
 
 ---
 
