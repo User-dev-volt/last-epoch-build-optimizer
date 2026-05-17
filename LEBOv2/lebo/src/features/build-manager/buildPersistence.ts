@@ -2,6 +2,7 @@ import { showErrorToast, showInfoToast } from '../../shared/components/Toast'
 import { invokeCommand } from '../../shared/utils/invokeCommand'
 import { useBuildStore } from '../../shared/stores/buildStore'
 import type { BuildState, BuildMeta, AffixEntryV2, GearItemV2 } from '../../shared/types/build'
+import { MAX_CHARACTER_LEVEL } from '../../shared/utils/budgetCalculator'
 
 export function migrateBuildState(raw: unknown): BuildState {
   if (typeof raw !== 'object' || raw === null) {
@@ -17,7 +18,9 @@ export function migrateBuildState(raw: unknown): BuildState {
     name: String(obj.name ?? ''),
     classId: String(obj.classId ?? ''),
     masteryId: String(obj.masteryId ?? ''),
-    characterLevel: typeof obj.characterLevel === 'number' ? obj.characterLevel : 1,
+    characterLevel: typeof obj.characterLevel === 'number'
+      ? Math.max(1, Math.min(MAX_CHARACTER_LEVEL, obj.characterLevel))
+      : 1,
     budgetEnforced: typeof obj.budgetEnforced === 'boolean' ? obj.budgetEnforced : false,
     nodeAllocations:
       typeof obj.nodeAllocations === 'object' && obj.nodeAllocations !== null

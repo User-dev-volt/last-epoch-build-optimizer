@@ -3,14 +3,12 @@
 ## Deferred from: code review of 6-1-buildstate-v2-typescript-types-and-core-migration-function (2026-05-17)
 
 - `AffixEntryV2.value` intentionally not populated by `buildAffixEntries` — deferred to story 7-5 (structured gear context in optimization payload). `value?: number` can't represent the old min–max range; `affixId + tier` is sufficient to reconstruct full values from the item DB when 7-5 runs. Clarifying comments added to `GearSlot.tsx` and `build.ts` as part of 6-1 review.
-- v2 passthrough gear items not structurally validated — `schemaVersion === 2` branch casts gear/skills/idols without field-level validation; a corrupted v2 build passes through silently (`buildPersistence.ts:46-54`). Full validation layer is out of scope for this story.
-- AC5 "unchanged" letter vs. intent — `sharedFields` re-applies `String(...)` coercions even for v2 passthrough; spec says "returned unchanged" but this is a spec-intent deviation not a functional bug (`buildPersistence.ts`).
-- `AffixEntryV2.value` semantics undocumented — no invariant on whether `value` is min, max, or resolved scalar; will cause divergent interpretations across codebase. Document in a future story (`build.ts`).
-- `GearSlot.test.tsx` hardcodes `tier: 3` — assertion depends on game data fixture stability; if median tier calculation changes the test fails for the wrong reason (`GearSlot.test.tsx:282`).
-- `characterLevel` has no bounds validation — negative or >100 values accepted in `sharedFields`; pre-existing project-wide pattern (`buildPersistence.ts`).
+- v2 passthrough gear items not structurally validated — `schemaVersion === 2` branch casts gear/skills/idols without field-level validation; a corrupted v2 build passes through silently (`buildPersistence.ts:46-54`). Full validation layer is out of scope for this story; revisit after 6-4 (Phase 2 save format) when the write path is finalised.
+- `AffixEntryV2.value` semantics — design decision deferred to story 7-5 (structured gear context in optimization payload). Comment added to `build.ts` and `GearSlot.tsx` marking the field as reserved.
+- `GearSlot.test.tsx` hardcodes `tier: 3` — test depends on game data fixture stability. Low risk; revisit when 7-5 touches the GearSlot test suite.
+- ~~`characterLevel` has no bounds validation~~ — **FIXED in 6-1 review**: `migrateBuildState` now clamps to `[1, MAX_CHARACTER_LEVEL]`. UI (`BudgetToggle`) was already clamping; disk-load path is now also protected.
 - `tier: 0` possible from `medianTier` when tiers array is empty (`GearSlot.tsx:buildAffixEntries`). Story 7-5 (structured gear context in optimization payload) will serialize affix tiers into the AI prompt — a `tier: 0` would produce output like "Health T0 (+0 HP)" which is wrong. Fix `buildAffixEntries` to guard against `tier <= 0` and either omit the tier or clamp to 1 before 7-5 ships.
-- `isPersisted: true` hardcoded in `sharedFields` — can't distinguish freshly-constructed from loaded builds; pre-existing behavior (`buildPersistence.ts`).
-- `GearItem` kept with no deprecation marker or removal plan — creates dead type alongside `GearItemV2`; intentional per dev notes. Schedule removal in a future cleanup story (`build.ts`).
+- `GearItem` kept with no deprecation marker — TODO comment added to `build.ts`. Remove after story 6-4 ships and v1 saves are no longer expected in the wild.
 
 ## Deferred from: code review of 5-6-item-data-freshness-check-and-stalenessbar-extension (2026-05-17)
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { BuildState, BuildMeta } from '../../shared/types/build'
+import { MAX_CHARACTER_LEVEL } from '../../shared/utils/budgetCalculator'
 
 vi.mock('../../shared/utils/invokeCommand', () => ({
   invokeCommand: vi.fn(),
@@ -80,6 +81,16 @@ describe('migrateBuildState', () => {
 
   it('throws for null input', () => {
     expect(() => migrateBuildState(null)).toThrow('STORAGE_ERROR')
+  })
+
+  it('clamps characterLevel below 1 to 1', () => {
+    const result = migrateBuildState({ ...mockBuild, characterLevel: -50 })
+    expect(result.characterLevel).toBe(1)
+  })
+
+  it('clamps characterLevel above MAX_CHARACTER_LEVEL to MAX_CHARACTER_LEVEL', () => {
+    const result = migrateBuildState({ ...mockBuild, characterLevel: 9999 })
+    expect(result.characterLevel).toBe(MAX_CHARACTER_LEVEL)
   })
 
   it('throws for non-object input', () => {
