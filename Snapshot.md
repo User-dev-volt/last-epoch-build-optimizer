@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Dev agent picks up story 6-3 from ready-for-dev status; begins with extracting `atomic_write_file` helper into `game_data_service.rs` (enables all downstream fixes)
+Code review of Story 6.3 using a different LLM than Claude (per embedded advisory)
 
 ---
 
