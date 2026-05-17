@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe } from 'vitest-axe'
@@ -16,6 +16,12 @@ const mockItemDatabase: ItemDatabase = {
       slot: 'helmet',
       implicitAffixIds: ['affix-armor'],
     },
+    { id: 'iron-sword', name: 'Iron Sword', baseType: 'Sword', slot: 'mainhand', implicitAffixIds: [] },
+    { id: 'iron-shield', name: 'Iron Shield', baseType: 'Shield', slot: 'offhand', implicitAffixIds: [] },
+    { id: 'iron-boots', name: 'Iron Boots', baseType: 'Boots', slot: 'boots', implicitAffixIds: [] },
+    { id: 'iron-gloves', name: 'Iron Gloves', baseType: 'Gloves', slot: 'gloves', implicitAffixIds: [] },
+    { id: 'iron-belt', name: 'Iron Belt', baseType: 'Belt', slot: 'belt', implicitAffixIds: [] },
+    { id: 'iron-ring', name: 'Iron Ring', baseType: 'Ring', slot: 'ring1', implicitAffixIds: [] },
     {
       id: 'void-boots',
       name: 'Void Boots',
@@ -83,9 +89,13 @@ const mockBuild: BuildState = {
   updatedAt: '2026-01-01T00:00:00Z',
 }
 
-const initialBuildState = useBuildStore.getState()
-
 describe('GearSlot', () => {
+  let initialBuildState: ReturnType<typeof useBuildStore.getState>
+
+  beforeAll(() => {
+    initialBuildState = useBuildStore.getState()
+  })
+
   beforeEach(() => {
     useBuildStore.setState(initialBuildState, true)
     useBuildStore.getState().setActiveBuild(mockBuild)
@@ -118,17 +128,17 @@ describe('GearSlot', () => {
     expect(screen.getByText('Helmet')).toBeInTheDocument()
   })
 
-  it('typing shows up to 6 results', async () => {
+  it('typing shows up to 6 results even when more match', async () => {
     render(
       <GearSlot slotId="helmet" slotName="Helmet" itemDatabase={mockItemDatabase} />
     )
+    // 7 "Iron" items in mock — cap of 6 must trigger
     const input = screen.getByPlaceholderText('Search items…')
-    await userEvent.type(input, 'i')
+    await userEvent.type(input, 'Iron')
 
     await waitFor(() => {
       const options = screen.queryAllByRole('option')
-      expect(options.length).toBeGreaterThan(0)
-      expect(options.length).toBeLessThanOrEqual(6)
+      expect(options.length).toBe(6)
     })
   })
 
@@ -234,6 +244,45 @@ describe('GearSlot', () => {
       expect(screen.getByText('Void Boots')).toBeInTheDocument()
     })
     expect(screen.queryAllByRole('slider')).toHaveLength(0)
+  })
+
+  it('changing a tier slider updates the encoded affix string in buildStore', async () => {
+    render(
+      <GearSlot slotId="helmet" slotName="Helmet" itemDatabase={mockItemDatabase} />
+    )
+    const input = screen.getByPlaceholderText('Search items…')
+    await userEvent.type(input, 'Iron')
+    await waitFor(() => expect(screen.getByText('Iron Helm')).toBeInTheDocument())
+    await userEvent.click(screen.getByText('Iron Helm'))
+
+    const slider = await screen.findByRole('slider', { name: 'Added Armor tier' })
+    // medianTier for 3-tier affix = 2 (21–40); ArrowRight advances to tier 3 (41–60)
+    await userEvent.type(slider, '{ArrowRight}')
+
+    await waitFor(() => {
+      const gear = useBuildStore.getState().activeBuild!.contextData.gear
+      const slot = gear.find((g) => g.slotId === 'helmet')
+      expect(slot?.affixes).toContain('Added Armor: 41–60')
+    })
+  })
+
+  it('resets to empty state when active build changes', async () => {
+    render(
+      <GearSlot slotId="helmet" slotName="Helmet" itemDatabase={mockItemDatabase} />
+    )
+    const input = screen.getByPlaceholderText('Search items…')
+    await userEvent.type(input, 'Iron')
+    await waitFor(() => expect(screen.getByText('Iron Helm')).toBeInTheDocument())
+    await userEvent.click(screen.getByText('Iron Helm'))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Clear Helmet' })).toBeInTheDocument())
+
+    // Switch to a different build — triggers the useEffect reset
+    const otherBuild = { ...mockBuild, id: 'build-2' }
+    useBuildStore.getState().setActiveBuild(otherBuild)
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Search items…')).toBeInTheDocument()
+    })
   })
 
   it('axe accessibility: zero violations in empty state', async () => {

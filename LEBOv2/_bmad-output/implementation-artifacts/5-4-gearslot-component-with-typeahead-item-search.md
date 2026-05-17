@@ -1,6 +1,6 @@
 # Story 5.4: GearSlot Component with Typeahead Item Search
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -336,16 +336,16 @@ All 3 tasks complete. 54 tests pass (GearSlot: 12, AffixTierControl: 9, RightPan
 _(none)_
 
 ### Patches
-- [ ] [Review][Patch] Null-DB fallback input has no onChange — spec requires free-text to write to store [GearSlot.tsx:144–156]
-- [ ] [Review][Patch] Combobox typed as `string` but onChange casts to SearchResult via `as unknown` — type Combobox with explicit generic `<Combobox<SearchResult>>` [GearSlot.tsx:162–165]
-- [ ] [Review][Patch] `buildAffixStrings` crashes when `tiers` is empty array — `medianTier` returns 0, `tiers[-1]` is undefined; add guard [GearSlot.tsx:53–55]
-- [ ] [Review][Patch] `{searchResults.length > 0 && <ComboboxOptions>}` prevents HUI from setting `aria-expanded="true"` on click before typing — violates AC #1; render ComboboxOptions unconditionally [GearSlot.tsx:184]
-- [ ] [Review][Patch] `handleSelect` silently no-ops on null — if HUI passes null (Escape / deselect), state is left inconsistent; handle null by calling handleClear [GearSlot.tsx:109]
-- [ ] [Review][Patch] `handleTierChange` stale closure — rapid slider drags overwrite each other; use functional state updater pattern [GearSlot.tsx:129–133]
-- [ ] [Review][Patch] `useBuildStore.getState()` called at module scope in test — captures pre-test state; move inside `beforeEach` or use a factory [GearSlot.test.tsx:86]
-- [ ] [Review][Patch] "typing shows up to 6 results" test is vacuously true — mock has only 3 items, cap never triggers; expand mock to 8+ items [GearSlot.test.tsx:121–133]
-- [ ] [Review][Patch] No test for `handleTierChange` / tier slider interaction — change tier, assert store updated with re-encoded affix string [GearSlot.test.tsx]
-- [ ] [Review][Patch] No test for build-switch reset — simulate `activeBuildId` change, assert slot returns to empty state [GearSlot.test.tsx]
+- [x] [Review][Patch] Null-DB fallback input has no onChange — spec requires free-text to write to store [GearSlot.tsx:144–156]
+- [x] [Review][Patch] Combobox typed as `string` but onChange casts to SearchResult via `as unknown` — type Combobox with explicit generic `<Combobox<SearchResult>>` [GearSlot.tsx:162–165]
+- [x] [Review][Patch] `buildAffixStrings` crashes when `tiers` is empty array — `medianTier` returns 0, `tiers[-1]` is undefined; add guard [GearSlot.tsx:53–55]
+- [x] [Review][Patch] `{searchResults.length > 0 && <ComboboxOptions>}` prevents HUI from setting `aria-expanded="true"` on click before typing — violates AC #1; render ComboboxOptions unconditionally [GearSlot.tsx:184]
+- [x] [Review][Patch] `handleSelect` silently no-ops on null — if HUI passes null (Escape / deselect), state is left inconsistent; handle null by calling handleClear [GearSlot.tsx:109]
+- [x] [Review][Patch] `handleTierChange` stale closure — rapid slider drags overwrite each other; use functional state updater pattern [GearSlot.tsx:129–133]
+- [x] [Review][Patch] `useBuildStore.getState()` called at module scope in test — captures pre-test state; move inside `beforeEach` or use a factory [GearSlot.test.tsx:86]
+- [x] [Review][Patch] "typing shows up to 6 results" test is vacuously true — mock has only 3 items, cap never triggers; expand mock to 8+ items [GearSlot.test.tsx:121–133]
+- [x] [Review][Patch] No test for `handleTierChange` / tier slider interaction — change tier, assert store updated with re-encoded affix string [GearSlot.test.tsx]
+- [x] [Review][Patch] No test for build-switch reset — simulate `activeBuildId` change, assert slot returns to empty state [GearSlot.test.tsx]
 
 ### Deferred
 - [x] [Review][Defer] ComboboxButton (▾) added without AC coverage — functional but undocumented scope creep [GearSlot.tsx:180] — deferred, pre-existing

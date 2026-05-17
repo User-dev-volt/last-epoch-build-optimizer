@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import {
   Combobox,
   ComboboxInput,
@@ -52,6 +52,7 @@ function buildAffixStrings(
   return resolved.map((r) => {
     const tier = tiers[r.affixId] ?? medianTier(r.affixEntry)
     const tierData = r.affixEntry.tiers[tier - 1]
+    if (!tierData) return r.name
     const valueStr =
       tierData.minValue === tierData.maxValue
         ? String(tierData.minValue)
@@ -64,6 +65,8 @@ export function GearSlot({ slotId, slotName, itemDatabase }: GearSlotProps) {
   const [query, setQuery] = useState('')
   const [selectedItem, setSelectedItem] = useState<SearchResult | null>(null)
   const [affixTiers, setAffixTiers] = useState<Record<string, number>>({})
+  const affixTiersRef = useRef<Record<string, number>>({})
+  affixTiersRef.current = affixTiers
 
   const activeBuildId = useBuildStore((s) => s.activeBuild?.id ?? null)
 
@@ -107,7 +110,10 @@ export function GearSlot({ slotId, slotName, itemDatabase }: GearSlotProps) {
   }
 
   function handleSelect(item: SearchResult | null) {
-    if (!item) return
+    if (!item) {
+      handleClear()
+      return
+    }
     setSelectedItem(item)
     setQuery('')
     const resolved = itemDatabase ? resolveAffixes(item, itemDatabase) : []
@@ -127,7 +133,7 @@ export function GearSlot({ slotId, slotName, itemDatabase }: GearSlotProps) {
   }
 
   function handleTierChange(affixId: string, tier: number) {
-    const nextTiers = { ...affixTiers, [affixId]: tier }
+    const nextTiers = { ...affixTiersRef.current, [affixId]: tier }
     setAffixTiers(nextTiers)
     writeToStore(selectedItem, resolvedAffixes, nextTiers)
   }
@@ -151,6 +157,14 @@ export function GearSlot({ slotId, slotName, itemDatabase }: GearSlotProps) {
                 color: 'var(--color-text-primary)',
                 border: '1px solid var(--color-bg-elevated)',
               }}
+              onChange={(e) => {
+                const allGear = useBuildStore.getState().activeBuild?.contextData.gear ?? []
+                const otherSlots = allGear.filter((g) => g.slotId !== slotId)
+                useBuildStore.getState().updateContextGear([
+                  ...otherSlots,
+                  { slotId, itemName: e.target.value, affixes: [] },
+                ])
+              }}
             />
             <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
               Database unavailable
@@ -158,11 +172,9 @@ export function GearSlot({ slotId, slotName, itemDatabase }: GearSlotProps) {
           </>
         ) : (
           <div className="relative">
-            <Combobox
-              value={query}
-              onChange={(val) => {
-                handleSelect(val as unknown as SearchResult)
-              }}
+            <Combobox<SearchResult | null>
+              value={selectedItem}
+              onChange={handleSelect}
               immediate
             >
               <div className="flex items-center gap-1">
@@ -181,28 +193,26 @@ export function GearSlot({ slotId, slotName, itemDatabase }: GearSlotProps) {
                   ▾
                 </ComboboxButton>
               </div>
-              {searchResults.length > 0 && (
-                <ComboboxOptions
-                  className="absolute z-10 w-full max-h-40 overflow-y-auto rounded mt-1"
-                  style={{ backgroundColor: 'var(--color-bg-elevated)' }}
-                >
-                  {searchResults.map((result) => (
-                    <ComboboxOption
-                      key={result.id}
-                      value={result}
-                      className="px-2 py-1 text-xs cursor-pointer data-[focus]:bg-[var(--color-bg-hover)]"
+              <ComboboxOptions
+                className="absolute z-10 w-full max-h-40 overflow-y-auto rounded mt-1"
+                style={{ backgroundColor: 'var(--color-bg-elevated)' }}
+              >
+                {searchResults.map((result) => (
+                  <ComboboxOption
+                    key={result.id}
+                    value={result}
+                    className="px-2 py-1 text-xs cursor-pointer data-[focus]:bg-[var(--color-bg-hover)]"
+                  >
+                    <span style={{ color: 'var(--color-text-primary)' }}>{result.name}</span>
+                    <span
+                      className="ml-2 text-[10px]"
+                      style={{ color: 'var(--color-text-muted)' }}
                     >
-                      <span style={{ color: 'var(--color-text-primary)' }}>{result.name}</span>
-                      <span
-                        className="ml-2 text-[10px]"
-                        style={{ color: 'var(--color-text-muted)' }}
-                      >
-                        {result.baseType}
-                      </span>
-                    </ComboboxOption>
-                  ))}
-                </ComboboxOptions>
-              )}
+                      {result.baseType}
+                    </span>
+                  </ComboboxOption>
+                ))}
+              </ComboboxOptions>
             </Combobox>
           </div>
         )
