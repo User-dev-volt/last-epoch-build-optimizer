@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useBuildStore } from '../../shared/stores/buildStore'
-import type { GearItem } from '../../shared/types/build'
+import type { GearItemV2, AffixEntryV2 } from '../../shared/types/build'
 import { GEAR_SLOTS } from './gearData'
 
 export function GearInput() {
@@ -12,7 +12,7 @@ export function GearInput() {
     setPendingAffixes({})
   }, [activeBuildId])
 
-  function getSlot(slotId: string): GearItem {
+  function getSlot(slotId: string): GearItemV2 {
     return gear.find((g) => g.slotId === slotId) ?? { slotId, itemName: '', affixes: [] }
   }
 
@@ -27,8 +27,9 @@ export function GearInput() {
     const affix = (pendingAffixes[slotId] ?? '').trim()
     if (!affix) return
     const slot = getSlot(slotId)
+    const entry: AffixEntryV2 = { name: affix }
     const updated = GEAR_SLOTS.map(({ slotId: id }) =>
-      id === slotId ? { ...slot, affixes: [...slot.affixes, affix] } : getSlot(id)
+      id === slotId ? { ...slot, affixes: [...slot.affixes, entry] } : getSlot(id)
     )
     useBuildStore.getState().updateContextGear(updated)
     setPendingAffixes((prev) => ({ ...prev, [slotId]: '' }))
@@ -68,17 +69,17 @@ export function GearInput() {
               <div className="flex flex-wrap gap-1">
                 {slot.affixes.map((affix, i) => (
                   <span
-                    key={`${affix}-${i}`}
+                    key={`${affix.name}-${i}`}
                     data-testid={`gear-affix-tag-${slotId}-${i}`}
                     className="text-xs px-1.5 py-0.5 rounded flex items-center gap-1"
                     style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-secondary)' }}
                   >
-                    {affix}
+                    {affix.name}
                     <button
                       type="button"
                       onClick={() => handleRemoveAffix(slotId, i)}
                       style={{ color: 'var(--color-text-muted)' }}
-                      aria-label={`Remove affix ${affix}`}
+                      aria-label={`Remove affix ${affix.name}`}
                     >
                       ×
                     </button>

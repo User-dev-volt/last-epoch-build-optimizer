@@ -56,10 +56,10 @@ const mockMeta: BuildMeta = {
 const initialBuildState = useBuildStore.getState()
 
 describe('migrateBuildState', () => {
-  it('passes through a valid schemaVersion 1 object', () => {
+  it('migrates a schemaVersion 1 build to schemaVersion 2', () => {
     const raw = { ...mockBuild }
     const result = migrateBuildState(raw)
-    expect(result.schemaVersion).toBe(1)
+    expect(result.schemaVersion).toBe(2)
     expect(result.id).toBe('build-1')
     expect(result.name).toBe('Void Knight')
     expect(result.classId).toBe('sentinel')
@@ -102,6 +102,94 @@ describe('migrateBuildState', () => {
     const raw = { ...mockBuild, activeSkillLevels: { 'slot-0': 10 } }
     const result = migrateBuildState(raw)
     expect(result.activeSkillLevels).toEqual({ 'slot-0': 10 })
+  })
+})
+
+describe('migrateBuildState — v2 migration', () => {
+  it('converts v1 string affixes to AffixEntryV2 objects (AC2)', () => {
+    const raw = {
+      schemaVersion: 1,
+      id: 'x',
+      name: 'Test',
+      contextData: {
+        gear: [{ slotId: 'chest', itemName: 'Plate', affixes: ['Health', 'Armor'] }],
+        skills: [],
+        idols: [],
+      },
+    }
+    const result = migrateBuildState(raw)
+    expect(result.schemaVersion).toBe(2)
+    expect(result.contextData.gear[0].affixes).toEqual([
+      { name: 'Health', tier: undefined, value: undefined },
+      { name: 'Armor', tier: undefined, value: undefined },
+    ])
+  })
+
+  it('coerces null gear to [] and sets schemaVersion 2 (AC3)', () => {
+    const raw = {
+      schemaVersion: 1,
+      id: 'x',
+      name: 'Test',
+      contextData: { gear: null, skills: [], idols: [] },
+    }
+    const result = migrateBuildState(raw)
+    expect(result.schemaVersion).toBe(2)
+    expect(result.contextData.gear).toEqual([])
+  })
+
+  it('coerces undefined gear to [] (AC3)', () => {
+    const raw = {
+      schemaVersion: 1,
+      id: 'x',
+      name: 'Test',
+      contextData: { skills: [], idols: [] },
+    }
+    const result = migrateBuildState(raw)
+    expect(result.schemaVersion).toBe(2)
+    expect(result.contextData.gear).toEqual([])
+  })
+
+  it('preserves empty affixes array as empty AffixEntryV2[] (AC4)', () => {
+    const raw = {
+      schemaVersion: 1,
+      id: 'x',
+      name: 'Test',
+      contextData: {
+        gear: [{ slotId: 'helm', itemName: 'Crown', affixes: [] }],
+        skills: [],
+        idols: [],
+      },
+    }
+    const result = migrateBuildState(raw)
+    expect(result.schemaVersion).toBe(2)
+    expect(result.contextData.gear[0].affixes).toEqual([])
+  })
+
+  it('v2 build passes through migrateBuildState unchanged (AC5)', () => {
+    const v2Build = {
+      schemaVersion: 2,
+      id: 'build-v2',
+      name: 'V2 Build',
+      classId: 'sentinel',
+      masteryId: 'void_knight',
+      characterLevel: 10,
+      budgetEnforced: false,
+      nodeAllocations: {},
+      skillNodeAllocations: {},
+      activeSkillLevels: {},
+      weaverAllocations: {},
+      contextData: {
+        gear: [{ slotId: 'chest', itemName: 'Plate', affixes: [{ name: 'Health', tier: 2 }] }],
+        skills: [],
+        idols: [],
+      },
+      isPersisted: true,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+    }
+    const result = migrateBuildState(v2Build)
+    expect(result.schemaVersion).toBe(2)
+    expect(result.contextData.gear[0].affixes).toEqual([{ name: 'Health', tier: 2 }])
   })
 })
 

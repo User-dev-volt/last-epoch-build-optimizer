@@ -4,6 +4,20 @@ export interface GearItem {
   affixes: string[]
 }
 
+export interface AffixEntryV2 {
+  affixId?: string
+  name: string
+  tier?: number
+  value?: number
+}
+
+export interface GearItemV2 {
+  slotId: string
+  itemId?: string
+  itemName: string
+  affixes: AffixEntryV2[]
+}
+
 export interface ActiveSkill {
   slotId: string
   skillName: string
@@ -17,7 +31,7 @@ export interface IdolItem {
 }
 
 export interface BuildState {
-  schemaVersion: 1
+  schemaVersion: 1 | 2
   id: string
   name: string
   classId: string
@@ -29,7 +43,7 @@ export interface BuildState {
   activeSkillLevels: Record<string, number>
   weaverAllocations: Record<string, number>
   contextData: {
-    gear: GearItem[]
+    gear: GearItemV2[]
     skills: ActiveSkill[]
     idols: IdolItem[]
   }

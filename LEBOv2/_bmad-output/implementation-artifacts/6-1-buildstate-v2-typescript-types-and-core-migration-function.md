@@ -1,6 +1,6 @@
 # Story 6.1: BuildState v2 TypeScript Types and Core Migration Function
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -51,28 +51,28 @@ then the build is returned unchanged — `schemaVersion` remains `2`, `affixes` 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Update `src/shared/types/build.ts` with v2 types (AC1)
-  - [ ] 1.1: Add `AffixEntryV2` interface: `{ affixId?: string; name: string; tier?: number; value?: number }`
-  - [ ] 1.2: Add `GearItemV2` interface: `{ slotId: string; itemId?: string; itemName: string; affixes: AffixEntryV2[] }` (keep `GearItem` for backward reference — migration reads it as input shape)
-  - [ ] 1.3: Change `BuildState.schemaVersion` from literal `1` to union `1 | 2`
-  - [ ] 1.4: Change `BuildState.contextData.gear` from `GearItem[]` to `GearItemV2[]` (canonical store type is v2 post-migration)
+- [x] Task 1: Update `src/shared/types/build.ts` with v2 types (AC1)
+  - [x] 1.1: Add `AffixEntryV2` interface: `{ affixId?: string; name: string; tier?: number; value?: number }`
+  - [x] 1.2: Add `GearItemV2` interface: `{ slotId: string; itemId?: string; itemName: string; affixes: AffixEntryV2[] }` (keep `GearItem` for backward reference — migration reads it as input shape)
+  - [x] 1.3: Change `BuildState.schemaVersion` from literal `1` to union `1 | 2`
+  - [x] 1.4: Change `BuildState.contextData.gear` from `GearItem[]` to `GearItemV2[]` (canonical store type is v2 post-migration)
 
-- [ ] Task 2: Update `migrateBuildState` in `buildPersistence.ts` (AC2, AC3, AC4, AC5, AC6)
-  - [ ] 2.1: Add v2 idempotency guard: if `obj.schemaVersion === 2`, return the build as-is with `schemaVersion: 2`
-  - [ ] 2.2: In the v1 path, convert `contextData.gear` from raw string-affixes to `GearItemV2[]`:
+- [x] Task 2: Update `migrateBuildState` in `buildPersistence.ts` (AC2, AC3, AC4, AC5, AC6)
+  - [x] 2.1: Add v2 idempotency guard: if `obj.schemaVersion === 2`, return the build as-is with `schemaVersion: 2`
+  - [x] 2.2: In the v1 path, convert `contextData.gear` from raw string-affixes to `GearItemV2[]`:
     - Coerce null/undefined/missing gear to `[]`
     - For each gear slot: map `affixes: string[]` → `AffixEntryV2[]` using `name => ({ name, tier: undefined, value: undefined })`
     - Preserve `slotId`, `itemName`; set `itemId: undefined`
-  - [ ] 2.3: Set `schemaVersion: 2` in the returned build for all v1 inputs
-  - [ ] 2.4: Update `return` statement in `migrateBuildState` to use `GearItemV2[]` for `contextData.gear`
+  - [x] 2.3: Set `schemaVersion: 2` in the returned build for all v1 inputs
+  - [x] 2.4: Update `return` statement in `migrateBuildState` to use `GearItemV2[]` for `contextData.gear`
 
-- [ ] Task 3: Update tests in `buildPersistence.test.ts` (AC1–AC5)
-  - [ ] 3.1: Update existing test `expect(result.schemaVersion).toBe(1)` → `toBe(2)` (v1 input now migrates to v2)
-  - [ ] 3.2: Add migration test: v1 build with string affixes produces correct `AffixEntryV2[]` objects (AC2)
-  - [ ] 3.3: Add migration test: null gear coerced to `[]`, schemaVersion set to 2 (AC3)
-  - [ ] 3.4: Add migration test: empty `affixes: []` preserved as empty `AffixEntryV2[]` (AC4)
-  - [ ] 3.5: Add idempotency test: v2 build passes through `migrateBuildState` unchanged (AC5)
-  - [ ] 3.6: Update `mockBuild` fixture to reflect post-migration schemaVersion (either use v2 shape or adjust test assertions — see Dev Notes)
+- [x] Task 3: Update tests in `buildPersistence.test.ts` (AC1–AC5)
+  - [x] 3.1: Update existing test `expect(result.schemaVersion).toBe(1)` → `toBe(2)` (v1 input now migrates to v2)
+  - [x] 3.2: Add migration test: v1 build with string affixes produces correct `AffixEntryV2[]` objects (AC2)
+  - [x] 3.3: Add migration test: null gear coerced to `[]`, schemaVersion set to 2 (AC3)
+  - [x] 3.4: Add migration test: empty `affixes: []` preserved as empty `AffixEntryV2[]` (AC4)
+  - [x] 3.5: Add idempotency test: v2 build passes through `migrateBuildState` unchanged (AC5)
+  - [x] 3.6: `mockBuild` fixture `schemaVersion: 1` is valid for `1 | 2` union; `gear: []` is valid for `GearItemV2[]` — no fixture change needed
 
 ## Dev Notes
 
@@ -256,4 +256,26 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- All 6 ACs satisfied. `AffixEntryV2` and `GearItemV2` added to `build.ts`; `BuildState.schemaVersion` is now `1 | 2`; `contextData.gear` is `GearItemV2[]`.
+- `migrateBuildState` updated: idempotency guard for v2 builds, v1→v2 gear conversion with string-to-`AffixEntryV2` mapping and null/undefined coercion.
+- `migrateBuildState` now always returns `schemaVersion: 2` for v1 inputs.
+- Downstream consumers updated for TypeScript strict-mode compliance: `buildStore.ts`, `GearInput.tsx`, `GearSlot.tsx` (replaced `buildAffixStrings` with `buildAffixEntries` returning `AffixEntryV2[]`).
+- All downstream tests updated: `buildStore.test.ts`, `GearInput.test.tsx`, `GearSlot.test.tsx`.
+- 0 new TypeScript errors introduced (27 pre-existing errors in unrelated `AffixTierControl.test.tsx`).
+- 136 tests pass across all 4 modified test files; 8 pre-existing unrelated test failures unchanged.
+
 ### File List
+
+- lebo/src/shared/types/build.ts
+- lebo/src/shared/stores/buildStore.ts
+- lebo/src/shared/stores/buildStore.test.ts
+- lebo/src/features/build-manager/buildPersistence.ts
+- lebo/src/features/build-manager/buildPersistence.test.ts
+- lebo/src/features/context-panel/GearInput.tsx
+- lebo/src/features/context-panel/GearInput.test.tsx
+- lebo/src/features/item-database/GearSlot.tsx
+- lebo/src/features/item-database/GearSlot.test.tsx
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+- _bmad-output/implementation-artifacts/6-1-buildstate-v2-typescript-types-and-core-migration-function.md
+
+### Change Log

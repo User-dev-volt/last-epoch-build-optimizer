@@ -9,6 +9,7 @@ import {
 import { AffixTierControl } from './AffixTierControl'
 import { AffixPicker } from './AffixPicker'
 import type { ItemDatabase, AffixEntry, SearchResult } from '../../shared/types/itemDatabase'
+import type { AffixEntryV2 } from '../../shared/types/build'
 import { useBuildStore } from '../../shared/stores/buildStore'
 import { searchItems } from './itemSearch'
 
@@ -46,19 +47,13 @@ function resolveAffixes(item: SearchResult, itemDatabase: ItemDatabase): Resolve
   }
 }
 
-function buildAffixStrings(
+function buildAffixEntries(
   resolved: ResolvedAffix[],
   tiers: Record<string, number>
-): string[] {
+): AffixEntryV2[] {
   return resolved.map((r) => {
     const tier = tiers[r.affixId] ?? medianTier(r.affixEntry)
-    const tierData = r.affixEntry.tiers[tier - 1]
-    if (!tierData) return r.name
-    const valueStr =
-      tierData.minValue === tierData.maxValue
-        ? String(tierData.minValue)
-        : `${tierData.minValue}–${tierData.maxValue}`
-    return `${r.name}: ${valueStr}`
+    return { affixId: r.affixId, name: r.name, tier }
   })
 }
 
@@ -120,10 +115,10 @@ export function GearSlot({ slotId, slotName, itemDatabase }: GearSlotProps) {
       return
     }
 
-    const affixStrings = buildAffixStrings(resolved, tiers)
+    const affixEntries = buildAffixEntries(resolved, tiers)
     useBuildStore.getState().updateContextGear([
       ...otherSlots,
-      { slotId, itemName: item.name, affixes: affixStrings },
+      { slotId, itemName: item.name, affixes: affixEntries },
     ])
   }
 

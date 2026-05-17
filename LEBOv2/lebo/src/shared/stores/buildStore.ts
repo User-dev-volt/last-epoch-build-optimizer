@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { BuildState, BuildMeta, ApplyNodeResult, GearItem, ActiveSkill, IdolItem } from '../types/build'
+import type { BuildState, BuildMeta, ApplyNodeResult, GearItemV2, ActiveSkill, IdolItem } from '../types/build'
 import type { SkillEntry } from '../types/gameData'
 import type { TreeData } from '../types/treeData'
 import { calculatePassivePoints, calculateSkillPoints, calculateWeaverPoints } from '../utils/budgetCalculator'
@@ -43,7 +43,7 @@ export interface BuildStore {
   ) => ApplyNodeResult
   resetActiveTree: (treeType: 'passive' | 'skill' | 'weaver', slotId?: string) => void
   undoNodeChange: () => void
-  updateContextGear: (gear: GearItem[]) => void
+  updateContextGear: (gear: GearItemV2[]) => void
   updateContextSkills: (skills: ActiveSkill[]) => void
   updateContextIdols: (idols: IdolItem[]) => void
 }

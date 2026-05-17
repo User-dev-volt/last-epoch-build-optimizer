@@ -23,7 +23,9 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Choose review strategy: decide whether to **(1) apply all three patches now, (2) leave as backlog items, or (3) walk through each patch for discussion** before proceeding.
+- Dev agent uses Story 6-1 file to implement BuildStateV2 type migration with embedded guardrails
+- Search codebase for `.affixes` consumers before writing migration code
+- Run test suite against old test assertion before committing
 
 ---
 

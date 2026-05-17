@@ -282,7 +282,7 @@ describe('GearSlot', () => {
     await waitFor(() => {
       const gear = useBuildStore.getState().activeBuild!.contextData.gear
       const slot = gear.find((g) => g.slotId === 'helmet')
-      expect(slot?.affixes).toContain('Added Armor: 41–60')
+      expect(slot?.affixes).toContainEqual(expect.objectContaining({ name: 'Added Armor', tier: 3 }))
     })
   })
 
@@ -462,7 +462,7 @@ describe('GearSlot', () => {
     await waitFor(() => {
       const gear = useBuildStore.getState().activeBuild!.contextData.gear
       const slot = gear.find((g) => g.slotId === 'helmet')
-      expect(slot?.affixes.some((a) => a.startsWith('Movement Speed:'))).toBe(true)
+      expect(slot?.affixes.some((a) => a.name === 'Movement Speed')).toBe(true)
     })
   })
 })

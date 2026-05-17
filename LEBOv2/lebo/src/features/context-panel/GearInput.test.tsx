@@ -59,14 +59,14 @@ describe('GearInput', () => {
     await userEvent.click(addButton)
     const gear = useBuildStore.getState().activeBuild!.contextData.gear
     const helmet = gear.find((g) => g.slotId === 'helmet')
-    expect(helmet?.affixes).toContain('+15% Void Damage')
+    expect(helmet?.affixes).toContainEqual(expect.objectContaining({ name: '+15% Void Damage' }))
   })
 
   it('affix dismiss button removes the affix from the store', async () => {
     useBuildStore.getState().setActiveBuild({
       ...mockBuild,
       contextData: {
-        gear: [{ slotId: 'helmet', itemName: 'Iron Helm', affixes: ['+10 HP', '+5 Mana'] }],
+        gear: [{ slotId: 'helmet', itemName: 'Iron Helm', affixes: [{ name: '+10 HP' }, { name: '+5 Mana' }] }],
         skills: [],
         idols: [],
       },
@@ -77,15 +77,15 @@ describe('GearInput', () => {
     await userEvent.click(dismissBtn)
     const gear = useBuildStore.getState().activeBuild!.contextData.gear
     const helmet = gear.find((g) => g.slotId === 'helmet')
-    expect(helmet?.affixes).not.toContain('+10 HP')
-    expect(helmet?.affixes).toContain('+5 Mana')
+    expect(helmet?.affixes).not.toContainEqual(expect.objectContaining({ name: '+10 HP' }))
+    expect(helmet?.affixes).toContainEqual(expect.objectContaining({ name: '+5 Mana' }))
   })
 
   it('slot data is preserved when store gear is pre-populated', () => {
     useBuildStore.getState().setActiveBuild({
       ...mockBuild,
       contextData: {
-        gear: [{ slotId: 'body', itemName: 'Dragon Plate', affixes: ['+20 Armor'] }],
+        gear: [{ slotId: 'body', itemName: 'Dragon Plate', affixes: [{ name: '+20 Armor' }] }],
         skills: [],
         idols: [],
       },

@@ -1,15 +1,18 @@
 import { showErrorToast, showInfoToast } from '../../shared/components/Toast'
 import { invokeCommand } from '../../shared/utils/invokeCommand'
 import { useBuildStore } from '../../shared/stores/buildStore'
-import type { BuildState, BuildMeta } from '../../shared/types/build'
+import type { BuildState, BuildMeta, AffixEntryV2, GearItemV2 } from '../../shared/types/build'
 
 export function migrateBuildState(raw: unknown): BuildState {
   if (typeof raw !== 'object' || raw === null) {
     throw new Error('STORAGE_ERROR: invalid build data')
   }
   const obj = raw as Record<string, unknown>
-  return {
-    schemaVersion: 1,
+  const ctx = (typeof obj.contextData === 'object' && obj.contextData !== null)
+    ? (obj.contextData as Record<string, unknown>)
+    : null
+
+  const sharedFields = {
     id: String(obj.id ?? crypto.randomUUID()),
     name: String(obj.name ?? ''),
     classId: String(obj.classId ?? ''),
@@ -32,13 +35,52 @@ export function migrateBuildState(raw: unknown): BuildState {
       typeof obj.weaverAllocations === 'object' && obj.weaverAllocations !== null
         ? (obj.weaverAllocations as Record<string, number>)
         : {},
-    contextData:
-      typeof obj.contextData === 'object' && obj.contextData !== null
-        ? (obj.contextData as BuildState['contextData'])
-        : { gear: [], skills: [], idols: [] },
-    isPersisted: true,
+    isPersisted: true as const,
     createdAt: String(obj.createdAt ?? new Date().toISOString()),
     updatedAt: String(obj.updatedAt ?? new Date().toISOString()),
+  }
+
+  // Idempotency: v2 builds pass through with defaults re-applied for safety
+  if (obj.schemaVersion === 2) {
+    return {
+      ...sharedFields,
+      schemaVersion: 2,
+      contextData: {
+        gear: (Array.isArray(ctx?.gear) ? ctx!.gear : []) as GearItemV2[],
+        skills: Array.isArray(ctx?.skills) ? ctx!.skills as BuildState['contextData']['skills'] : [],
+        idols: Array.isArray(ctx?.idols) ? ctx!.idols as BuildState['contextData']['idols'] : [],
+      },
+    }
+  }
+
+  // v1 → v2: convert gear affixes from string[] to AffixEntryV2[]
+  const rawGear = ctx?.gear
+  const migratedGear: GearItemV2[] = Array.isArray(rawGear)
+    ? rawGear.map((slot: unknown) => {
+        const s = slot as Record<string, unknown>
+        return {
+          slotId: String(s.slotId ?? s.slot ?? ''),
+          itemId: typeof s.itemId === 'string' ? s.itemId : undefined,
+          itemName: String(s.itemName ?? ''),
+          affixes: Array.isArray(s.affixes)
+            ? s.affixes.map((a: unknown): AffixEntryV2 =>
+                typeof a === 'string'
+                  ? { name: a, tier: undefined, value: undefined }
+                  : (a as AffixEntryV2)
+              )
+            : [],
+        }
+      })
+    : []
+
+  return {
+    ...sharedFields,
+    schemaVersion: 2,
+    contextData: {
+      gear: migratedGear,
+      skills: Array.isArray(ctx?.skills) ? ctx!.skills as BuildState['contextData']['skills'] : [],
+      idols: Array.isArray(ctx?.idols) ? ctx!.idols as BuildState['contextData']['idols'] : [],
+    },
   }
 }
 
