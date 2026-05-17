@@ -1,6 +1,6 @@
 # Story 5.3: AffixTierControl — Pip-Based Tier Selection
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -34,37 +34,37 @@ so that I can quickly set affix tiers to match my actual item rolls without typi
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add CSS tokens to `src/assets/styles/global.css` (AC: #6)
-  - [ ] Add under the `@theme` block, after the existing `/* Skill picker */` group:
+- [x] Task 1: Add CSS tokens to `src/assets/styles/global.css` (AC: #6)
+  - [x] Add under the `@theme` block, after the existing `/* Skill picker */` group:
     ```css
     /* Item tier pips */
     --color-tier-pip-active:   #C9A84C; /* PixiJS: 0xC9A84C — matches --color-accent-gold */
     --color-tier-pip-inactive: #1c1c21; /* PixiJS: 0x1C1C21 — matches --color-bg-elevated; border added via element style */
     ```
-  - [ ] No other changes to global.css
+  - [x] No other changes to global.css
 
-- [ ] Task 2: Create `AffixTierControl.tsx` at `src/features/item-database/AffixTierControl.tsx` (AC: #1–#5)
-  - [ ] Import only: `import type { AffixEntry } from '../../shared/types/itemDatabase'` — no Tauri, no store, no Headless UI
-  - [ ] Define `AffixTierControlProps`: `{ affixEntry: AffixEntry; currentTier: number; onChange: (tier: number) => void }`
-  - [ ] Derive: `const tierCount = affixEntry.tiers.length`
-  - [ ] Derive: `const tierData = affixEntry.tiers[currentTier - 1]`; compute `valueText` (see Dev Notes)
-  - [ ] Container div: `role="slider"`, `aria-valuemin={1}`, `aria-valuemax={tierCount}`, `aria-valuenow={currentTier}`, `aria-label={`${affixEntry.name} tier`}`, `aria-valuetext={`Tier ${currentTier}: ${valueText}`}`, `tabIndex={0}`, `onKeyDown={handleKeyDown}`, flex row layout with `alignItems: 'center'`, `gap: 8`
-  - [ ] Pip loop: render `tierCount` divs; each 8px × 8px, `borderRadius: '50%'`, pip i filled if `i <= currentTier`; pip i unfilled otherwise; each pip has `onClick={() => onChange(i)}`, `aria-hidden={true}`, `style={{ cursor: 'pointer' }}`
-  - [ ] Value display: `<span style={{ fontFamily: 'var(--font-mono)', width: 40, textAlign: 'right', fontSize: 13, color: 'var(--color-text-primary)' }}>{valueText}</span>`
-  - [ ] `handleKeyDown`: Right → `onChange(Math.min(currentTier + 1, tierCount))`; Left → `onChange(Math.max(currentTier - 1, 1))`; both call `e.preventDefault()`; skip onChange if already at boundary
-  - [ ] Named export: `export function AffixTierControl(...)`
+- [x] Task 2: Create `AffixTierControl.tsx` at `src/features/item-database/AffixTierControl.tsx` (AC: #1–#5)
+  - [x] Import only: `import type { AffixEntry } from '../../shared/types/itemDatabase'` — no Tauri, no store, no Headless UI
+  - [x] Define `AffixTierControlProps`: `{ affixEntry: AffixEntry; currentTier: number; onChange: (tier: number) => void }`
+  - [x] Derive: `const tierCount = affixEntry.tiers.length`
+  - [x] Derive: `const tierData = affixEntry.tiers[currentTier - 1]`; compute `valueText` (see Dev Notes)
+  - [x] Container div: `role="slider"`, `aria-valuemin={1}`, `aria-valuemax={tierCount}`, `aria-valuenow={currentTier}`, `aria-label={`${affixEntry.name} tier`}`, `aria-valuetext={`Tier ${currentTier}: ${valueText}`}`, `tabIndex={0}`, `onKeyDown={handleKeyDown}`, flex row layout with `alignItems: 'center'`, `gap: 8`
+  - [x] Pip loop: render `tierCount` divs; each 8px × 8px, `borderRadius: '50%'`, pip i filled if `i <= currentTier`; pip i unfilled otherwise; each pip has `onClick={() => onChange(i)}`, `aria-hidden={true}`, `style={{ cursor: 'pointer' }}`
+  - [x] Value display: `<span style={{ fontFamily: 'var(--font-mono)', width: 40, textAlign: 'right', fontSize: 13, color: 'var(--color-text-primary)' }}>{valueText}</span>`
+  - [x] `handleKeyDown`: Right → `onChange(Math.min(currentTier + 1, tierCount))`; Left → `onChange(Math.max(currentTier - 1, 1))`; both call `e.preventDefault()`; skip onChange if already at boundary
+  - [x] Named export: `export function AffixTierControl(...)`
 
-- [ ] Task 3: Create `AffixTierControl.test.tsx` at `src/features/item-database/AffixTierControl.test.tsx` (AC: #7)
-  - [ ] Build a minimal `mockAffixEntry: AffixEntry` with 4 tiers for most tests (validates non-7 tier case works)
-  - [ ] Test: clicking pip 3 calls `onChange(3)`
-  - [ ] Test: keyboard Right arrow at tier 2 → `onChange(3)`
-  - [ ] Test: keyboard Left arrow at tier 2 → `onChange(1)`
-  - [ ] Test: keyboard Right arrow at max tier (4) → `onChange` NOT called
-  - [ ] Test: keyboard Left arrow at tier 1 → `onChange` NOT called
-  - [ ] Test: `aria-valuetext` shows correct `min`–`max` string for current tier
-  - [ ] Test: `expect(await axe(container)).toHaveNoViolations()`
-  - [ ] No `vi.mock` needed (no Tauri/IPC imports in component)
-  - [ ] No snapshot tests — explicit `expect` assertions only
+- [x] Task 3: Create `AffixTierControl.test.tsx` at `src/features/item-database/AffixTierControl.test.tsx` (AC: #7)
+  - [x] Build a minimal `mockAffixEntry: AffixEntry` with 4 tiers for most tests (validates non-7 tier case works)
+  - [x] Test: clicking pip 3 calls `onChange(3)`
+  - [x] Test: keyboard Right arrow at tier 2 → `onChange(3)`
+  - [x] Test: keyboard Left arrow at tier 2 → `onChange(1)`
+  - [x] Test: keyboard Right arrow at max tier (4) → `onChange` NOT called
+  - [x] Test: keyboard Left arrow at tier 1 → `onChange` NOT called
+  - [x] Test: `aria-valuetext` shows correct `min`–`max` string for current tier
+  - [x] Test: `expect(await axe(container)).toHaveNoViolations()`
+  - [x] No `vi.mock` needed (no Tauri/IPC imports in component)
+  - [x] No snapshot tests — explicit `expect` assertions only
 
 ## Dev Notes
 
@@ -246,4 +246,18 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- All 3 tasks completed in single session. 8 tests pass (all 8 written for this story). 8 pre-existing failures confirmed as pre-existing (6 in ProviderSelector/Settings from Story 5.1 notes + 2 in SkillTree unrelated to item-database feature).
+- Pure presentational component with no Tauri/IPC dependencies — no vi.mock needed.
+- aria-hidden on pip divs prevents axe violations (pips are decorative, ARIA slider is on container).
+- Added extra test for single-value affix (minValue === maxValue) not listed in story tasks but required for correctness.
+
 ### File List
+
+- src/assets/styles/global.css (modified — added --color-tier-pip-active, --color-tier-pip-inactive tokens)
+- src/features/item-database/AffixTierControl.tsx (created)
+- src/features/item-database/AffixTierControl.test.tsx (created)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (updated — story 5-3 → review)
+
+## Change Log
+
+- 2026-05-16: Story 5.3 implemented — AffixTierControl pip-based tier selection component, CSS tokens, and full test suite (8 tests, 0 axe violations)

@@ -46,6 +46,10 @@
   --hex-clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   --color-badge-mastery-gate: #1A1208; /* PixiJS: 0x1A1208 — dark warm overlay for mastery gate badge */
 
+  /* Item tier pips */
+  --color-tier-pip-active:   #C9A84C; /* PixiJS: 0xC9A84C — matches --color-accent-gold */
+  --color-tier-pip-inactive: #1c1c21; /* PixiJS: 0x1C1C21 — matches --color-bg-elevated; border added via element style */
+
   /* Text */
   --color-text-primary:   #F0EAE0;
   --color-text-secondary: #9E9494;
