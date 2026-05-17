@@ -1,6 +1,6 @@
 # Story 6.2: Optimization Preset Migration and Build Persistence Integration
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -52,34 +52,34 @@ then all operations work correctly with no regression (FR53); `loadBuild` contin
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `FineTuneWeights` to `src/shared/types/optimization.ts` (AC1–AC7)
-  - [ ] 1.1: Export `interface FineTuneWeights { damage: number; survivability: number; speed: number }` from `optimization.ts`
+- [x] Task 1: Add `FineTuneWeights` to `src/shared/types/optimization.ts` (AC1–AC7)
+  - [x] 1.1: Export `interface FineTuneWeights { damage: number; survivability: number; speed: number }` from `optimization.ts`
 
-- [ ] Task 2: Add `sliderPosition` and `fineTuneWeights` to `BuildState` in `src/shared/types/build.ts` (AC1–AC7)
-  - [ ] 2.1: Import `FineTuneWeights` from `./optimization`
-  - [ ] 2.2: Add `sliderPosition?: number` to `BuildState` (optional — avoids cascading changes across all existing `BuildState` constructions in tests and `buildStore.ts`)
-  - [ ] 2.3: Add `fineTuneWeights?: FineTuneWeights | null` to `BuildState` (optional for same reason)
+- [x] Task 2: Add `sliderPosition` and `fineTuneWeights` to `BuildState` in `src/shared/types/build.ts` (AC1–AC7)
+  - [x] 2.1: Import `FineTuneWeights` from `./optimization`
+  - [x] 2.2: Add `sliderPosition?: number` to `BuildState` (optional — avoids cascading changes across all existing `BuildState` constructions in tests and `buildStore.ts`)
+  - [x] 2.3: Add `fineTuneWeights?: FineTuneWeights | null` to `BuildState` (optional for same reason)
 
-- [ ] Task 3: Extend `migrateBuildState` in `src/features/build-manager/buildPersistence.ts` (AC1–AC7)
-  - [ ] 3.1: Import `FineTuneWeights` from `../../shared/types/optimization`
-  - [ ] 3.2: Add `goalPreset` → slider mapping helper (inline or small private function):
+- [x] Task 3: Extend `migrateBuildState` in `src/features/build-manager/buildPersistence.ts` (AC1–AC7)
+  - [x] 3.1: Import `FineTuneWeights` from `../../shared/types/optimization`
+  - [x] 3.2: Add `goalPreset` → slider mapping helper (inline or small private function):
     - `"Maximize Damage"` → `{ sliderPosition: 100, fineTuneWeights: null }`
     - `"Maximize Survivability"` → `{ sliderPosition: 0, fineTuneWeights: null }`
     - `"Maximize Speed"` → `{ sliderPosition: 50, fineTuneWeights: { damage: 25, survivability: 0, speed: 75 } }`
     - `"Balanced"` (or null/missing/unrecognised) → `{ sliderPosition: 50, fineTuneWeights: null }`
-  - [ ] 3.3: In the v1 → v2 path: read `obj.goalPreset`, apply mapping, spread `{ sliderPosition, fineTuneWeights }` into the returned object
-  - [ ] 3.4: In the v2 passthrough path: preserve `sliderPosition`/`fineTuneWeights` from `obj` if present; default to `50`/`null` if absent (AC6/AC7)
+  - [x] 3.3: In the v1 → v2 path: read `obj.goalPreset`, apply mapping, spread `{ sliderPosition, fineTuneWeights }` into the returned object
+  - [x] 3.4: In the v2 passthrough path: preserve `sliderPosition`/`fineTuneWeights` from `obj` if present; default to `50`/`null` if absent (AC6/AC7)
 
-- [ ] Task 4: Add tests in `src/features/build-manager/buildPersistence.test.ts` (AC1–AC8)
-  - [ ] 4.1: Test: v1 + `"Maximize Damage"` → `sliderPosition: 100, fineTuneWeights: null` (AC1)
-  - [ ] 4.2: Test: v1 + `"Maximize Survivability"` → `sliderPosition: 0, fineTuneWeights: null` (AC2)
-  - [ ] 4.3: Test: v1 + `"Balanced"` → `sliderPosition: 50, fineTuneWeights: null` (AC3)
-  - [ ] 4.4: Test: v1 + `"Maximize Speed"` → `sliderPosition: 50, fineTuneWeights: { damage: 25, survivability: 0, speed: 75 }` (AC4)
-  - [ ] 4.5: Test: v1 + `goalPreset: null` → `sliderPosition: 50, fineTuneWeights: null` (AC5)
-  - [ ] 4.6: Test: v1 + `goalPreset` absent → `sliderPosition: 50, fineTuneWeights: null` (AC5)
-  - [ ] 4.7: Test: v2 with `sliderPosition: 100` preserved through passthrough (AC6)
-  - [ ] 4.8: Test: v2 without `sliderPosition` → defaults to 50 (AC7)
-  - [ ] 4.9: Verify all existing tests still pass — `mockBuild` fixture remains valid (no required fields added)
+- [x] Task 4: Add tests in `src/features/build-manager/buildPersistence.test.ts` (AC1–AC8)
+  - [x] 4.1: Test: v1 + `"Maximize Damage"` → `sliderPosition: 100, fineTuneWeights: null` (AC1)
+  - [x] 4.2: Test: v1 + `"Maximize Survivability"` → `sliderPosition: 0, fineTuneWeights: null` (AC2)
+  - [x] 4.3: Test: v1 + `"Balanced"` → `sliderPosition: 50, fineTuneWeights: null` (AC3)
+  - [x] 4.4: Test: v1 + `"Maximize Speed"` → `sliderPosition: 50, fineTuneWeights: { damage: 25, survivability: 0, speed: 75 }` (AC4)
+  - [x] 4.5: Test: v1 + `goalPreset: null` → `sliderPosition: 50, fineTuneWeights: null` (AC5)
+  - [x] 4.6: Test: v1 + `goalPreset` absent → `sliderPosition: 50, fineTuneWeights: null` (AC5)
+  - [x] 4.7: Test: v2 with `sliderPosition: 100` preserved through passthrough (AC6)
+  - [x] 4.8: Test: v2 without `sliderPosition` → defaults to 50 (AC7)
+  - [x] 4.9: Verify all existing tests still pass — `mockBuild` fixture remains valid (no required fields added)
 
 ## Dev Notes
 
@@ -241,8 +241,24 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Added `FineTuneWeights` interface to `optimization.ts` (named export, no default).
+- Extended `BuildState` with optional `sliderPosition?: number` and `fineTuneWeights?: FineTuneWeights | null` — kept optional to avoid cascading fixture changes across 15+ test files.
+- Added `migrateGoalPreset` (private module function) with switch on raw Phase 1 `goalPreset` string → slider values; all 4 presets + null/missing default covered.
+- Added `isFineTuneWeights` type guard for safe v2 passthrough deserialization.
+- v2 passthrough now sets `sliderPosition` (preserve if number, else 50) and `fineTuneWeights` (preserve if valid FineTuneWeights, else null).
+- v1 → v2 path spreads `migrateGoalPreset(obj.goalPreset)` result into return object.
+- 11 new tests added (8 unit + 1 loadBuild integration); all 40 tests in buildPersistence.test.ts pass. No regressions in existing tests.
+- `goalPreset` is NOT added to any TypeScript interface — accessed only via `obj.goalPreset` on the raw `Record<string, unknown>`.
+
 ### File List
+
+- `lebo/src/shared/types/optimization.ts`
+- `lebo/src/shared/types/build.ts`
+- `lebo/src/features/build-manager/buildPersistence.ts`
+- `lebo/src/features/build-manager/buildPersistence.test.ts`
 
 ### Review Findings
 
 ### Change Log
+
+- 2026-05-17: Story 6-2 implemented — `FineTuneWeights` type added, `BuildState` extended with optional slider fields, `migrateBuildState` extended with `migrateGoalPreset` helper and v2 passthrough defaults, 11 new tests added (all pass).

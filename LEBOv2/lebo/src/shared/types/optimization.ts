@@ -1,3 +1,9 @@
+export interface FineTuneWeights {
+  damage: number
+  survivability: number
+  speed: number
+}
+
 export type OptimizationGoal =
   | 'maximize_damage'
   | 'maximize_survivability'

@@ -2,7 +2,29 @@ import { showErrorToast, showInfoToast } from '../../shared/components/Toast'
 import { invokeCommand } from '../../shared/utils/invokeCommand'
 import { useBuildStore } from '../../shared/stores/buildStore'
 import type { BuildState, BuildMeta, AffixEntryV2, GearItemV2 } from '../../shared/types/build'
+import type { FineTuneWeights } from '../../shared/types/optimization'
 import { MAX_CHARACTER_LEVEL } from '../../shared/utils/budgetCalculator'
+
+function migrateGoalPreset(
+  preset: unknown
+): { sliderPosition: number; fineTuneWeights: FineTuneWeights | null } {
+  switch (preset) {
+    case 'Maximize Damage':        return { sliderPosition: 100, fineTuneWeights: null }
+    case 'Maximize Survivability': return { sliderPosition: 0,   fineTuneWeights: null }
+    case 'Maximize Speed':         return { sliderPosition: 50,  fineTuneWeights: { damage: 25, survivability: 0, speed: 75 } }
+    case 'Balanced':
+    default:                       return { sliderPosition: 50,  fineTuneWeights: null }
+  }
+}
+
+function isFineTuneWeights(v: unknown): v is FineTuneWeights {
+  return (
+    typeof v === 'object' && v !== null &&
+    typeof (v as Record<string, unknown>).damage === 'number' &&
+    typeof (v as Record<string, unknown>).survivability === 'number' &&
+    typeof (v as Record<string, unknown>).speed === 'number'
+  )
+}
 
 export function migrateBuildState(raw: unknown): BuildState {
   if (typeof raw !== 'object' || raw === null) {
@@ -57,6 +79,8 @@ export function migrateBuildState(raw: unknown): BuildState {
         skills: Array.isArray(ctx?.skills) ? ctx!.skills as BuildState['contextData']['skills'] : [],
         idols: Array.isArray(ctx?.idols) ? ctx!.idols as BuildState['contextData']['idols'] : [],
       },
+      sliderPosition: typeof obj.sliderPosition === 'number' ? obj.sliderPosition : 50,
+      fineTuneWeights: isFineTuneWeights(obj.fineTuneWeights) ? obj.fineTuneWeights : null,
     }
   }
 
@@ -90,6 +114,7 @@ export function migrateBuildState(raw: unknown): BuildState {
       skills: Array.isArray(ctx?.skills) ? ctx!.skills as BuildState['contextData']['skills'] : [],
       idols: Array.isArray(ctx?.idols) ? ctx!.idols as BuildState['contextData']['idols'] : [],
     },
+    ...migrateGoalPreset(obj.goalPreset),
   }
 }
 

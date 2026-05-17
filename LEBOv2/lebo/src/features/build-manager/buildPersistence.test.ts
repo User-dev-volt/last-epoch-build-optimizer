@@ -249,6 +249,126 @@ describe('migrateBuildState — v2 migration', () => {
   })
 })
 
+describe('migrateBuildState — goalPreset migration', () => {
+  const base = { id: 'x', name: 'T', schemaVersion: 1 as const }
+
+  it('maps "Maximize Damage" to sliderPosition 100 (AC1)', () => {
+    const result = migrateBuildState({ ...base, goalPreset: 'Maximize Damage' })
+    expect(result.sliderPosition).toBe(100)
+    expect(result.fineTuneWeights).toBeNull()
+  })
+
+  it('maps "Maximize Survivability" to sliderPosition 0 (AC2)', () => {
+    const result = migrateBuildState({ ...base, goalPreset: 'Maximize Survivability' })
+    expect(result.sliderPosition).toBe(0)
+    expect(result.fineTuneWeights).toBeNull()
+  })
+
+  it('maps "Balanced" to sliderPosition 50 (AC3)', () => {
+    const result = migrateBuildState({ ...base, goalPreset: 'Balanced' })
+    expect(result.sliderPosition).toBe(50)
+    expect(result.fineTuneWeights).toBeNull()
+  })
+
+  it('maps "Maximize Speed" to sliderPosition 50 with fineTuneWeights (AC4)', () => {
+    const result = migrateBuildState({ ...base, goalPreset: 'Maximize Speed' })
+    expect(result.sliderPosition).toBe(50)
+    expect(result.fineTuneWeights).toEqual({ damage: 25, survivability: 0, speed: 75 })
+  })
+
+  it('defaults null goalPreset to sliderPosition 50 (AC5)', () => {
+    const result = migrateBuildState({ ...base, goalPreset: null })
+    expect(result.sliderPosition).toBe(50)
+    expect(result.fineTuneWeights).toBeNull()
+  })
+
+  it('defaults absent goalPreset to sliderPosition 50 (AC5)', () => {
+    const result = migrateBuildState({ ...base })
+    expect(result.sliderPosition).toBe(50)
+    expect(result.fineTuneWeights).toBeNull()
+  })
+
+  it('v2 passthrough preserves existing sliderPosition and fineTuneWeights (AC6)', () => {
+    const v2 = {
+      schemaVersion: 2 as const,
+      id: 'v2',
+      name: 'V2',
+      classId: '',
+      masteryId: '',
+      characterLevel: 1,
+      budgetEnforced: false,
+      nodeAllocations: {},
+      skillNodeAllocations: {},
+      activeSkillLevels: {},
+      weaverAllocations: {},
+      contextData: { gear: [], skills: [], idols: [] },
+      isPersisted: true,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+      sliderPosition: 100,
+      fineTuneWeights: null,
+    }
+    const result = migrateBuildState(v2)
+    expect(result.sliderPosition).toBe(100)
+    expect(result.fineTuneWeights).toBeNull()
+  })
+
+  it('v2 passthrough defaults absent sliderPosition to 50 (AC7)', () => {
+    const v2 = {
+      schemaVersion: 2 as const,
+      id: 'v2',
+      name: 'V2',
+      classId: '',
+      masteryId: '',
+      characterLevel: 1,
+      budgetEnforced: false,
+      nodeAllocations: {},
+      skillNodeAllocations: {},
+      activeSkillLevels: {},
+      weaverAllocations: {},
+      contextData: { gear: [], skills: [], idols: [] },
+      isPersisted: true,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+    }
+    const result = migrateBuildState(v2)
+    expect(result.sliderPosition).toBe(50)
+    expect(result.fineTuneWeights).toBeNull()
+  })
+})
+
+describe('migrateBuildState — goalPreset loadBuild integration (AC8)', () => {
+  beforeEach(() => {
+    mockInvoke.mockReset()
+    useBuildStore.setState(initialBuildState, true)
+  })
+
+  it('loadBuild with v1 "Maximize Damage" produces activeBuild.sliderPosition = 100', async () => {
+    const v1Build = {
+      schemaVersion: 1,
+      id: 'build-ac8',
+      name: 'Damage Build',
+      classId: 'sentinel',
+      masteryId: 'void_knight',
+      characterLevel: 50,
+      budgetEnforced: false,
+      nodeAllocations: {},
+      skillNodeAllocations: {},
+      activeSkillLevels: {},
+      weaverAllocations: {},
+      contextData: { gear: [], skills: [], idols: [] },
+      isPersisted: true,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+      goalPreset: 'Maximize Damage',
+    }
+    mockInvoke.mockResolvedValue(JSON.stringify(v1Build))
+    await loadBuild('build-ac8')
+    expect(useBuildStore.getState().activeBuild?.sliderPosition).toBe(100)
+    expect(useBuildStore.getState().activeBuild?.fineTuneWeights).toBeNull()
+  })
+})
+
 describe('saveBuild', () => {
   beforeEach(() => {
     mockInvoke.mockReset()

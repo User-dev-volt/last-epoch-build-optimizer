@@ -1,3 +1,5 @@
+import type { FineTuneWeights } from './optimization'
+
 // TODO: remove after story 6-4 ships — kept as the v1 input shape reference for migrateBuildState.
 export interface GearItem {
   slotId: string
@@ -50,6 +52,8 @@ export interface BuildState {
     skills: ActiveSkill[]
     idols: IdolItem[]
   }
+  sliderPosition?: number
+  fineTuneWeights?: FineTuneWeights | null
   isPersisted: boolean
   createdAt: string
   updatedAt: string

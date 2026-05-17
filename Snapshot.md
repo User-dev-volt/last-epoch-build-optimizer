@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Execute the workflow's parallel adversarial review layers on the 9-file diff (focus: migration correctness, type safety in v1↔v2 boundary, test coverage of edge cases)
+Dev agent picks up story 6-2 from `_bmad-output/implementation-artifacts/6-2-optimization-preset-migration-and-build-persistence-integration.md` and implements the 4-file changeset
 
 ---
 
