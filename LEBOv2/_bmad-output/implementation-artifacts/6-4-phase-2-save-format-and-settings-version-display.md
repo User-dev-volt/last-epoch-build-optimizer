@@ -1,6 +1,6 @@
 # Story 6.4: Phase 2 Save Format and Settings Version Display
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -30,8 +30,8 @@ then it shows:
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Fix `createBuild` in `buildStore.ts` to initialize with `schemaVersion: 2` (AC1)
-  - [ ] 1.1: In `lebo/src/shared/stores/buildStore.ts`, in the `createBuild` action, change:
+- [x] Task 1: Fix `createBuild` in `buildStore.ts` to initialize with `schemaVersion: 2` (AC1)
+  - [x] 1.1: In `lebo/src/shared/stores/buildStore.ts`, in the `createBuild` action, change:
     ```typescript
     schemaVersion: 1,
     ```
@@ -41,27 +41,27 @@ then it shows:
     sliderPosition: 50,
     fineTuneWeights: null,
     ```
-  - [ ] 1.2: In `applyNodeChange`'s auto-create block (the fallback that creates a new build when `activeBuild` is null), apply the same change: `schemaVersion: 2`, add `sliderPosition: 50`, `fineTuneWeights: null`
+  - [x] 1.2: In `applyNodeChange`'s auto-create block (the fallback that creates a new build when `activeBuild` is null), apply the same change: `schemaVersion: 2`, add `sliderPosition: 50`, `fineTuneWeights: null`
 
-- [ ] Task 2: Update Settings panel to display version info (AC3)
-  - [ ] 2.1: In `lebo/src/features/settings/Settings.tsx`, import `useGameDataStore` from `../../shared/stores/gameDataStore`
-  - [ ] 2.2: In the component body, read:
+- [x] Task 2: Update Settings panel to display version info (AC3)
+  - [x] 2.1: In `lebo/src/features/settings/Settings.tsx`, import `useGameDataStore` from `../../shared/stores/gameDataStore`
+  - [x] 2.2: In the component body, read:
     ```typescript
     const dataVersion = useGameDataStore((s) => s.dataVersion)
     const dataUpdatedAt = useGameDataStore((s) => s.dataUpdatedAt)
     const itemDataVersion = useGameDataStore((s) => s.gameData?.manifest.itemDataVersion ?? null)
     ```
-  - [ ] 2.3: In the "Data Sources" section of the JSX, add two read-only labels below the existing icon source line:
+  - [x] 2.3: In the "Data Sources" section of the JSX, add two read-only labels below the existing icon source line:
     - "Game Data: {dataVersion} (last updated {formatted date})" — format `dataUpdatedAt` as a short date string (e.g. `new Date(dataUpdatedAt).toLocaleDateString()`); show "—" when `dataVersion` is null
     - "Item Database: {itemDataVersion}" — show "—" when `itemDataVersion` is null
     - Use `data-testid="game-data-version"` and `data-testid="item-data-version"` on these elements
 
-- [ ] Task 3: Tests (AC1, AC3)
-  - [ ] 3.1: In `lebo/src/shared/stores/buildStore.test.ts`, add a test under `buildStore`:
+- [x] Task 3: Tests (AC1, AC3)
+  - [x] 3.1: In `lebo/src/shared/stores/buildStore.test.ts`, add a test under `buildStore`:
     - `createBuild initializes with schemaVersion 2`: set `selectedClassId` and `selectedMasteryId`, call `createBuild('VoidKnight')`, assert `activeBuild.schemaVersion === 2`, `activeBuild.sliderPosition === 50`, `activeBuild.fineTuneWeights === null`
-  - [ ] 3.2: In `lebo/src/features/build-manager/buildPersistence.test.ts`, add a test under `saveBuild`:
+  - [x] 3.2: In `lebo/src/features/build-manager/buildPersistence.test.ts`, add a test under `saveBuild`:
     - `saves a v2 build with schemaVersion 2 in invoke args`: call `saveBuild` with a v2 build object (`schemaVersion: 2`), assert `mockInvoke` was called with `schemaVersion: 2` in the args
-  - [ ] 3.3: In `lebo/src/features/settings/Settings.test.tsx`, add tests:
+  - [x] 3.3: In `lebo/src/features/settings/Settings.test.tsx`, add tests:
     - `shows game data version when store has data`: set `useGameDataStore` state with `dataVersion: '1.4.4'` and `dataUpdatedAt: '2026-04-22T00:00:00Z'`, render `<Settings />`, assert `data-testid="game-data-version"` contains "1.4.4"
     - `shows item data version when manifest has itemDataVersion`: set `useGameDataStore` state with `gameData: { manifest: { ..., itemDataVersion: '1.0.0' }, classes: {} }`, render, assert `data-testid="item-data-version"` contains "1.0.0"
     - `shows em-dash when versions not yet loaded`: render with default (null) store state, assert both version labels show "—"
@@ -161,4 +161,16 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Task 1: Changed `schemaVersion: 1` to `schemaVersion: 2` with `sliderPosition: 50` and `fineTuneWeights: null` in both places in `buildStore.ts`: `createBuild` action (line ~76) and `applyNodeChange` auto-create fallback (line ~134). Updated existing test that asserted `schemaVersion: 1` to assert `2`.
+- Task 2: Added `useGameDataStore` import and three store selectors to `Settings.tsx`. Added two read-only labels in the "Data Sources" section with `data-testid` attributes and null guards.
+- Task 3: Added 5 new tests across 3 files. All pass. Pre-existing failure (`renders the ProviderSelector`) in `Settings.test.tsx` is unrelated — `ProviderSelector` component lacks `data-testid="provider-selector"` and was failing before this story.
+
 ### File List
+
+- `lebo/src/shared/stores/buildStore.ts`
+- `lebo/src/features/settings/Settings.tsx`
+- `lebo/src/shared/stores/buildStore.test.ts`
+- `lebo/src/features/build-manager/buildPersistence.test.ts`
+- `lebo/src/features/settings/Settings.test.tsx`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `_bmad-output/implementation-artifacts/6-4-phase-2-save-format-and-settings-version-display.md`

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { useAppStore } from '../../shared/stores/appStore'
+import { useGameDataStore } from '../../shared/stores/gameDataStore'
 import { Settings } from './Settings'
 
 vi.mock('@tauri-apps/api/core', () => ({
@@ -18,11 +19,14 @@ vi.mock('react-hot-toast', () => ({
   Toaster: () => null,
 }))
 
+const initialGameDataState = useGameDataStore.getState()
+
 describe('Settings', () => {
   const initialState = useAppStore.getState()
 
   beforeEach(() => {
     useAppStore.setState(initialState, true)
+    useGameDataStore.setState(initialGameDataState, true)
   })
 
   it('renders the Settings heading', () => {
@@ -51,5 +55,35 @@ describe('Settings', () => {
     render(<Settings />)
     fireEvent.click(screen.getByTestId('settings-back-btn'))
     expect(useAppStore.getState().currentView).toBe('main')
+  })
+
+  it('shows game data version when store has data', () => {
+    useGameDataStore.setState({ dataVersion: '1.4.4', dataUpdatedAt: '2026-04-22T00:00:00Z' })
+    render(<Settings />)
+    expect(screen.getByTestId('game-data-version').textContent).toContain('1.4.4')
+  })
+
+  it('shows item data version when manifest has itemDataVersion', () => {
+    useGameDataStore.setState({
+      gameData: {
+        manifest: {
+          schemaVersion: 1,
+          gameVersion: '1.4.4',
+          dataVersion: '1.4.4',
+          generatedAt: '2026-04-22T00:00:00Z',
+          classes: [],
+          itemDataVersion: '1.0.0',
+        },
+        classes: {},
+      },
+    })
+    render(<Settings />)
+    expect(screen.getByTestId('item-data-version').textContent).toContain('1.0.0')
+  })
+
+  it('shows em-dash when versions not yet loaded', () => {
+    render(<Settings />)
+    expect(screen.getByTestId('game-data-version').textContent).toBe('—')
+    expect(screen.getByTestId('item-data-version').textContent).toBe('—')
   })
 })

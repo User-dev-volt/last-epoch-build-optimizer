@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-User must confirm `proceed?` to launch the three parallel review layers against the 9-file diff.
+- Dev agent picks up story 6-4 from `_bmad-output/implementation-artifacts/6-4-phase-2-save-format-and-settings-version-display.md` and implements three tasks in order (buildStore → Settings → tests)
 
 ---
 

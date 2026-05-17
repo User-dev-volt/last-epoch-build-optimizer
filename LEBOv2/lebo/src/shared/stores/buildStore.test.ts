@@ -106,7 +106,7 @@ describe('buildStore', () => {
     expect(s.activeBuild!.classId).toBe('sentinel')
     expect(s.activeBuild!.masteryId).toBe('void_knight')
     expect(s.activeBuild!.nodeAllocations).toEqual({})
-    expect(s.activeBuild!.schemaVersion).toBe(1)
+    expect(s.activeBuild!.schemaVersion).toBe(2)
     expect(s.activeBuild!.isPersisted).toBe(false)
     expect(s.undoStack).toHaveLength(0)
   })
@@ -126,6 +126,16 @@ describe('buildStore', () => {
     useBuildStore.getState().createBuild('Void Knight')
     const s = useBuildStore.getState()
     expect(s.activeBuild!.activeSkillLevels).toEqual({})
+  })
+
+  it('createBuild initializes with schemaVersion 2', () => {
+    useBuildStore.getState().setSelectedClass('sentinel')
+    useBuildStore.getState().setSelectedMastery('void_knight')
+    useBuildStore.getState().createBuild('Void Knight')
+    const s = useBuildStore.getState()
+    expect(s.activeBuild!.schemaVersion).toBe(2)
+    expect(s.activeBuild!.sliderPosition).toBe(50)
+    expect(s.activeBuild!.fineTuneWeights).toBeNull()
   })
 
   it('createBuild is a no-op when class or mastery is not selected', () => {

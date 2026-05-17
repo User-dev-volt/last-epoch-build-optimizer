@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-06
-last_updated: 2026-05-17 (story 6-4 ready-for-dev)
+last_updated: 2026-05-17 (story 6-4 review)
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -88,7 +88,7 @@ development_status:
   6-1-buildstate-v2-typescript-types-and-core-migration-function: done  # code review complete 2026-05-17; 3 patches applied, 1 deferred to 7-5
   6-2-optimization-preset-migration-and-build-persistence-integration: done  # code review complete 2026-05-17; 6 patches applied, 6 deferred
   6-3-manifest-v2-and-atomic-data-update-pipeline: done  # code review complete 2026-05-17; 1 patch applied (download_game_data_update now preserves local manifest fields), 3 deferred
-  6-4-phase-2-save-format-and-settings-version-display: ready-for-dev
+  6-4-phase-2-save-format-and-settings-version-display: review
   epic-6-retrospective: optional
 
   # Epic 7: Advanced Optimization UX — Archetype Slider

@@ -439,6 +439,32 @@ describe('saveBuild', () => {
     expect(savedBuilds[0].name).toBe('Renamed VK')
   })
 
+  it('saves a v2 build with schemaVersion 2 in invoke args', async () => {
+    const v2Build: BuildState = {
+      schemaVersion: 2,
+      sliderPosition: 50,
+      fineTuneWeights: null,
+      id: 'build-v2',
+      name: 'V2 Build',
+      classId: 'sentinel',
+      masteryId: 'void_knight',
+      characterLevel: 1,
+      budgetEnforced: false,
+      nodeAllocations: {},
+      skillNodeAllocations: {},
+      activeSkillLevels: {},
+      weaverAllocations: {},
+      contextData: { gear: [], skills: [], idols: [] },
+      isPersisted: false,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+    }
+    await saveBuild(v2Build)
+    expect(mockInvoke).toHaveBeenCalledWith('save_build', expect.objectContaining({
+      schemaVersion: 2,
+    }))
+  })
+
   it('calls showErrorToast and re-throws when invokeCommand rejects', async () => {
     mockInvoke.mockRejectedValue(new Error('db write failed'))
     await expect(saveBuild(mockBuild)).rejects.toThrow('db write failed')

@@ -1,9 +1,13 @@
 import { useAppStore } from '../../shared/stores/appStore'
+import { useGameDataStore } from '../../shared/stores/gameDataStore'
 import { ProviderSelector } from './ProviderSelector'
 
 export function Settings() {
   const setCurrentView = useAppStore((s) => s.setCurrentView)
   const iconSource = useAppStore((s) => s.iconSource)
+  const dataVersion = useGameDataStore((s) => s.dataVersion)
+  const dataUpdatedAt = useGameDataStore((s) => s.dataUpdatedAt)
+  const itemDataVersion = useGameDataStore((s) => s.gameData?.manifest.itemDataVersion ?? null)
 
   return (
     <div
@@ -91,6 +95,20 @@ export function Settings() {
                 : iconSource === 'placeholder'
                   ? 'placeholder'
                   : '—'}
+          </div>
+          <div className="text-xs mt-2" style={{ color: 'var(--color-text-secondary)' }}>
+            <span style={{ color: 'var(--color-text-muted)' }}>Game Data: </span>
+            <span data-testid="game-data-version">
+              {dataVersion
+                ? `${dataVersion} (last updated ${dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleDateString() : ''})`
+                : '—'}
+            </span>
+          </div>
+          <div className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+            <span style={{ color: 'var(--color-text-muted)' }}>Item Database: </span>
+            <span data-testid="item-data-version">
+              {itemDataVersion ?? '—'}
+            </span>
           </div>
         </section>
       </div>

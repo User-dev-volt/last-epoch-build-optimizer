@@ -74,7 +74,9 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
     const now = new Date().toISOString()
     set({
       activeBuild: {
-        schemaVersion: 1,
+        schemaVersion: 2,
+        sliderPosition: 50,
+        fineTuneWeights: null,
         id: crypto.randomUUID(),
         name: masteryName,
         classId: selectedClassId,
@@ -132,7 +134,9 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
       }
       const now = new Date().toISOString()
       activeBuild = {
-        schemaVersion: 1,
+        schemaVersion: 2,
+        sliderPosition: 50,
+        fineTuneWeights: null,
         id: crypto.randomUUID(),
         name: state.selectedMasteryId,
         classId: state.selectedClassId,
