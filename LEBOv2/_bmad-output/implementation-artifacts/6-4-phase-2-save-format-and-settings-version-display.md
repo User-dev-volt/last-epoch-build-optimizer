@@ -1,6 +1,6 @@
 # Story 6.4: Phase 2 Save Format and Settings Version Display
 
-Status: review
+Status: done
 
 ## Story
 
@@ -153,13 +153,13 @@ No new files. No Rust changes. No `lib.rs` changes.
 
 ### Review Findings
 
-- [ ] [Review][Patch] Malformed label when `dataVersion` is set but `dataUpdatedAt` is null — renders "(last updated )" with empty parenthetical [`lebo/src/features/settings/Settings.tsx`]
-- [ ] [Review][Patch] `new Date(dataUpdatedAt).toLocaleDateString()` renders "Invalid Date" string for malformed date input — no validation before use [`lebo/src/features/settings/Settings.tsx`]
-- [ ] [Review][Patch] `buildPersistence.test.ts` v2 test only asserts `schemaVersion: 2` in invoke args — `sliderPosition` and `fineTuneWeights` not asserted in payload [`lebo/src/features/build-manager/buildPersistence.test.ts`]
-- [ ] [Review][Patch] Version label format assertions too weak — tests only assert `.toContain(version)`, full label structure and date portion never verified [`lebo/src/features/settings/Settings.test.tsx`]
-- [ ] [Review][Patch] `applyNodeChange` auto-create path produces `schemaVersion: 2` but has zero test coverage [`lebo/src/shared/stores/buildStore.test.ts`]
-- [ ] [Review][Patch] AC2 unverified — no test confirms `migrateBuildState` passes a v2 build through unchanged [`lebo/src/features/build-manager/buildPersistence.test.ts`]
-- [ ] [Review][Patch] No test for `gameData` loaded with manifest missing `itemDataVersion` — fallback "—" for absent-but-not-null field is untested [`lebo/src/features/settings/Settings.test.tsx`]
+- [x] [Review][Patch] Malformed label when `dataVersion` is set but `dataUpdatedAt` is null — renders "(last updated )" with empty parenthetical [`lebo/src/features/settings/Settings.tsx`]
+- [x] [Review][Patch] `new Date(dataUpdatedAt).toLocaleDateString()` renders "Invalid Date" string for malformed date input — no validation before use [`lebo/src/features/settings/Settings.tsx`]
+- [x] [Review][Patch] `buildPersistence.test.ts` v2 test only asserts `schemaVersion: 2` in invoke args — `sliderPosition` and `fineTuneWeights` not asserted in payload [`lebo/src/features/build-manager/buildPersistence.test.ts`]
+- [x] [Review][Patch] Version label format assertions too weak — tests only assert `.toContain(version)`, full label structure and date portion never verified [`lebo/src/features/settings/Settings.test.tsx`]
+- [x] [Review][Patch] `applyNodeChange` auto-create path produces `schemaVersion: 2` but has zero test coverage [`lebo/src/shared/stores/buildStore.test.ts`]
+- [x] [Review][Patch] AC2 unverified — no test confirms `migrateBuildState` passes a v2 build through unchanged [`lebo/src/features/build-manager/buildPersistence.test.ts`]
+- [x] [Review][Patch] No test for `gameData` loaded with manifest missing `itemDataVersion` — fallback "—" for absent-but-not-null field is untested [`lebo/src/features/settings/Settings.test.tsx`]
 - [x] [Review][Defer] Two duplicate `createBuild` paths can drift independently — pre-existing architectural concern [`lebo/src/shared/stores/buildStore.ts:74,134`] — deferred, pre-existing
 - [x] [Review][Defer] `initialGameDataState` captured at module evaluation time — could be contaminated by prior test files in same Vitest worker [`lebo/src/features/settings/Settings.test.tsx`] — deferred, pre-existing
 - [x] [Review][Defer] Undo stack rehydrates v1-era build snapshots lacking `sliderPosition`/`fineTuneWeights` — optional fields in `BuildState` type [`lebo/src/shared/stores/buildStore.ts`] — deferred, pre-existing

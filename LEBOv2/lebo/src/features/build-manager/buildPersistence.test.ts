@@ -176,6 +176,35 @@ describe('migrateBuildState — v2 migration', () => {
     expect(result.contextData.gear[0].affixes).toEqual([])
   })
 
+  it('v2 build preserves non-default sliderPosition and fineTuneWeights through passthrough (AC2 idempotency)', () => {
+    const v2Build = {
+      schemaVersion: 2,
+      sliderPosition: 75,
+      fineTuneWeights: { damage: 50, survivability: 25, speed: 25 },
+      id: 'build-v2-idem',
+      name: 'V2 Idempotency',
+      classId: 'sentinel',
+      masteryId: 'void_knight',
+      characterLevel: 20,
+      budgetEnforced: true,
+      nodeAllocations: { 'node-a': 2 },
+      skillNodeAllocations: {},
+      activeSkillLevels: { 'skill-1': 15 },
+      weaverAllocations: {},
+      contextData: { gear: [], skills: [], idols: [] },
+      isPersisted: true,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-02-01T00:00:00Z',
+    }
+    const result = migrateBuildState(v2Build)
+    expect(result.schemaVersion).toBe(2)
+    expect(result.sliderPosition).toBe(75)
+    expect(result.fineTuneWeights).toEqual({ damage: 50, survivability: 25, speed: 25 })
+    expect(result.nodeAllocations).toEqual({ 'node-a': 2 })
+    expect(result.activeSkillLevels).toEqual({ 'skill-1': 15 })
+    expect(result.characterLevel).toBe(20)
+  })
+
   it('v2 build passes through migrateBuildState unchanged (AC5)', () => {
     const v2Build = {
       schemaVersion: 2,
@@ -463,6 +492,10 @@ describe('saveBuild', () => {
     expect(mockInvoke).toHaveBeenCalledWith('save_build', expect.objectContaining({
       schemaVersion: 2,
     }))
+    const callArgs = mockInvoke.mock.calls.at(-1)![1] as Record<string, unknown>
+    const parsed = JSON.parse(callArgs.data as string) as Record<string, unknown>
+    expect(parsed.sliderPosition).toBe(50)
+    expect(parsed.fineTuneWeights).toBeNull()
   })
 
   it('calls showErrorToast and re-throws when invokeCommand rejects', async () => {

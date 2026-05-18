@@ -2,6 +2,11 @@ import { useAppStore } from '../../shared/stores/appStore'
 import { useGameDataStore } from '../../shared/stores/gameDataStore'
 import { ProviderSelector } from './ProviderSelector'
 
+function safeLocalDate(iso: string): string {
+  const d = new Date(iso)
+  return isNaN(d.getTime()) ? iso : d.toLocaleDateString()
+}
+
 export function Settings() {
   const setCurrentView = useAppStore((s) => s.setCurrentView)
   const iconSource = useAppStore((s) => s.iconSource)
@@ -100,7 +105,9 @@ export function Settings() {
             <span style={{ color: 'var(--color-text-muted)' }}>Game Data: </span>
             <span data-testid="game-data-version">
               {dataVersion
-                ? `${dataVersion} (last updated ${dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleDateString() : ''})`
+                ? dataUpdatedAt
+                  ? `${dataVersion} (last updated ${safeLocalDate(dataUpdatedAt)})`
+                  : dataVersion
                 : '—'}
             </span>
           </div>

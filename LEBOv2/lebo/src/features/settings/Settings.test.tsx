@@ -60,7 +60,9 @@ describe('Settings', () => {
   it('shows game data version when store has data', () => {
     useGameDataStore.setState({ dataVersion: '1.4.4', dataUpdatedAt: '2026-04-22T00:00:00Z' })
     render(<Settings />)
-    expect(screen.getByTestId('game-data-version').textContent).toContain('1.4.4')
+    const text = screen.getByTestId('game-data-version').textContent!
+    expect(text).toContain('1.4.4')
+    expect(text).toContain('last updated')
   })
 
   it('shows item data version when manifest has itemDataVersion', () => {
@@ -84,6 +86,23 @@ describe('Settings', () => {
   it('shows em-dash when versions not yet loaded', () => {
     render(<Settings />)
     expect(screen.getByTestId('game-data-version').textContent).toBe('—')
+    expect(screen.getByTestId('item-data-version').textContent).toBe('—')
+  })
+
+  it('shows em-dash for item data version when manifest lacks itemDataVersion', () => {
+    useGameDataStore.setState({
+      gameData: {
+        manifest: {
+          schemaVersion: 1,
+          gameVersion: '1.4.4',
+          dataVersion: '1.4.4',
+          generatedAt: '2026-04-22T00:00:00Z',
+          classes: [],
+        },
+        classes: {},
+      },
+    })
+    render(<Settings />)
     expect(screen.getByTestId('item-data-version').textContent).toBe('—')
   })
 })

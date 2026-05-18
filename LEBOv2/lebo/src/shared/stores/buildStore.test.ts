@@ -323,6 +323,14 @@ describe('buildStore — applyNodeChange', () => {
     expect(s.activeBuild!.nodeAllocations['root']).toBe(1)
   })
 
+  it('auto-creates activeBuild with schemaVersion 2 defaults on first applyNodeChange', () => {
+    useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
+    const s = useBuildStore.getState()
+    expect(s.activeBuild!.schemaVersion).toBe(2)
+    expect(s.activeBuild!.sliderPosition).toBe(50)
+    expect(s.activeBuild!.fineTuneWeights).toBeNull()
+  })
+
   it('allocates a root node (no prerequisites)', () => {
     const result = useBuildStore.getState().applyNodeChange('root', 1, mockTreeData)
     expect(result.success).toBe(true)
