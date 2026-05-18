@@ -1,6 +1,6 @@
 # Story 7.1: OptimizationSlider Component and useOptimizationStore Extension
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -52,14 +52,14 @@ then `expect(await axe(container)).toHaveNoViolations()` passes (UX-DR15, NFR17)
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add CSS tokens to global stylesheet (AC2, AC5)
-  - [ ] 1.1: In `lebo/src/assets/styles/global.css`, inside the `@theme` block (after the existing tier pip tokens), add:
+- [x] Task 1: Add CSS tokens to global stylesheet (AC2, AC5)
+  - [x] 1.1: In `lebo/src/assets/styles/global.css`, inside the `@theme` block (after the existing tier pip tokens), add:
     ```css
     /* Optimization slider gradient */
     --color-slider-glass-cannon: #C73232; /* PixiJS: 0xC73232 — high-saturation crimson-red for damage end */
     --color-slider-juggernaut:   #2A4D7A; /* PixiJS: 0x2A4D7A — deep steel-blue for survivability end */
     ```
-  - [ ] 1.2: After the `@theme` block (before or after existing `@keyframes`), add CSS rules for the range input track and thumb used by OptimizationSlider. Use the class `.optimization-slider` to scope:
+  - [x] 1.2: After the `@theme` block (before or after existing `@keyframes`), add CSS rules for the range input track and thumb used by OptimizationSlider. Use the class `.optimization-slider` to scope:
     ```css
     .optimization-slider {
       appearance: none;
@@ -99,29 +99,29 @@ then `expect(await axe(container)).toHaveNoViolations()` passes (UX-DR15, NFR17)
     }
     ```
 
-- [ ] Task 2: Extend useOptimizationStore with sliderPosition and fineTuneWeights (AC6)
-  - [ ] 2.1: In `lebo/src/shared/stores/optimizationStore.ts`, add to the `OptimizationStore` interface:
+- [x] Task 2: Extend useOptimizationStore with sliderPosition and fineTuneWeights (AC6)
+  - [x] 2.1: In `lebo/src/shared/stores/optimizationStore.ts`, add to the `OptimizationStore` interface:
     ```typescript
     sliderPosition: number
     fineTuneWeights: FineTuneWeights | null
     setSliderPosition: (pos: number) => void
     setFineTuneWeights: (weights: FineTuneWeights | null) => void
     ```
-  - [ ] 2.2: Add the `FineTuneWeights` import to the existing imports from `'../types/optimization'`:
+  - [x] 2.2: Add the `FineTuneWeights` import to the existing imports from `'../types/optimization'`:
     ```typescript
     import type { OptimizationGoal, SuggestionResult, BuildScore, FineTuneWeights } from '../types/optimization'
     ```
-  - [ ] 2.3: Add the initial state values and action implementations to the store:
+  - [x] 2.3: Add the initial state values and action implementations to the store:
     ```typescript
     sliderPosition: 50,
     fineTuneWeights: null,
     setSliderPosition: (pos) => set({ sliderPosition: pos }),
     setFineTuneWeights: (weights) => set({ fineTuneWeights: weights }),
     ```
-  - [ ] 2.4: Do NOT remove `goal` or `setGoal` — `startOptimization` in `useOptimizationStream.ts` still reads `goal`; that is updated in story 7.3.
+  - [x] 2.4: Do NOT remove `goal` or `setGoal` — `startOptimization` in `useOptimizationStream.ts` still reads `goal`; that is updated in story 7.3.
 
-- [ ] Task 3: Create OptimizationSlider component (AC2, AC3, AC4, AC7)
-  - [ ] 3.1: Create `lebo/src/features/optimization/OptimizationSlider.tsx` with the following:
+- [x] Task 3: Create OptimizationSlider component (AC2, AC3, AC4, AC7)
+  - [x] 3.1: Create `lebo/src/features/optimization/OptimizationSlider.tsx` with the following:
     - Read `sliderPosition` and `setSliderPosition` from `useOptimizationStore`
     - Render a `<div>` wrapper with relative positioning containing:
       - A top row: "Juggernaut" label (left) and "Glass Cannon" label (right), both 11px uppercase `--color-text-secondary`
@@ -143,19 +143,19 @@ then `expect(await axe(container)).toHaveNoViolations()` passes (UX-DR15, NFR17)
     - Tooltip positioning: use `calc((${sliderPosition}% - ${sliderPosition * 0.32}px))` or a simpler approach: `style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}` on a `position: absolute` div above the slider.
     - Weight split display: `survivability = 100 - sliderPosition`, `damage = sliderPosition`
     - `aria-valuetext`: `\`${100 - sliderPosition}% Survivability / ${sliderPosition}% Damage\``
-  - [ ] 3.2: A section header "Optimization Intent" above the slider (11px, uppercase, `--color-text-muted`) to keep visual hierarchy consistent with "Gear" section above.
+  - [x] 3.2: A section header "Optimization Intent" above the slider (11px, uppercase, `--color-text-muted`) to keep visual hierarchy consistent with "Gear" section above.
 
-- [ ] Task 4: Remove GoalSelector from RightPanel; add OptimizationSlider (AC1)
-  - [ ] 4.1: In `lebo/src/features/layout/RightPanel.tsx`:
+- [x] Task 4: Remove GoalSelector from RightPanel; add OptimizationSlider (AC1)
+  - [x] 4.1: In `lebo/src/features/layout/RightPanel.tsx`:
     - Remove the import: `import { GoalSelector } from '../optimization/GoalSelector'`
     - Add the import: `import { OptimizationSlider } from '../optimization/OptimizationSlider'`
     - In the JSX, replace `<GoalSelector />` with `<OptimizationSlider />`
-  - [ ] 4.2: Delete `lebo/src/features/optimization/GoalSelector.tsx` (no longer consumed anywhere — TypeScript strict mode would flag the unused import in any file that tries to use it)
-  - [ ] 4.3: Delete `lebo/src/features/optimization/GoalSelector.test.tsx` (test for the deleted component)
-  - [ ] NOTE: Do NOT remove `OptimizationGoal` type from `optimization.ts` — `optimizationStore.ts` still references `goal: OptimizationGoal`. That is cleaned up in story 7.3.
+  - [x] 4.2: Delete `lebo/src/features/optimization/GoalSelector.tsx` (no longer consumed anywhere — TypeScript strict mode would flag the unused import in any file that tries to use it)
+  - [x] 4.3: Delete `lebo/src/features/optimization/GoalSelector.test.tsx` (test for the deleted component)
+  - [x] NOTE: Do NOT remove `OptimizationGoal` type from `optimization.ts` — `optimizationStore.ts` still references `goal: OptimizationGoal`. That is cleaned up in story 7.3.
 
-- [ ] Task 5: Write OptimizationSlider tests (AC3, AC4, AC7, AC8)
-  - [ ] 5.1: Create `lebo/src/features/optimization/OptimizationSlider.test.tsx`
+- [x] Task 5: Write OptimizationSlider tests (AC3, AC4, AC7, AC8)
+  - [x] 5.1: Create `lebo/src/features/optimization/OptimizationSlider.test.tsx`
     - Import pattern: capture `initialState = useOptimizationStore.getState()` in `beforeAll`; reset via `useOptimizationStore.setState(initialState, true)` in `beforeEach` (same pattern as GoalSelector.test.tsx)
     - Test: `renders with default sliderPosition 50` — render, assert `aria-valuenow="50"`
     - Test: `renders endpoint labels "Juggernaut" and "Glass Cannon"` — assert both texts present
@@ -167,7 +167,7 @@ then `expect(await axe(container)).toHaveNoViolations()` passes (UX-DR15, NFR17)
     - Test: `arrow left at 0 clamps to 0` — set store to 0, fire left arrow, assert 0
     - Test: `onChange updates sliderPosition in store` — use `fireEvent.change` on the input with `{ target: { value: '75' } }`, assert store at 75
     - Test: `passes axe accessibility check` — `const { container } = render(<OptimizationSlider />); expect(await axe(container)).toHaveNoViolations()`
-  - [ ] 5.2: Use `axe` import from `'vitest-axe'` (not `axe-core` directly) — consistent with project pattern in e.g. `AffixTierControl.test.tsx`
+  - [x] 5.2: Use `axe` import from `'vitest-axe'` (not `axe-core` directly) — consistent with project pattern in e.g. `AffixTierControl.test.tsx`
 
 ## Dev Notes
 
@@ -299,4 +299,27 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- All 5 tasks completed. 10 new tests + 2 updated RightPanel tests pass (32 total). Pre-existing failures in ProviderSelector, SkillTreeCanvas, TreeControls, AffixTierControl are unchanged from before this story.
+- `goal` and `setGoal` deliberately preserved in optimizationStore — consumed by `useOptimizationStream.ts:37`; deferred to story 7.3.
+- `OptimizationGoal` type preserved in `optimization.ts` — still used by store interface; deferred to story 7.3.
+- RightPanel test updated: replaced `goal-selector` testId assertions with `role="slider"` / `aria-label="Optimization intent"` queries.
+
 ### File List
+
+**Created:**
+- `lebo/src/features/optimization/OptimizationSlider.tsx`
+- `lebo/src/features/optimization/OptimizationSlider.test.tsx`
+
+**Modified:**
+- `lebo/src/assets/styles/global.css`
+- `lebo/src/shared/stores/optimizationStore.ts`
+- `lebo/src/features/layout/RightPanel.tsx`
+- `lebo/src/features/layout/RightPanel.test.tsx`
+
+**Deleted:**
+- `lebo/src/features/optimization/GoalSelector.tsx`
+- `lebo/src/features/optimization/GoalSelector.test.tsx`
+
+### Change Log
+
+- 2026-05-17: Implemented story 7.1 — OptimizationSlider component replaces GoalSelector; useOptimizationStore extended with sliderPosition (default 50) and fineTuneWeights (default null); CSS tokens and slider styles added to global.css; 10 tests + axe accessibility check pass.

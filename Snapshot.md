@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Pause story 6-4 sign-off; triage the five findings above (test AC2 idempotency, add `applyNodeChange` test, fix or formally defer `ProviderSelector` failure, lock date format locale, harden version label assertions) before moving to dev sign-off.
+1.
 
 ---
 

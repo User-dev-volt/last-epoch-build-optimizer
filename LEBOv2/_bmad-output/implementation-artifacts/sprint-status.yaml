@@ -93,7 +93,7 @@ development_status:
 
   # Epic 7: Advanced Optimization UX — Archetype Slider
   epic-7: in-progress
-  7-1-optimizationslider-component-and-useoptimizationstore-extension: ready-for-dev
+  7-1-optimizationslider-component-and-useoptimizationstore-extension: review
   7-2-finetunepanel-component: backlog
   7-3-optimization-weight-computation-in-rust-and-prompt-construction: backlog
   7-4-level-budget-aware-ai-optimization-context: backlog

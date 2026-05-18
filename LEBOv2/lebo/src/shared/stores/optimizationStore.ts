@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { OptimizationGoal, SuggestionResult, BuildScore } from '../types/optimization'
+import type { OptimizationGoal, SuggestionResult, BuildScore, FineTuneWeights } from '../types/optimization'
 import type { AppError } from '../types/errors'
 
 export interface HighlightedNodeIds {
@@ -32,6 +32,10 @@ interface OptimizationStore {
   setPreviewSuggestionRank: (rank: number | null) => void
   setHighlightedNodeIds: (nodes: HighlightedNodeIds | null) => void
   setCurrentModel: (model: string | null) => void
+  sliderPosition: number
+  fineTuneWeights: FineTuneWeights | null
+  setSliderPosition: (pos: number) => void
+  setFineTuneWeights: (weights: FineTuneWeights | null) => void
 }
 
 export const useOptimizationStore = create<OptimizationStore>()((set) => ({
@@ -79,4 +83,8 @@ export const useOptimizationStore = create<OptimizationStore>()((set) => ({
   setPreviewSuggestionRank: (rank) => set({ previewSuggestionRank: rank }),
   setHighlightedNodeIds: (nodes) => set({ highlightedNodeIds: nodes }),
   setCurrentModel: (model) => set({ currentModel: model }),
+  sliderPosition: 50,
+  fineTuneWeights: null,
+  setSliderPosition: (pos) => set({ sliderPosition: pos }),
+  setFineTuneWeights: (weights) => set({ fineTuneWeights: weights }),
 }))

@@ -50,6 +50,10 @@
   --color-tier-pip-active:   #C9A84C; /* PixiJS: 0xC9A84C — matches --color-accent-gold */
   --color-tier-pip-inactive: #1C1C21; /* PixiJS: 0x1C1C21 — matches --color-bg-elevated; border added via element style */
 
+  /* Optimization slider gradient */
+  --color-slider-glass-cannon: #C73232; /* PixiJS: 0xC73232 — high-saturation crimson-red for damage end */
+  --color-slider-juggernaut:   #2A4D7A; /* PixiJS: 0x2A4D7A — deep steel-blue for survivability end */
+
   /* Text */
   --color-text-primary:   #F0EAE0;
   --color-text-secondary: #9E9494;
@@ -58,6 +62,43 @@
   /* Typography */
   --font-ui:   'Inter Variable', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', monospace;
+}
+
+.optimization-slider {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(
+    to right,
+    var(--color-slider-juggernaut),
+    var(--color-slider-glass-cannon)
+  );
+  outline: none;
+  cursor: pointer;
+}
+.optimization-slider:focus-visible {
+  outline: 2px solid var(--color-accent-gold);
+  outline-offset: 2px;
+}
+.optimization-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-accent-gold);
+  cursor: pointer;
+  border: 2px solid var(--color-bg-base);
+}
+.optimization-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-accent-gold);
+  cursor: pointer;
+  border: 2px solid var(--color-bg-base);
 }
 
 @keyframes analyzing-bar {

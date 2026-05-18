@@ -74,10 +74,10 @@ describe('RightPanel', () => {
     expect(screen.getByTestId('optimize-button')).toHaveAttribute('aria-disabled', 'true')
   })
 
-  it('renders GoalSelector when a build is loaded', () => {
+  it('renders OptimizationSlider when a build is loaded', () => {
     useBuildStore.setState({ activeBuild: MOCK_BUILD })
     render(<RightPanel />)
-    expect(screen.getByTestId('goal-selector')).toBeInTheDocument()
+    expect(screen.getByRole('slider', { name: 'Optimization intent' })).toBeInTheDocument()
   })
 
   it('renders OptimizeButton when a build is loaded', () => {
@@ -120,11 +120,11 @@ describe('RightPanel', () => {
     expect(screen.queryByTestId('context-note')).toBeNull()
   })
 
-  it('does not show GoalSelector or OptimizeButton when panel is collapsed', () => {
+  it('does not show OptimizationSlider or OptimizeButton when panel is collapsed', () => {
     useBuildStore.setState({ activeBuild: MOCK_BUILD })
     useAppStore.setState({ activePanel: { left: 'expanded', right: 'collapsed' } })
     render(<RightPanel />)
-    expect(screen.queryByTestId('goal-selector')).toBeNull()
+    expect(screen.queryByRole('slider', { name: 'Optimization intent' })).toBeNull()
     expect(screen.queryByTestId('optimize-button')).toBeNull()
   })
 

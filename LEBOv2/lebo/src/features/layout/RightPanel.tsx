@@ -6,7 +6,7 @@ import { useGameDataStore } from '../../shared/stores/gameDataStore'
 import { startOptimization } from '../../shared/stores/useOptimizationStream'
 import { PanelCollapseToggle } from './PanelCollapseToggle'
 import { ScoreGauge } from '../optimization/ScoreGauge'
-import { GoalSelector } from '../optimization/GoalSelector'
+import { OptimizationSlider } from '../optimization/OptimizationSlider'
 import { OptimizeButton } from '../optimization/OptimizeButton'
 import { SuggestionsList } from '../optimization/SuggestionsList'
 import { GearSlot } from '../item-database/GearSlot'
@@ -98,7 +98,7 @@ export function RightPanel() {
             {activeBuild ? (
               <>
                 <ScoreGauge baselineScore={scores} previewScore={previewScore} />
-                <GoalSelector />
+                <OptimizationSlider />
               </>
             ) : (
               <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
