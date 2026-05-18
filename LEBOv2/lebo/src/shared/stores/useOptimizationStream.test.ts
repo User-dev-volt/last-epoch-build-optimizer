@@ -45,6 +45,7 @@ vi.mock('./gameDataStore', () => ({
   useGameDataStore: {
     getState: vi.fn(() => ({
       gameData: { classes: {}, manifest: { schemaVersion: 1, gameVersion: '1.0', dataVersion: '1.0', generatedAt: '2026-01-01', classes: [] } },
+      itemDatabase: null,
     })),
   },
 }))
@@ -53,6 +54,7 @@ import { listen } from '@tauri-apps/api/event'
 import { invokeCommand } from '../utils/invokeCommand'
 import { calculatePassivePoints } from '../utils/budgetCalculator'
 import { useBuildStore } from './buildStore'
+import { useGameDataStore } from './gameDataStore'
 import { useOptimizationStore } from './optimizationStore'
 import { useOptimizationStream, startOptimization } from './useOptimizationStream'
 
@@ -328,6 +330,101 @@ describe('useOptimizationStream', () => {
 
     expect(mockInvokeCommand).toHaveBeenCalledWith('invoke_claude_api', expect.objectContaining({
       levelContext: null,
+    }))
+  })
+
+  it('startOptimization passes structuredGear with resolved values for database-sourced gear', async () => {
+    vi.mocked(useGameDataStore.getState).mockReturnValueOnce({
+      gameData: { classes: {}, manifest: { schemaVersion: 1, gameVersion: '1.0', dataVersion: '1.0', generatedAt: '2026-01-01', classes: [] } },
+      itemDatabase: {
+        affixes: [{
+          id: 'health_prefix',
+          name: 'Health',
+          type: 'prefix' as const,
+          itemSlots: ['helmet'],
+          tiers: [{ tier: 4, minValue: 260, maxValue: 300 }],
+        }],
+        baseItems: [],
+        uniqueItems: [],
+      },
+    } as ReturnType<typeof useGameDataStore.getState>)
+
+    vi.mocked(useBuildStore.getState).mockReturnValueOnce({
+      activeBuild: {
+        id: 'test',
+        name: 'Test',
+        classId: 'sentinel',
+        masteryId: 'void_knight',
+        schemaVersion: 2 as const,
+        budgetEnforced: false,
+        characterLevel: 1,
+        nodeAllocations: {},
+        activeSkillLevels: {},
+        skillNodeAllocations: {},
+        weaverAllocations: {},
+        contextData: {
+          gear: [{
+            slotId: 'helmet',
+            itemName: 'Runed Skullcap',
+            affixes: [{ affixId: 'health_prefix', name: 'Health', tier: 4 }],
+          }],
+          skills: [],
+          idols: [],
+        },
+        isPersisted: false,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      },
+    } as ReturnType<typeof useBuildStore.getState>)
+
+    await act(async () => { await startOptimization() })
+
+    expect(mockInvokeCommand).toHaveBeenCalledWith('invoke_claude_api', expect.objectContaining({
+      structuredGear: [{
+        slot: 'helmet',
+        itemName: 'Runed Skullcap',
+        affixes: [{ name: 'Health', tier: 4, value: 280 }],
+      }],
+    }))
+  })
+
+  it('startOptimization passes structuredGear with empty affixes for free-text gear', async () => {
+    vi.mocked(useBuildStore.getState).mockReturnValueOnce({
+      activeBuild: {
+        id: 'test',
+        name: 'Test',
+        classId: 'sentinel',
+        masteryId: 'void_knight',
+        schemaVersion: 2 as const,
+        budgetEnforced: false,
+        characterLevel: 1,
+        nodeAllocations: {},
+        activeSkillLevels: {},
+        skillNodeAllocations: {},
+        weaverAllocations: {},
+        contextData: {
+          gear: [{ slotId: 'body', itemName: 'Some good chest piece', affixes: [] }],
+          skills: [],
+          idols: [],
+        },
+        isPersisted: false,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      },
+    } as ReturnType<typeof useBuildStore.getState>)
+
+    await act(async () => { await startOptimization() })
+
+    expect(mockInvokeCommand).toHaveBeenCalledWith('invoke_claude_api', expect.objectContaining({
+      structuredGear: [{ slot: 'body', itemName: 'Some good chest piece', affixes: [] }],
+    }))
+  })
+
+  it('startOptimization passes structuredGear: null when all gear slots are empty', async () => {
+    await act(async () => { await startOptimization() })
+
+    expect(mockInvokeCommand).toHaveBeenCalledWith('invoke_claude_api', expect.objectContaining({
+      structuredGear: null,
     }))
   })
 })

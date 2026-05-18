@@ -20,6 +20,22 @@ pub struct LevelContext {
     active_skill_levels: std::collections::HashMap<String, u32>,
 }
 
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StructuredGearAffix {
+    name: String,
+    tier: Option<u32>,
+    value: Option<f64>,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StructuredGearSlot {
+    slot: String,
+    item_name: String,
+    affixes: Vec<StructuredGearAffix>,
+}
+
 /// Invoke the Claude API with the current build state and optimization weights.
 /// Streams suggestions via Tauri events:
 ///   optimization:suggestion-received — one per parsed suggestion
@@ -32,6 +48,7 @@ pub async fn invoke_claude_api(
     slider_position: f32,
     fine_tune_weights: Option<FineTuneWeights>,
     level_context: Option<LevelContext>,
+    structured_gear: Option<Vec<StructuredGearSlot>>,
 ) -> Result<(), String> {
     // API key is fetched per-branch below based on the active provider.
 
@@ -121,9 +138,11 @@ pub async fn invoke_claude_api(
     // ── Assemble user message ─────────────────────────────────────────────────
     let optimization_intent = compute_optimization_intent(slider_position, fine_tune_weights);
     let level_constraints = level_context.as_ref().map(build_level_constraints);
+    let gear_context = structured_gear.as_deref().map(build_gear_context);
     let user_message = serde_json::to_string(&json!({
         "optimizationIntent": optimization_intent,
         "levelConstraints": level_constraints,
+        "gearContext": gear_context,
         "build": build_state,
         "availableNodes": available_nodes
     }))
@@ -189,6 +208,29 @@ fn compute_optimization_intent(slider_position: f32, fine_tune_weights: Option<F
         (slider_position.round() as i32, (100.0 - slider_position).round() as i32, 0)
     };
     format!("Optimization intent: {}% damage, {}% survivability, {}% speed", damage_pct, surv_pct, speed_pct)
+}
+
+fn build_gear_context(slots: &[StructuredGearSlot]) -> String {
+    slots
+        .iter()
+        .map(|slot| {
+            if slot.affixes.is_empty() {
+                format!("{}: {}", slot.slot, slot.item_name)
+            } else {
+                let affixes_str: Vec<String> = slot
+                    .affixes
+                    .iter()
+                    .map(|a| match (a.tier, a.value) {
+                        (Some(t), Some(v)) => format!("{} T{} (+{:.0})", a.name, t, v),
+                        (Some(t), None) => format!("{} T{}", a.name, t),
+                        _ => a.name.clone(),
+                    })
+                    .collect();
+                format!("{}: {} \u{2014} {}", slot.slot, slot.item_name, affixes_str.join(", "))
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("; ")
 }
 
 fn build_level_constraints(ctx: &LevelContext) -> String {

@@ -12,6 +12,18 @@ export interface LevelContext {
   activeSkillLevels: Record<string, number>
 }
 
+export interface StructuredGearAffix {
+  name: string
+  tier?: number
+  value?: number
+}
+
+export interface StructuredGearSlot {
+  slot: string
+  itemName: string
+  affixes: StructuredGearAffix[]
+}
+
 export type OptimizationGoal =
   | 'maximize_damage'
   | 'maximize_survivability'

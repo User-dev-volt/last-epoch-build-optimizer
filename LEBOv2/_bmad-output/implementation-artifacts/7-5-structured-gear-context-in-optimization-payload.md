@@ -1,6 +1,6 @@
 # Story 7.5: Structured Gear Context in Optimization Payload
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -66,8 +66,8 @@ Global `useGameDataStore` mock updated to include `itemDatabase: null` so existi
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add TypeScript types (AC5)
-  - [ ] 1.1: In `lebo/src/shared/types/optimization.ts`, append after `LevelContext` interface:
+- [x] Task 1: Add TypeScript types (AC5)
+  - [x] 1.1: In `lebo/src/shared/types/optimization.ts`, append after `LevelContext` interface:
     ```ts
     export interface StructuredGearAffix {
       name: string
@@ -82,13 +82,13 @@ Global `useGameDataStore` mock updated to include `itemDatabase: null` so existi
     }
     ```
 
-- [ ] Task 2: Build `structuredGear` in `startOptimization()` and pass to Rust (AC1, AC2, AC3)
-  - [ ] 2.1: In `lebo/src/shared/stores/useOptimizationStream.ts`, add import at top:
+- [x] Task 2: Build `structuredGear` in `startOptimization()` and pass to Rust (AC1, AC2, AC3)
+  - [x] 2.1: In `lebo/src/shared/stores/useOptimizationStream.ts`, add import at top:
     ```ts
     import type { LevelContext, StructuredGearAffix, StructuredGearSlot } from '../types/optimization'
     ```
     (`useGameDataStore` is already imported at line 9)
-  - [ ] 2.2: In `startOptimization()`, after the `levelContext` block (after line 52, before `clearSuggestions()`), insert:
+  - [x] 2.2: In `startOptimization()`, after the `levelContext` block (after line 52, before `clearSuggestions()`), insert:
     ```ts
     const itemDatabase = useGameDataStore.getState().itemDatabase
     const gearItems = activeBuild.contextData?.gear ?? []
@@ -111,7 +111,7 @@ Global `useGameDataStore` mock updated to include `itemDatabase: null` so existi
         })
       : null
     ```
-  - [ ] 2.3: Add `structuredGear` to the `invokeCommand` call (alongside `levelContext`):
+  - [x] 2.3: Add `structuredGear` to the `invokeCommand` call (alongside `levelContext`):
     ```ts
     await invokeCommand('invoke_claude_api', {
       buildState: activeBuild,
@@ -122,8 +122,8 @@ Global `useGameDataStore` mock updated to include `itemDatabase: null` so existi
     })
     ```
 
-- [ ] Task 3: Add Rust structs and update command signature (AC6)
-  - [ ] 3.1: In `lebo/src-tauri/src/commands/claude_commands.rs`, add below the `LevelContext` struct (after line 21):
+- [x] Task 3: Add Rust structs and update command signature (AC6)
+  - [x] 3.1: In `lebo/src-tauri/src/commands/claude_commands.rs`, add below the `LevelContext` struct (after line 21):
     ```rust
     #[derive(serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -141,7 +141,7 @@ Global `useGameDataStore` mock updated to include `itemDatabase: null` so existi
         affixes: Vec<StructuredGearAffix>,
     }
     ```
-  - [ ] 3.2: Add `structured_gear: Option<Vec<StructuredGearSlot>>` to `invoke_claude_api` after `level_context`:
+  - [x] 3.2: Add `structured_gear: Option<Vec<StructuredGearSlot>>` to `invoke_claude_api` after `level_context`:
     ```rust
     pub async fn invoke_claude_api(
         app_handle: tauri::AppHandle,
@@ -153,8 +153,8 @@ Global `useGameDataStore` mock updated to include `itemDatabase: null` so existi
     ) -> Result<(), String> {
     ```
 
-- [ ] Task 4: Add `build_gear_context` helper and wire into user_message (AC4)
-  - [ ] 4.1: In `claude_commands.rs`, add after `build_level_constraints` fn (after line 213):
+- [x] Task 4: Add `build_gear_context` helper and wire into user_message (AC4)
+  - [x] 4.1: In `claude_commands.rs`, add after `build_level_constraints` fn (after line 213):
     ```rust
     fn build_gear_context(slots: &[StructuredGearSlot]) -> String {
         slots
@@ -179,11 +179,11 @@ Global `useGameDataStore` mock updated to include `itemDatabase: null` so existi
             .join("; ")
     }
     ```
-  - [ ] 4.2: In `invoke_claude_api`, after `let level_constraints = ...` (line 123), add:
+  - [x] 4.2: In `invoke_claude_api`, after `let level_constraints = ...` (line 123), add:
     ```rust
     let gear_context = structured_gear.as_deref().map(build_gear_context);
     ```
-  - [ ] 4.3: Update the `json!({...})` user_message to include `"gearContext"`:
+  - [x] 4.3: Update the `json!({...})` user_message to include `"gearContext"`:
     ```rust
     let user_message = serde_json::to_string(&json!({
         "optimizationIntent": optimization_intent,
@@ -194,11 +194,11 @@ Global `useGameDataStore` mock updated to include `itemDatabase: null` so existi
     }))
     ```
 
-- [ ] Task 5: Run `cargo check` (prerequisite for Task 6)
-  - [ ] 5.1: Run `cd lebo && cargo check --manifest-path src-tauri/Cargo.toml` — fix any compile errors before proceeding.
+- [x] Task 5: Run `cargo check` (prerequisite for Task 6)
+  - [x] 5.1: Run `cd lebo && cargo check --manifest-path src-tauri/Cargo.toml` — fix any compile errors before proceeding.
 
-- [ ] Task 6: Update tests (AC8)
-  - [ ] 6.1: Update global `useGameDataStore` mock in test file to include `itemDatabase: null`:
+- [x] Task 6: Update tests (AC8)
+  - [x] 6.1: Update global `useGameDataStore` mock in test file to include `itemDatabase: null`:
     ```ts
     vi.mock('./gameDataStore', () => ({
       useGameDataStore: {
@@ -209,11 +209,11 @@ Global `useGameDataStore` mock updated to include `itemDatabase: null` so existi
       },
     }))
     ```
-  - [ ] 6.2: Add import for `useGameDataStore` after the existing imports (after `import { useBuildStore }` line):
+  - [x] 6.2: Add import for `useGameDataStore` after the existing imports (after `import { useBuildStore }` line):
     ```ts
     import { useGameDataStore } from './gameDataStore'
     ```
-  - [ ] 6.3: Add test — database gear resolves structuredGear with values:
+  - [x] 6.3: Add test — database gear resolves structuredGear with values:
     ```ts
     it('startOptimization passes structuredGear with resolved values for database-sourced gear', async () => {
       vi.mocked(useGameDataStore.getState).mockReturnValueOnce({
@@ -270,7 +270,7 @@ Global `useGameDataStore` mock updated to include `itemDatabase: null` so existi
       }))
     })
     ```
-  - [ ] 6.4: Add test — free-text gear produces structuredGear with empty affixes:
+  - [x] 6.4: Add test — free-text gear produces structuredGear with empty affixes:
     ```ts
     it('startOptimization passes structuredGear with empty affixes for free-text gear', async () => {
       vi.mocked(useBuildStore.getState).mockReturnValueOnce({
@@ -304,7 +304,7 @@ Global `useGameDataStore` mock updated to include `itemDatabase: null` so existi
       }))
     })
     ```
-  - [ ] 6.5: Add test — empty gear produces `structuredGear: null`:
+  - [x] 6.5: Add test — empty gear produces `structuredGear: null`:
     ```ts
     it('startOptimization passes structuredGear: null when all gear slots are empty', async () => {
       // Default mock has contextData: { gear: [], skills: [], idols: [] }
@@ -315,7 +315,7 @@ Global `useGameDataStore` mock updated to include `itemDatabase: null` so existi
       }))
     })
     ```
-  - [ ] 6.6: Run `pnpm vitest src/shared/stores/useOptimizationStream.test.ts` — all 17 tests must pass.
+  - [x] 6.6: Run `pnpm vitest src/shared/stores/useOptimizationStream.test.ts` — all 17 tests must pass.
 
 ## Dev Notes
 
@@ -425,4 +425,20 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- All 6 tasks and subtasks implemented exactly as specified.
+- StructuredGearAffix and StructuredGearSlot TypeScript interfaces added to optimization.ts after LevelContext.
+- startOptimization() now classifies gear slots: database-sourced (affixId+tier present) → resolves midpoint value; free-text (affixes empty) → empty affixes array; empty (itemName='') → excluded. structuredGear is null when all slots are empty.
+- Rust: StructuredGearAffix/StructuredGearSlot structs with #[serde(rename_all = "camelCase")] added; structured_gear parameter added after level_context; build_gear_context helper formats slots into prompt string with em-dash separator; gearContext included in user_message JSON.
+- cargo check passed clean (0 errors, 0 warnings).
+- 17 tests pass: 14 existing (no regressions) + 3 new structuredGear tests (database gear value resolution, free-text empty affixes, null for empty slots).
+
 ### File List
+
+- lebo/src/shared/types/optimization.ts
+- lebo/src/shared/stores/useOptimizationStream.ts
+- lebo/src/shared/stores/useOptimizationStream.test.ts
+- lebo/src-tauri/src/commands/claude_commands.rs
+
+## Change Log
+
+- 2026-05-18: Story 7-5 implemented — structured gear context in optimization payload. Added StructuredGearAffix/StructuredGearSlot types (TS + Rust), gear classification and value resolution in startOptimization(), build_gear_context Rust helper, gearContext field in user_message JSON. 17 tests pass.

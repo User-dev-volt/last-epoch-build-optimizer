@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Wait for user direction on patch application method (apply all, defer as action items, or walk through individually)
+Dev agent: Implement story 7-5 using the generated story file as the authoritative spec. Focus sequence: (1) add `StructuredGearSlot` type + resolver, (2) modify `useOptimizationStream` to call resolver, (3) pass to Rust command, (4) write 3 new tests + update gameDataStore mock.
 
 ---
 
