@@ -66,8 +66,14 @@ describe('FineTunePanel', () => {
     expect(screen.getByRole('slider', { name: 'Speed Weight' })).toBeInTheDocument()
   })
 
-  it('passes axe accessibility check', async () => {
+  it('passes axe accessibility check (collapsed)', async () => {
     const { container } = render(<FineTunePanel />)
+    expect(await axe(container)).toHaveNoViolations()
+  })
+
+  it('passes axe accessibility check (expanded)', async () => {
+    const { container } = render(<FineTunePanel />)
+    fireEvent.click(screen.getByRole('button', { name: /fine tune/i }))
     expect(await axe(container)).toHaveNoViolations()
   })
 })
@@ -117,7 +123,9 @@ describe('setSliderPosition scaling with fineTuneWeights', () => {
       sliderPosition: 50,
     })
     useOptimizationStore.getState().setSliderPosition(80)
-    expect(useOptimizationStore.getState().fineTuneWeights?.survivability).toBe(0)
+    const weights = useOptimizationStore.getState().fineTuneWeights
+    expect(weights?.survivability).toBe(0)
+    expect(weights?.damage).toBe(100)
   })
 
   it('speed weight is unchanged when master slider moves', () => {

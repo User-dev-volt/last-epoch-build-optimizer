@@ -33,6 +33,7 @@ export function FineTunePanel() {
       {({ open }) => (
         <>
           <DisclosureButton
+            aria-controls="fine-tune-panel"
             className="flex items-center gap-1.5 text-xs w-full text-left py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus:outline focus:outline-2 focus:outline-offset-2"
             style={{
               color: 'var(--color-text-secondary)',
@@ -54,6 +55,7 @@ export function FineTunePanel() {
           </DisclosureButton>
 
           <DisclosurePanel
+            id="fine-tune-panel"
             transition
             className="overflow-hidden data-[closed]:opacity-0 motion-safe:transition-opacity motion-safe:data-[enter]:duration-200 motion-safe:data-[leave]:duration-150"
           >

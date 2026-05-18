@@ -1,6 +1,6 @@
 # Story 7.2: FineTunePanel Component
 
-Status: review
+Status: done
 
 ## Story
 
@@ -226,9 +226,9 @@ claude-sonnet-4-6
 
 - [x] [Review][Defer] AC4 — Proportional vs delta scaling: AC4 says "proportionally scale to maintain their relative ratios" but implementation uses additive delta. Deferred to story 7-3 — scaling semantics must be decided alongside Rust weight computation design; the whole optimization engine is the bedrock of the app and needs to be designed holistically.
 - [x] [Review][Defer] Weight sum invariant: damage+survivability+speed can sum to any value (0–300); if Rust engine expects sum=100 results will be wrong. Deferred to story 7-3 — normalization strategy depends on how the Rust scoring engine interprets weights.
-- [ ] [Review][Patch] AC6: `aria-controls` missing on DisclosureButton — Headless UI injects `aria-expanded` automatically, but `aria-controls` requires an explicit `id` on `DisclosurePanel` and a matching `aria-controls` prop on `DisclosureButton` [FineTunePanel.tsx]
-- [ ] [Review][Patch] Axe test covers collapsed state only — `axe(container)` runs before the panel is opened; violations inside the expanded sub-slider area are never audited. Should click trigger before running axe [FineTunePanel.test.tsx:86]
-- [ ] [Review][Patch] Test `'clamps scaled survivability to 0 when delta would underflow'` does not assert damage was also clamped — with damage=90, delta=+30, damage clamps to 100 (from 120) but this is unverified; a regression zeroing damage would pass [FineTunePanel.test.tsx:113]
+- [x] [Review][Patch] AC6: `aria-controls` missing on DisclosureButton — added `aria-controls="fine-tune-panel"` on DisclosureButton and `id="fine-tune-panel"` on DisclosurePanel [FineTunePanel.tsx]
+- [x] [Review][Patch] Axe test covers collapsed state only — split into two tests: collapsed + expanded (trigger clicked before axe audit) [FineTunePanel.test.tsx]
+- [x] [Review][Patch] Test `'clamps scaled survivability to 0 when delta would underflow'` does not assert damage was also clamped — added `expect(weights?.damage).toBe(100)` assertion [FineTunePanel.test.tsx]
 - [x] [Review][Defer] `fineTuneWeights` ↔ `buildStore.activeBuild` sync gap: persisted fine-tune weights in a saved build are not pushed into `optimizationStore` after load; `App.tsx` only bridges `nodeAllocations` — deferred, pre-existing architectural gap
 - [x] [Review][Defer] `handleChange` stale closure risk: reads `fineTuneWeights` from render closure, not from a functional `set()` callback; theoretically stale under rapid concurrent updates, but impossible in practice with single-focus range sliders — deferred, low-risk
 - [x] [Review][Defer] No reset UI for `fineTuneWeights`: once any sub-slider is moved, there is no "Reset to auto" button to return to `null`; `(Custom)` is permanent for the session — deferred, not in ACs, likely a later story
