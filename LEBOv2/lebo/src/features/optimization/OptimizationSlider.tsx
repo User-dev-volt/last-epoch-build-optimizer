@@ -49,7 +49,8 @@ export function OptimizationSlider() {
           <div
             className="absolute text-[10px] px-1.5 py-0.5 rounded pointer-events-none"
             style={{
-              bottom: '22px',
+              top: '100%',
+              marginTop: '4px',
               left: `${sliderPosition}%`,
               transform: 'translateX(-50%)',
               backgroundColor: 'var(--color-bg-elevated)',

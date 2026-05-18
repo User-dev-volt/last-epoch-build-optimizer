@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Run `gds-code-review` against story 7-5 implementation using a different LLM for peer review, then begin story 7-6
+Apply the patch to `useOptimizationStream.ts` lines ~X–Y (split condition + recompute affixes array with optional value lookup).
 
 ---
 

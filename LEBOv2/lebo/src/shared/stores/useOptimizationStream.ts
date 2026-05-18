@@ -57,7 +57,7 @@ export async function startOptimization() {
   const structuredGear: StructuredGearSlot[] | null = populatedGear.length > 0
     ? populatedGear.map((g): StructuredGearSlot => {
         const dbAffixes = g.affixes.filter((a) => a.affixId !== undefined && a.tier !== undefined)
-        if (!itemDatabase || dbAffixes.length === 0) {
+        if (dbAffixes.length === 0) {
           return { slot: g.slotId, itemName: g.itemName, affixes: [] }
         }
         const affixes: StructuredGearAffix[] = dbAffixes.map((a) => {

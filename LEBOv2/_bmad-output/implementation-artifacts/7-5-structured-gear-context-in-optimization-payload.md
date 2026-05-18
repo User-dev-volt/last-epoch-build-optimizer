@@ -1,6 +1,6 @@
 # Story 7.5: Structured Gear Context in Optimization Payload
 
-Status: review
+Status: done
 
 ## Story
 
@@ -441,7 +441,7 @@ claude-sonnet-4-6
 
 ### Review Findings
 
-- [ ] [Review][Patch] `itemDatabase === null` drops ALL affix data instead of preserving name+tier without value [`lebo/src/shared/stores/useOptimizationStream.ts`]
+- [x] [Review][Patch] `itemDatabase === null` drops ALL affix data instead of preserving name+tier without value [`lebo/src/shared/stores/useOptimizationStream.ts`]
 - [x] [Review][Defer] Affix name sourced from build storage (`a.name`) rather than canonical DB entry name — pre-existing data design, not caused by this story
 
 ## Change Log

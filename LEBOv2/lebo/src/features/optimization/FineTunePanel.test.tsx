@@ -89,16 +89,17 @@ describe('setSliderPosition scaling with fineTuneWeights', () => {
     useOptimizationStore.setState(initialState, true)
   })
 
-  it('scales damage+survivability by delta when fineTuneWeights non-null', () => {
+  it('does not modify fineTuneWeights when sliderPosition changes', () => {
     useOptimizationStore.setState({
       fineTuneWeights: { damage: 60, survivability: 30, speed: 10 },
       sliderPosition: 50,
     })
     useOptimizationStore.getState().setSliderPosition(70)
     const weights = useOptimizationStore.getState().fineTuneWeights
-    expect(weights?.damage).toBe(80)
-    expect(weights?.survivability).toBe(10)
+    expect(weights?.damage).toBe(60)
+    expect(weights?.survivability).toBe(30)
     expect(weights?.speed).toBe(10)
+    expect(useOptimizationStore.getState().sliderPosition).toBe(70)
   })
 
   it('does not modify fineTuneWeights when null', () => {
@@ -106,34 +107,5 @@ describe('setSliderPosition scaling with fineTuneWeights', () => {
     useOptimizationStore.getState().setSliderPosition(70)
     expect(useOptimizationStore.getState().fineTuneWeights).toBeNull()
     expect(useOptimizationStore.getState().sliderPosition).toBe(70)
-  })
-
-  it('clamps scaled damage to 100 when delta would overflow', () => {
-    useOptimizationStore.setState({
-      fineTuneWeights: { damage: 95, survivability: 5, speed: 0 },
-      sliderPosition: 50,
-    })
-    useOptimizationStore.getState().setSliderPosition(70)
-    expect(useOptimizationStore.getState().fineTuneWeights?.damage).toBe(100)
-  })
-
-  it('clamps scaled survivability to 0 when delta would underflow', () => {
-    useOptimizationStore.setState({
-      fineTuneWeights: { damage: 90, survivability: 5, speed: 5 },
-      sliderPosition: 50,
-    })
-    useOptimizationStore.getState().setSliderPosition(80)
-    const weights = useOptimizationStore.getState().fineTuneWeights
-    expect(weights?.survivability).toBe(0)
-    expect(weights?.damage).toBe(100)
-  })
-
-  it('speed weight is unchanged when master slider moves', () => {
-    useOptimizationStore.setState({
-      fineTuneWeights: { damage: 60, survivability: 30, speed: 10 },
-      sliderPosition: 50,
-    })
-    useOptimizationStore.getState().setSliderPosition(60)
-    expect(useOptimizationStore.getState().fineTuneWeights?.speed).toBe(10)
   })
 })
