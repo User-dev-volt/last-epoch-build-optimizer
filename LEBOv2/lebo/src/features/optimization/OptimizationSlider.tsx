@@ -12,12 +12,14 @@ export function OptimizationSlider() {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
       e.preventDefault()
-      setSliderPosition(Math.min(100, sliderPosition + 5))
-      setActiveBuildSliderPosition(Math.min(100, sliderPosition + 5))
+      const newPos = Math.min(100, useOptimizationStore.getState().sliderPosition + 5)
+      setSliderPosition(newPos)
+      setActiveBuildSliderPosition(newPos)
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
       e.preventDefault()
-      setSliderPosition(Math.max(0, sliderPosition - 5))
-      setActiveBuildSliderPosition(Math.max(0, sliderPosition - 5))
+      const newPos = Math.max(0, useOptimizationStore.getState().sliderPosition - 5)
+      setSliderPosition(newPos)
+      setActiveBuildSliderPosition(newPos)
     }
   }
 

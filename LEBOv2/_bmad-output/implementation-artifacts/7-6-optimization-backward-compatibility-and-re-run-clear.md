@@ -1,6 +1,6 @@
 # Story 7.6: Optimization Backward Compatibility and Re-Run / Clear
 
-Status: review
+Status: done
 
 ## Story
 
@@ -342,10 +342,10 @@ Critical rules from `project-context.md` that apply to this story:
 
 ### Review Findings
 
-- [ ] [Review][Patch] Mid-stream build switch repopulates cleared suggestions with stale data — add `optimizationBuildId: string | null` to `optimizationStore`; stamp it with `activeBuild.id` when `startOptimization()` runs; in the `optimization:suggestion-received` handler, compare stamp against `useBuildStore.getState().activeBuild?.id` and discard if mismatched; `clearSuggestions()` resets `optimizationBuildId` to `null` [optimizationStore.ts, useOptimizationStream.ts]
-- [ ] [Review][Patch] Stale closure in `OptimizationSlider.handleKeyDown` reads `sliderPosition` from render scope, not current store value [OptimizationSlider.tsx:12-21]
-- [ ] [Review][Patch] `clearSuggestions()` does not reset `isOptimizing` — build switch mid-stream leaves `isOptimizing: true`, hiding the Clear button and blocking new optimization runs [optimizationStore.ts:57]
-- [ ] [Review][Patch] No integration test for AC4 App.tsx subscriber wiring — no test verifies `setActiveBuild()` with new id syncs `optimizationStore.sliderPosition` and fires `clearSuggestions()`
+- [x] [Review][Patch] Mid-stream build switch repopulates cleared suggestions with stale data — add `optimizationBuildId: string | null` to `optimizationStore`; stamp it with `activeBuild.id` when `startOptimization()` runs; in the `optimization:suggestion-received` handler, compare stamp against `useBuildStore.getState().activeBuild?.id` and discard if mismatched; `clearSuggestions()` resets `optimizationBuildId` to `null` [optimizationStore.ts, useOptimizationStream.ts]
+- [x] [Review][Patch] Stale closure in `OptimizationSlider.handleKeyDown` reads `sliderPosition` from render scope, not current store value [OptimizationSlider.tsx:12-21]
+- [x] [Review][Patch] `clearSuggestions()` does not reset `isOptimizing` — build switch mid-stream leaves `isOptimizing: true`, hiding the Clear button and blocking new optimization runs [optimizationStore.ts:57]
+- [x] [Review][Patch] No integration test for AC4 App.tsx subscriber wiring — no test verifies `setActiveBuild()` with new id syncs `optimizationStore.sliderPosition` and fires `clearSuggestions()`
 - [x] [Review][Defer] `MOCK_BUILD.schemaVersion: 1` in `SuggestionsList.test.tsx:46` missing `sliderPosition`/`fineTuneWeights` — deferred, pre-existing fixture
 - [x] [Review][Defer] `derivedSpeed` hardcoded to `0` in `FineTunePanel` — deferred, pre-existing design from story 7-2
 - [x] [Review][Defer] Same-id build reload does not resync slider position — deferred, pre-existing edge case not in primary workflow

@@ -19,11 +19,13 @@ interface OptimizationStore {
   scores: BuildScore | null
   streamError: AppError | null
   currentModel: string | null
+  optimizationBuildId: string | null
   setGoal: (goal: OptimizationGoal) => void
   setSuggestions: (suggestions: SuggestionResult[]) => void
   addSuggestion: (suggestion: SuggestionResult) => void
   clearSuggestions: () => void
   setIsOptimizing: (optimizing: boolean) => void
+  setOptimizationBuildId: (id: string | null) => void
   setHasOptimizationCompleted: (value: boolean) => void
   setScores: (scores: BuildScore | null) => void
   setStreamError: (error: AppError | null) => void
@@ -50,6 +52,7 @@ export const useOptimizationStore = create<OptimizationStore>()((set) => ({
   scores: null,
   streamError: null,
   currentModel: null,
+  optimizationBuildId: null,
   setGoal: (goal) => set({ goal }),
   setSuggestions: (suggestions) => set({ suggestions }),
   addSuggestion: (suggestion) =>
@@ -64,8 +67,11 @@ export const useOptimizationStore = create<OptimizationStore>()((set) => ({
       streamError: null,
       hasOptimizationCompleted: false,
       currentModel: null,
+      isOptimizing: false,
+      optimizationBuildId: null,
     }),
   setIsOptimizing: (optimizing) => set({ isOptimizing: optimizing }),
+  setOptimizationBuildId: (id) => set({ optimizationBuildId: id }),
   setHasOptimizationCompleted: (value) => set({ hasOptimizationCompleted: value }),
   setScores: (scores) => set({ scores }),
   setStreamError: (error) => set({ streamError: error }),

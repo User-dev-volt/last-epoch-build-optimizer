@@ -74,6 +74,7 @@ export async function startOptimization() {
 
   useOptimizationStore.getState().clearSuggestions()
   useOptimizationStore.getState().setIsOptimizing(true)
+  useOptimizationStore.getState().setOptimizationBuildId(activeBuild.id)
 
   try {
     await invokeCommand('invoke_claude_api', {
@@ -107,6 +108,7 @@ export function useOptimizationStream() {
           const gameData = useGameDataStore.getState().gameData
 
           if (!activeBuild || !gameData) return
+          if (useOptimizationStore.getState().optimizationBuildId !== activeBuild.id) return
 
           const baselineScore = calculateScore(activeBuild, gameData)
 

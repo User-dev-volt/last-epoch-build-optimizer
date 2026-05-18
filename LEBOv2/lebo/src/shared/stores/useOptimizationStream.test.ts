@@ -66,6 +66,9 @@ describe('useOptimizationStream', () => {
 
   beforeEach(() => {
     useOptimizationStore.setState(initialState, true)
+    // Stamp the sentinel to match the mocked activeBuild id so event-handler tests
+    // are not blocked by the optimizationBuildId guard added in story 7-6 review.
+    useOptimizationStore.setState({ optimizationBuildId: 'test' })
     vi.clearAllMocks()
 
     // Default: listen returns a no-op unlisten fn
