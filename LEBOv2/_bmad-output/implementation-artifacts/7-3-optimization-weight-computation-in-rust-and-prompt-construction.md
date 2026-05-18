@@ -1,6 +1,6 @@
 # Story 7.3: Optimization Weight Computation in Rust and Prompt Construction
 
-Status: review
+Status: done
 
 ## Story
 
@@ -175,8 +175,14 @@ claude-sonnet-4-6
 - `lebo/src/shared/stores/useOptimizationStream.ts` — updated `startOptimization()` to pass `sliderPosition`/`fineTuneWeights` instead of `goal`
 - `lebo/src/shared/stores/useOptimizationStream.test.ts` — updated 2 tests to assert new invocation shape
 
+### Review Findings
+
+- [x] [Review][Defer] No Rust unit test for `compute_optimization_intent` [lebo/src-tauri/src/commands/claude_commands.rs:171] — deferred, pre-existing pattern (no Rust unit tests exist in codebase); pure function logic verifiable via integration test
+- [x] [Review][Defer] `setFineTuneWeights` has no input clamping — values can be negative or >100 [lebo/src/shared/stores/optimizationStore.ts:104] — deferred, pre-existing gap from story 7-2; FineTunePanel is responsible for UI bounds; `isFineTuneWeights` validator in buildPersistence.ts also lacks range checks (both pre-existing)
+
 ## Change Log
 
 | Date | Change |
 |------|--------|
 | 2026-05-18 | Implemented story 7-3: added `FineTuneWeights` Rust struct + `compute_optimization_intent` helper; updated `invoke_claude_api` to remove `goal` param and add `slider_position`/`fine_tune_weights`; updated TypeScript `startOptimization()` call site; updated 2 tests. All 275 optimization/store tests green. |
+| 2026-05-18 | Code review complete: 0 patches, 2 deferred, 10 dismissed. Story → done. |

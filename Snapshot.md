@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Wait for Edge Case Hunter and Acceptance Auditor to complete; then triage and present findings in precedence order.
+Run `/gds-code-review` against the story diff with Opus model before moving to story 7-4.
 
 ---
 

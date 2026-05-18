@@ -1,5 +1,10 @@
 # Deferred Work
 
+## Deferred from: code review of 7-3-optimization-weight-computation-in-rust-and-prompt-construction (2026-05-18)
+
+- No Rust unit test for `compute_optimization_intent` (`claude_commands.rs:171`): pure function with two branches (slider-only path and fine-tune path) is unverified in isolation. Pre-existing pattern — no Rust unit tests exist in codebase. Add `#[cfg(test)] mod tests` covering at least: slider-only at 0/50/100, fine-tune with sum≠100, fine-tune with negative values.
+- `setFineTuneWeights` has no input clamping (`optimizationStore.ts:104`): raw `set({fineTuneWeights: weights})` with no range validation on individual fields. Pre-existing gap from story 7-2; FineTunePanel is responsible for UI-level bounds. Also note: `isFineTuneWeights` validator in `buildPersistence.ts` does not range-check values on disk-load — a persisted `damage: 999` would load unclipped. Fix both when adding validation in a future story.
+
 ## Deferred from: code review of 7-2-finetunepanel-component (2026-05-17)
 
 - **AC4 proportional vs delta scaling**: AC4 says "maintain relative ratios" but impl uses additive delta. Must be resolved in story 7-3 alongside Rust weight computation — the scaling semantics are meaningless without knowing how the engine consumes the weights.
