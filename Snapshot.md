@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Provide answers to Decision 1 and Decision 2 above. Claude will apply patches to the story file and deferred-work.md, then close the review.
+- Dev agent reads `7-3-optimization-weight-computation-in-rust-and-prompt-construction.md` and begins task
 
 ---
 
