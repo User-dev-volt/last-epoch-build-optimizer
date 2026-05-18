@@ -85,6 +85,21 @@ export const useOptimizationStore = create<OptimizationStore>()((set) => ({
   setCurrentModel: (model) => set({ currentModel: model }),
   sliderPosition: 50,
   fineTuneWeights: null,
-  setSliderPosition: (pos) => set({ sliderPosition: Math.max(0, Math.min(100, pos)) }),
+  setSliderPosition: (pos) =>
+    set((state) => {
+      const clamped = Math.max(0, Math.min(100, pos))
+      if (state.fineTuneWeights !== null) {
+        const delta = clamped - state.sliderPosition
+        return {
+          sliderPosition: clamped,
+          fineTuneWeights: {
+            damage: Math.min(100, Math.max(0, state.fineTuneWeights.damage + delta)),
+            survivability: Math.min(100, Math.max(0, state.fineTuneWeights.survivability - delta)),
+            speed: state.fineTuneWeights.speed,
+          },
+        }
+      }
+      return { sliderPosition: clamped }
+    }),
   setFineTuneWeights: (weights) => set({ fineTuneWeights: weights }),
 }))

@@ -7,6 +7,7 @@ import { startOptimization } from '../../shared/stores/useOptimizationStream'
 import { PanelCollapseToggle } from './PanelCollapseToggle'
 import { ScoreGauge } from '../optimization/ScoreGauge'
 import { OptimizationSlider } from '../optimization/OptimizationSlider'
+import { FineTunePanel } from '../optimization/FineTunePanel'
 import { OptimizeButton } from '../optimization/OptimizeButton'
 import { SuggestionsList } from '../optimization/SuggestionsList'
 import { GearSlot } from '../item-database/GearSlot'
@@ -99,6 +100,7 @@ export function RightPanel() {
               <>
                 <ScoreGauge baselineScore={scores} previewScore={previewScore} />
                 <OptimizationSlider />
+                <FineTunePanel />
               </>
             ) : (
               <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
