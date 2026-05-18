@@ -1,6 +1,6 @@
 # Story 7.1: OptimizationSlider Component and useOptimizationStore Extension
 
-Status: review
+Status: done
 
 ## Story
 
@@ -291,9 +291,9 @@ No Rust changes. No `lib.rs` changes. No new Tauri commands.
 
 ### Review Findings
 
-- [ ] [Review][Patch] setSliderPosition setter has no range clamping [optimizationStore.ts:86] — store setter applies no 0–100 clamp; keyboard handler guards manually but direct store calls (tests, future code) can write out-of-range values, corrupting survivability/damage math
-- [ ] [Review][Patch] -moz-range-thumb missing box-sizing: border-box [global.css] — Firefox renders the 2px border outside the declared 16px making the Firefox thumb 20×20px vs WebKit's 16×16px; add `box-sizing: border-box` to the -moz-range-thumb rule
-- [ ] [Review][Patch] outline: none without :focus fallback for non-focus-visible browsers [global.css] — .optimization-slider sets `outline: none` with only a `:focus-visible` rule; older Chromium/Safari that don't support :focus-visible show no focus ring at all, violating WCAG 2.4.7 and the project's "never outline: none without a replacement" rule; add a `:focus { outline: ... }` fallback
+- [x] [Review][Patch] setSliderPosition setter has no range clamping [optimizationStore.ts:86] — store setter applies no 0–100 clamp; keyboard handler guards manually but direct store calls (tests, future code) can write out-of-range values, corrupting survivability/damage math
+- [x] [Review][Patch] -moz-range-thumb missing box-sizing: border-box [global.css] — Firefox renders the 2px border outside the declared 16px making the Firefox thumb 20×20px vs WebKit's 16×16px; add `box-sizing: border-box` to the -moz-range-thumb rule
+- [x] [Review][Patch] outline: none without :focus fallback for non-focus-visible browsers [global.css] — .optimization-slider sets `outline: none` with only a `:focus-visible` rule; older Chromium/Safari that don't support :focus-visible show no focus ring at all, violating WCAG 2.4.7 and the project's "never outline: none without a replacement" rule; add a `:focus { outline: ... }` fallback
 - [x] [Review][Defer] aria-valuetext formula not tested with asymmetric case [OptimizationSlider.test.tsx] — deferred, test covers position=50 (symmetric) only; a position=30 test would confirm "70% Survivability / 30% Damage" direction but formula is simple and low-risk
 
 ## Dev Agent Record

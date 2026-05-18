@@ -78,6 +78,10 @@
   outline: none;
   cursor: pointer;
 }
+.optimization-slider:focus {
+  outline: 2px solid var(--color-accent-gold);
+  outline-offset: 2px;
+}
 .optimization-slider:focus-visible {
   outline: 2px solid var(--color-accent-gold);
   outline-offset: 2px;
@@ -93,6 +97,7 @@
   border: 2px solid var(--color-bg-base);
 }
 .optimization-slider::-moz-range-thumb {
+  box-sizing: border-box;
   width: 16px;
   height: 16px;
   border-radius: 50%;

@@ -85,6 +85,6 @@ export const useOptimizationStore = create<OptimizationStore>()((set) => ({
   setCurrentModel: (model) => set({ currentModel: model }),
   sliderPosition: 50,
   fineTuneWeights: null,
-  setSliderPosition: (pos) => set({ sliderPosition: pos }),
+  setSliderPosition: (pos) => set({ sliderPosition: Math.max(0, Math.min(100, pos)) }),
   setFineTuneWeights: (weights) => set({ fineTuneWeights: weights }),
 }))
