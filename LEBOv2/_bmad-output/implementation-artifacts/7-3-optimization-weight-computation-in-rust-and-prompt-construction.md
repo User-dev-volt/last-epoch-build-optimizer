@@ -1,6 +1,6 @@
 # Story 7.3: Optimization Weight Computation in Rust and Prompt Construction
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -39,8 +39,8 @@ The two `useOptimizationStream.test.ts` tests that assert `goal:` in the `invoke
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `FineTuneWeights` Rust struct and update command signature (AC3, AC4)
-  - [ ] 1.1: In `lebo/src-tauri/src/commands/claude_commands.rs`, add above `invoke_claude_api`:
+- [x] Task 1: Add `FineTuneWeights` Rust struct and update command signature (AC3, AC4)
+  - [x] 1.1: In `lebo/src-tauri/src/commands/claude_commands.rs`, add above `invoke_claude_api`:
     ```rust
     #[derive(serde::Deserialize)]
     struct FineTuneWeights {
@@ -49,26 +49,26 @@ The two `useOptimizationStream.test.ts` tests that assert `goal:` in the `invoke
         speed: f32,
     }
     ```
-  - [ ] 1.2: Change `invoke_claude_api` signature — remove `goal: String`, add `slider_position: f32` and `fine_tune_weights: Option<FineTuneWeights>` as additional Tauri command parameters (alongside existing `build_state: Value`)
+  - [x] 1.2: Change `invoke_claude_api` signature — remove `goal: String`, add `slider_position: f32` and `fine_tune_weights: Option<FineTuneWeights>` as additional Tauri command parameters (alongside existing `build_state: Value`)
 
-- [ ] Task 2: Compute optimization intent string in Rust (AC1, AC2, AC6)
-  - [ ] 2.1: Add a private helper `fn compute_optimization_intent(slider_position: f32, fine_tune_weights: Option<FineTuneWeights>) -> String`:
+- [x] Task 2: Compute optimization intent string in Rust (AC1, AC2, AC6)
+  - [x] 2.1: Add a private helper `fn compute_optimization_intent(slider_position: f32, fine_tune_weights: Option<FineTuneWeights>) -> String`:
     - If `fine_tune_weights` is `Some(w)`: use `w.damage`, `w.survivability`, `w.speed` directly as integer percentages
     - If `fine_tune_weights` is `None`: derive `damage = slider_position`, `survivability = 100.0 - slider_position`, `speed = 0.0`
     - Round each to nearest integer: `damage.round() as i32` etc.
     - Return `format!("Optimization intent: {}% damage, {}% survivability, {}% speed", damage_pct, surv_pct, speed_pct)`
-  - [ ] 2.2: Call `compute_optimization_intent` in `invoke_claude_api` after the `// ── Assemble user message` comment
-  - [ ] 2.3: Replace `"goal": goal` in the `json!({...})` user_message with `"optimizationIntent": optimization_intent`
+  - [x] 2.2: Call `compute_optimization_intent` in `invoke_claude_api` after the `// ── Assemble user message` comment
+  - [x] 2.3: Replace `"goal": goal` in the `json!({...})` user_message with `"optimizationIntent": optimization_intent`
 
-- [ ] Task 3: Update TypeScript call site (AC5)
-  - [ ] 3.1: In `lebo/src/shared/stores/useOptimizationStream.ts`, update `startOptimization()`:
+- [x] Task 3: Update TypeScript call site (AC5)
+  - [x] 3.1: In `lebo/src/shared/stores/useOptimizationStream.ts`, update `startOptimization()`:
     - Read `sliderPosition` and `fineTuneWeights` from `useOptimizationStore.getState()`
     - Replace `{ buildState: activeBuild, goal }` with `{ buildState: activeBuild, sliderPosition, fineTuneWeights }`
     - Remove the `const goal = ...` line (no longer needed in this function)
-  - [ ] 3.2: Remove unused `OptimizationGoal` type import from `useOptimizationStream.ts` only if it is no longer referenced in that file (it's still imported in `optimizationStore.ts` — do NOT touch that import)
+  - [x] 3.2: Remove unused `OptimizationGoal` type import from `useOptimizationStream.ts` only if it is no longer referenced in that file (it's still imported in `optimizationStore.ts` — do NOT touch that import)
 
-- [ ] Task 4: Update tests (AC7)
-  - [ ] 4.1: In `lebo/src/shared/stores/useOptimizationStream.test.ts`:
+- [x] Task 4: Update tests (AC7)
+  - [x] 4.1: In `lebo/src/shared/stores/useOptimizationStream.test.ts`:
     - Find test `'startOptimization clears suggestions and sets isOptimizing(true)'` (line ~116): replace the `expect.objectContaining({ goal: 'balanced' })` assertion with `expect.objectContaining({ sliderPosition: 50, fineTuneWeights: null })`
     - Find test `'startOptimization passes updated goal to invokeCommand'` (line ~244): replace the body — set `useOptimizationStore.getState().setSliderPosition(80)` and `useOptimizationStore.getState().setFineTuneWeights({ damage: 40, survivability: 40, speed: 20 })`, call `startOptimization()`, assert `expect(mockInvokeCommand).toHaveBeenCalledWith('invoke_claude_api', expect.objectContaining({ sliderPosition: 80, fineTuneWeights: { damage: 40, survivability: 40, speed: 20 } }))`. Rename this test to `'startOptimization passes sliderPosition and fineTuneWeights to invokeCommand'`.
 
@@ -159,6 +159,24 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+- `FineTuneWeights` struct initially declared `struct` (private) — cargo check caught `private_interfaces` error because `pub async fn invoke_claude_api` is reachable at pub visibility. Fixed by declaring `pub struct FineTuneWeights`.
+
 ### Completion Notes List
 
+- Task 1: Added `pub struct FineTuneWeights { damage, survivability, speed: f32 }` in `claude_commands.rs`. Updated `invoke_claude_api` to remove `goal: String` and add `slider_position: f32`, `fine_tune_weights: Option<FineTuneWeights>`. No `lib.rs` changes required — parameter additions/removals don't affect command registration.
+- Task 2: Added private `fn compute_optimization_intent(slider_position, fine_tune_weights) -> String` below the command. Slider-only path: damage=slider_pos, survivability=100-slider_pos, speed=0. Fine-tune path: use raw weights directly. Called in `invoke_claude_api` before JSON assembly; replaced `"goal": goal` with `"optimizationIntent": optimization_intent` in user_message.
+- Task 3: Updated `startOptimization()` to destructure `{ sliderPosition, fineTuneWeights }` from `useOptimizationStore.getState()` and pass both to `invokeCommand`. Removed `const goal = ...` line. No orphaned imports — `OptimizationGoal` was never imported in `useOptimizationStream.ts`.
+- Task 4: Updated two tests in `useOptimizationStream.test.ts`: (1) `startOptimization clears suggestions` test assertion changed from `{ goal: 'balanced' }` to `{ sliderPosition: 50, fineTuneWeights: null }`; (2) `startOptimization passes updated goal` test replaced with new body using `setSliderPosition(80)` + `setFineTuneWeights(...)` and renamed. All 12 optimization stream tests pass; 275/275 store+optimization tests green.
+- Pre-existing failures (8 tests): `ProviderSelector.test.tsx`, `Settings.test.tsx`, `SkillTreeCanvas.test.tsx`, `TreeControls.test.tsx` — none caused by this story, all in unrelated feature areas.
+
 ### File List
+
+- `lebo/src-tauri/src/commands/claude_commands.rs` — added `pub struct FineTuneWeights`, `fn compute_optimization_intent`, updated `invoke_claude_api` signature and user_message assembly
+- `lebo/src/shared/stores/useOptimizationStream.ts` — updated `startOptimization()` to pass `sliderPosition`/`fineTuneWeights` instead of `goal`
+- `lebo/src/shared/stores/useOptimizationStream.test.ts` — updated 2 tests to assert new invocation shape
+
+## Change Log
+
+| Date | Change |
+|------|--------|
+| 2026-05-18 | Implemented story 7-3: added `FineTuneWeights` Rust struct + `compute_optimization_intent` helper; updated `invoke_claude_api` to remove `goal` param and add `slider_position`/`fine_tune_weights`; updated TypeScript `startOptimization()` call site; updated 2 tests. All 275 optimization/store tests green. |

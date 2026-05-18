@@ -131,7 +131,8 @@ describe('useOptimizationStream', () => {
 
     expect(useOptimizationStore.getState().suggestions).toHaveLength(0)
     expect(mockInvokeCommand).toHaveBeenCalledWith('invoke_claude_api', expect.objectContaining({
-      goal: 'balanced',
+      sliderPosition: 50,
+      fineTuneWeights: null,
     }))
   })
 
@@ -241,13 +242,15 @@ describe('useOptimizationStream', () => {
     expect(useOptimizationStore.getState().previewSuggestionRank).toBeNull()
   })
 
-  it('startOptimization passes updated goal to invokeCommand', async () => {
-    useOptimizationStore.getState().setGoal('maximize_damage')
+  it('startOptimization passes sliderPosition and fineTuneWeights to invokeCommand', async () => {
+    useOptimizationStore.getState().setSliderPosition(80)
+    useOptimizationStore.getState().setFineTuneWeights({ damage: 40, survivability: 40, speed: 20 })
 
     await act(async () => { await startOptimization() })
 
     expect(mockInvokeCommand).toHaveBeenCalledWith('invoke_claude_api', expect.objectContaining({
-      goal: 'maximize_damage',
+      sliderPosition: 80,
+      fineTuneWeights: { damage: 40, survivability: 40, speed: 20 },
     }))
   })
 

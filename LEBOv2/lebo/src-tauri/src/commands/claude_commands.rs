@@ -2,7 +2,14 @@ use crate::services::{claude_service, game_data_service, keychain_service, openr
 use serde_json::{json, Value};
 use tauri::Emitter;
 
-/// Invoke the Claude API with the current build state and optimization goal.
+#[derive(serde::Deserialize)]
+pub struct FineTuneWeights {
+    damage: f32,
+    survivability: f32,
+    speed: f32,
+}
+
+/// Invoke the Claude API with the current build state and optimization weights.
 /// Streams suggestions via Tauri events:
 ///   optimization:suggestion-received — one per parsed suggestion
 ///   optimization:complete            — on stream completion
@@ -11,7 +18,8 @@ use tauri::Emitter;
 pub async fn invoke_claude_api(
     app_handle: tauri::AppHandle,
     build_state: Value,
-    goal: String,
+    slider_position: f32,
+    fine_tune_weights: Option<FineTuneWeights>,
 ) -> Result<(), String> {
     // API key is fetched per-branch below based on the active provider.
 
@@ -99,8 +107,9 @@ pub async fn invoke_claude_api(
     }
 
     // ── Assemble user message ─────────────────────────────────────────────────
+    let optimization_intent = compute_optimization_intent(slider_position, fine_tune_weights);
     let user_message = serde_json::to_string(&json!({
-        "goal": goal,
+        "optimizationIntent": optimization_intent,
         "build": build_state,
         "availableNodes": available_nodes
     }))
@@ -157,6 +166,15 @@ pub async fn invoke_claude_api(
     }
 
     Ok(())
+}
+
+fn compute_optimization_intent(slider_position: f32, fine_tune_weights: Option<FineTuneWeights>) -> String {
+    let (damage_pct, surv_pct, speed_pct) = if let Some(w) = fine_tune_weights {
+        (w.damage.round() as i32, w.survivability.round() as i32, w.speed.round() as i32)
+    } else {
+        (slider_position.round() as i32, (100.0 - slider_position).round() as i32, 0)
+    };
+    format!("Optimization intent: {}% damage, {}% survivability, {}% speed", damage_pct, surv_pct, speed_pct)
 }
 
 fn extract_error_type(err: &str) -> String {

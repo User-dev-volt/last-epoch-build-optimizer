@@ -34,7 +34,7 @@ interface ModelActivePayload {
 
 export async function startOptimization() {
   const activeBuild = useBuildStore.getState().activeBuild
-  const goal = useOptimizationStore.getState().goal
+  const { sliderPosition, fineTuneWeights } = useOptimizationStore.getState()
   if (!activeBuild) return
 
   useOptimizationStore.getState().clearSuggestions()
@@ -43,7 +43,8 @@ export async function startOptimization() {
   try {
     await invokeCommand('invoke_claude_api', {
       buildState: activeBuild,
-      goal,
+      sliderPosition,
+      fineTuneWeights,
     })
   } catch (err) {
     const appError = normalizeAppError(err)
