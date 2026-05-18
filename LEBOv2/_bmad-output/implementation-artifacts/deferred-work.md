@@ -1,5 +1,14 @@
 # Deferred Work
 
+## Deferred from: code review of 6-4-phase-2-save-format-and-settings-version-display (2026-05-17)
+
+- Two duplicate `createBuild` paths (`buildStore.ts:74` and `:134`) can drift independently — both now stamp v2 defaults, but there is no single factory; future changes risk re-diverging.
+- `initialGameDataState` captured at module evaluation time in `Settings.test.tsx` — if a prior test file in the same Vitest worker mutates the store before this module is evaluated, the reset baseline is dirty.
+- Undo stack rehydrates v1-era build snapshots lacking `sliderPosition`/`fineTuneWeights` — `BuildState` declares them optional, so undo into a pre-diff snapshot silently produces undefined for these fields.
+- `migrateBuildState` treats `schemaVersion === undefined` as v1 — a v2 build with a corrupted/null version field would be pushed through v1 migration and have its `sliderPosition` replaced by a preset-derived default.
+- Early-return guard in `createBuild` (`buildStore.ts:73`) silently no-ops when user selects same class/mastery — prevents resetting to fresh v2 defaults without a class switch.
+- Auto-create path in `applyNodeChange` (`buildStore.ts:136`) silently commits `sliderPosition: 50` with no undo path to "no build" — pre-existing undo design, now more consequential with a visible default.
+
 ## Deferred from: code review of 6-3-manifest-v2-and-atomic-data-update-pipeline (2026-05-17)
 
 - Concurrent read-modify-write race on `manifest.json`: `update_manifest_icon_source` and `update_item_data` both do load → mutate → atomic_write with no lock; they also share the same `manifest.tmp` path when running concurrently, so the last rename wins and the other's fields are silently lost. Spec accepts this as best-effort (`icon_commands.rs`, `item_commands.rs`).
