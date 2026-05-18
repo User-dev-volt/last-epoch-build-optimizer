@@ -323,3 +323,11 @@ Initial `cargo check` failed: `LevelContext` was `struct` (private) but used in 
 - `lebo/src/shared/stores/useOptimizationStream.ts`
 - `lebo/src/shared/stores/useOptimizationStream.test.ts`
 - `lebo/src-tauri/src/commands/claude_commands.rs`
+
+### Review Findings
+
+- [ ] [Review][Patch] Guard `nodeAllocations` against null/undefined before `Object.values()` [`lebo/src/shared/stores/useOptimizationStream.ts:23`] — `Object.values(activeBuild.nodeAllocations)` throws if `nodeAllocations` is null/undefined (e.g., older persisted build). Change to `Object.values(activeBuild.nodeAllocations ?? {})`. Same location: if this throws before `clearSuggestions()`, the store stays dirty with stale suggestions visible.
+- [ ] [Review][Patch] Guard `activeSkillLevels` against undefined in spread [`lebo/src/shared/stores/useOptimizationStream.ts:27`] — `{ ...activeBuild.activeSkillLevels }` silently produces `{}` if the field is undefined (old schema build loaded from vault without migration), causing the AI to receive `"skill levels: none"` when skills are actually allocated. Change to `{ ...(activeBuild.activeSkillLevels ?? {}) }`.
+- [ ] [Review][Patch] Test hardcodes `availablePassivePoints: 38` — derive from `calculatePassivePoints` instead [`lebo/src/shared/stores/useOptimizationStream.test.ts:308`] — import `calculatePassivePoints` in the test file and compute `const expected = calculatePassivePoints(40)` rather than inlining `38`. Prevents a silent stale-contract failure if the formula ever changes.
+- [x] [Review][Defer] `#[allow(dead_code)]` on `allocated_passive_points` in Rust struct [`lebo/src-tauri/src/commands/claude_commands.rs:13-14`] — deferred, pre-existing; field is intentionally accepted over the wire (per AC1 payload spec) but not emitted in the prompt string (AC2 format doesn't include it). Documented in dev notes.
+- [x] [Review][Defer] No test coverage for negative `unspentPassivePoints` (over-budget edge case) [`lebo/src/shared/stores/useOptimizationStream.ts:26`] — deferred, by design; dev notes explicitly call out `i32` to support negative values when over-budget in theory-craft mode. A test for this path would be valuable but is not required by AC6.

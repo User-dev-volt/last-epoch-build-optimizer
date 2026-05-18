@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-- Dev agent picks up `7-4-level-budget-aware-ai-optimization-context.md` and implements the 6 tasks in order: interfaces → plumbing → Rust wiring → tests
+Run `code-review` on Story 7-4 using a different LLM to validate AC compliance and constraint logic before merging to main
 
 ---
 

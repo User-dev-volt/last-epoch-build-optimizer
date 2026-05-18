@@ -1,5 +1,10 @@
 # Deferred Work
 
+## Deferred from: code review of 7-4-level-budget-aware-ai-optimization-context (2026-05-18)
+
+- `#[allow(dead_code)]` on `allocated_passive_points` in Rust `LevelContext` struct (`claude_commands.rs:13-14`): field is intentionally accepted from TypeScript per AC1 payload spec but not emitted in the AI prompt string per AC2. Suppressing the warning is acceptable; if the prompt format ever gains an "allocated" line, remove the attribute.
+- No test coverage for negative `unspentPassivePoints` over-budget case (`useOptimizationStream.ts:26`): dev notes explicitly acknowledge `i32` to support negative values when a player over-allocates in free theory-craft mode then toggles enforcement on. Add a test with `characterLevel: 3` (1 point) and `nodeAllocations: { n: 5 }` to verify the negative value is passed through without error.
+
 ## Deferred from: code review of 7-3-optimization-weight-computation-in-rust-and-prompt-construction (2026-05-18)
 
 - No Rust unit test for `compute_optimization_intent` (`claude_commands.rs:171`): pure function with two branches (slider-only path and fine-tune path) is unverified in isolation. Pre-existing pattern — no Rust unit tests exist in codebase. Add `#[cfg(test)] mod tests` covering at least: slider-only at 0/50/100, fine-tune with sum≠100, fine-tune with negative values.
