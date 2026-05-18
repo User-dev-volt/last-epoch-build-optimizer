@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-06
-last_updated: 2026-05-17 (story 6-4 done)
+last_updated: 2026-05-17 (story 7-1 created)
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -92,8 +92,8 @@ development_status:
   epic-6-retrospective: optional
 
   # Epic 7: Advanced Optimization UX — Archetype Slider
-  epic-7: backlog
-  7-1-optimizationslider-component-and-useoptimizationstore-extension: backlog
+  epic-7: in-progress
+  7-1-optimizationslider-component-and-useoptimizationstore-extension: ready-for-dev
   7-2-finetunepanel-component: backlog
   7-3-optimization-weight-computation-in-rust-and-prompt-construction: backlog
   7-4-level-budget-aware-ai-optimization-context: backlog
