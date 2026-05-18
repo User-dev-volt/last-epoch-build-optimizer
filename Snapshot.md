@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Run `/gds-code-review` against the story diff with Opus model before moving to story 7-4.
+- Run `dev-story` on story 7-4 (`level-budget-aware-ai-optimization-context`) or end workflow
 
 ---
 

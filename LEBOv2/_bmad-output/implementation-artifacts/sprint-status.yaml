@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-06
-last_updated: 2026-05-18 (story 7-3 code review complete)
+last_updated: 2026-05-18 (story 7-4 created, ready-for-dev)
 project: LEBOv2
 project_key: NOKEY
 tracking_system: file-system
@@ -96,7 +96,7 @@ development_status:
   7-1-optimizationslider-component-and-useoptimizationstore-extension: done  # code review complete 2026-05-17; 3 patches applied (setSliderPosition clamping, moz-range-thumb box-sizing, :focus fallback), 1 deferred
   7-2-finetunepanel-component: done  # code review complete 2026-05-18; 3 patches applied, 2 design decisions deferred to 7-3
   7-3-optimization-weight-computation-in-rust-and-prompt-construction: done  # code review complete 2026-05-18; 0 patches, 2 deferred (Rust unit tests gap, setFineTuneWeights clamping gap)
-  7-4-level-budget-aware-ai-optimization-context: backlog
+  7-4-level-budget-aware-ai-optimization-context: ready-for-dev
   7-5-structured-gear-context-in-optimization-payload: backlog
   7-6-optimization-backward-compatibility-and-re-run-clear: backlog
   epic-7-retrospective: optional
