@@ -1,5 +1,12 @@
 # Deferred Work
 
+## Deferred from: code review of 7-6-optimization-backward-compatibility-and-re-run-clear (2026-05-18)
+
+- `MOCK_BUILD.schemaVersion: 1` in `SuggestionsList.test.tsx:46` is missing `sliderPosition`/`fineTuneWeights` fields — pre-existing fixture, update when migrating tests to v2 shape.
+- `derivedSpeed` hardcoded to `0` in `FineTunePanel` (`FineTunePanel.tsx:16`) — pre-existing design from story 7-2; speed weight is always zero in derived mode.
+- Same-id build reload does not resync `optimizationStore.sliderPosition` — if a build is replaced in the store with the same id (e.g., export/re-import same build), the `activeBuild.id` guard in `App.tsx:92` returns early and the slider is not resynced. Not a primary workflow; address if re-import flow is added.
+- `setActiveBuildFineTuneWeights` in `buildStore` accepts any numeric object with no validation — NaN/Infinity could be persisted to disk. Pre-existing pattern across all buildStore setters; add validation layer if needed.
+
 ## Deferred from: code review of 7-5-structured-gear-context-in-optimization-payload (2026-05-18)
 
 - Affix name uses build-stored `a.name` rather than canonical DB entry name (`useOptimizationStream.ts` structuredGear construction): name is written from DB at selection time (via `buildAffixEntries()`) so divergence only occurs if the DB updates after the build was saved. Pre-existing design decision — no action needed unless DB-to-build name sync becomes a product concern.

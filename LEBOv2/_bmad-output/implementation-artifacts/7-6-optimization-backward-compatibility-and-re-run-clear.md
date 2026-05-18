@@ -340,6 +340,17 @@ Critical rules from `project-context.md` that apply to this story:
 - [Source: `lebo/src/features/optimization/SuggestionsList.test.tsx:1-58`] — test file structure and mock patterns to follow for new tests
 - [Source: `_bmad-output/implementation-artifacts/7-5-structured-gear-context-in-optimization-payload.md#Dev Notes`] — confirms `useOptimizationStore.getState().clearSuggestions()` pattern
 
+### Review Findings
+
+- [ ] [Review][Decision] Mid-stream build switch does not cancel the in-flight LLM stream — After `clearSuggestions()` fires in the `App.tsx` subscriber, the Tauri event listeners in `useOptimizationStream` remain active. Incoming `addSuggestion` events from the old optimization run repopulate the cleared suggestions array with stale, build-mismatched suggestions that appear to belong to the new build. Full fix requires either (a) touching `useOptimizationStream.ts` (marked off-limits by story dev notes) to add a cancellation path, or (b) adding an `optimizationBuildId` sentinel to `optimizationStore` so `addSuggestion` can discard events from a superseded run. Decision needed on approach before patching.
+- [ ] [Review][Patch] Stale closure in `OptimizationSlider.handleKeyDown` reads `sliderPosition` from render scope, not current store value [OptimizationSlider.tsx:12-21]
+- [ ] [Review][Patch] `clearSuggestions()` does not reset `isOptimizing` — build switch mid-stream leaves `isOptimizing: true`, hiding the Clear button and blocking new optimization runs [optimizationStore.ts:57]
+- [ ] [Review][Patch] No integration test for AC4 App.tsx subscriber wiring — no test verifies `setActiveBuild()` with new id syncs `optimizationStore.sliderPosition` and fires `clearSuggestions()`
+- [x] [Review][Defer] `MOCK_BUILD.schemaVersion: 1` in `SuggestionsList.test.tsx:46` missing `sliderPosition`/`fineTuneWeights` — deferred, pre-existing fixture
+- [x] [Review][Defer] `derivedSpeed` hardcoded to `0` in `FineTunePanel` — deferred, pre-existing design from story 7-2
+- [x] [Review][Defer] Same-id build reload does not resync slider position — deferred, pre-existing edge case not in primary workflow
+- [x] [Review][Defer] `setActiveBuildFineTuneWeights` has no input validation (NaN/Infinity possible) — deferred, pre-existing pattern across all buildStore setters
+
 ## Dev Agent Record
 
 ### Agent Model Used
