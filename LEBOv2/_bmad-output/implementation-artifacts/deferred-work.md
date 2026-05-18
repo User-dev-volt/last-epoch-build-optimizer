@@ -1,5 +1,10 @@
 # Deferred Work
 
+## Deferred from: code review of 7-1-optimizationslider-component-and-useoptimizationstore-extension (2026-05-17)
+
+- `aria-valuetext` formula only tested at position=50 (symmetric case); a position=30 test would confirm "70% Survivability / 30% Damage" direction is correct — formula is simple so risk is low, but an asymmetric coverage test would give full confidence (`OptimizationSlider.test.tsx`).
+
+
 ## Deferred from: code review of 6-4-phase-2-save-format-and-settings-version-display (2026-05-17)
 
 - Two duplicate `createBuild` paths (`buildStore.ts:74` and `:134`) can drift independently — both now stamp v2 defaults, but there is no single factory; future changes risk re-diverging.

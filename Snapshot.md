@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-1.
+- Run `code-review` command with designated LLM reviewer and capture approval
 
 ---
 
