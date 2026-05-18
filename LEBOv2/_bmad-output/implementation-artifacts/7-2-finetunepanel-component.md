@@ -235,6 +235,8 @@ claude-sonnet-4-6
 - [x] [Review][Defer] `isFineTuneWeights` validator in `buildPersistence.ts` does not range-check values: out-of-range persisted weights (e.g., damage: 999) load without clamping — deferred, pre-existing
 - [x] [Review][Defer] `(Custom)` label persists even if delta-scaled weights happen to equal derived values: no round-trip check to auto-clear fineTuneWeights — deferred, spec does not require auto-clear
 - [x] [Review][Defer] Opacity-only panel transition does not animate height (instant collapse); AC1 says "smooth ease-out transition" but dev notes explicitly specify opacity-only — deferred, by-design per dev notes
+- [x] [Review][Defer] `fineTuneWeights` not consumed by scoring engine or optimization invocation: sub-slider weights are stored but never forwarded to `startOptimization()` or `calculateScore()` — deferred, by design; story 7-3 wires weights into Rust computation and prompt construction
+- [x] [Review][Defer] Master slider tooltip (`OptimizationSlider`) shows derived damage/survivability % when custom fine-tune weights are active, creating a semantic mismatch: user sees "50% Damage" while actual weights may be 80/5/50 — deferred, pre-existing behavior in OptimizationSlider.tsx, out of 7-2 scope
 
 ### Change Log
 
