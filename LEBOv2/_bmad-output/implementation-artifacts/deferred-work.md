@@ -2,6 +2,8 @@
 
 ## Deferred from: code review of 7-2-finetunepanel-component (2026-05-17)
 
+- **AC4 proportional vs delta scaling**: AC4 says "maintain relative ratios" but impl uses additive delta. Must be resolved in story 7-3 alongside Rust weight computation — the scaling semantics are meaningless without knowing how the engine consumes the weights.
+- **Weight sum invariant**: damage+survivability+speed can sum to any value (0–300). If Rust engine expects normalized weights (sum=100), the payload is wrong. Normalization strategy deferred to story 7-3.
 - `fineTuneWeights` ↔ `buildStore.activeBuild` sync gap: persisted fine-tune weights in a saved build are not pushed into `optimizationStore` after load; `App.tsx` only bridges `nodeAllocations`. Pre-existing architectural gap; likely addressed in story 7-5 or 7-6.
 - `handleChange` stale closure risk: reads `fineTuneWeights` from render closure rather than functional `set()` callback; theoretically stale under rapid concurrent updates, low risk for single-focus range slider UI.
 - No reset UI for `fineTuneWeights`: once any sub-slider is moved, there is no "Reset to auto" button to return to null; `(Custom)` label persists for the session. Not in ACs; likely a future UX story.

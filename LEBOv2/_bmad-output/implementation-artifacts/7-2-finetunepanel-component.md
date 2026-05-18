@@ -224,8 +224,8 @@ claude-sonnet-4-6
 
 ### Review Findings
 
-- [ ] [Review][Decision] AC4 — Proportional vs delta scaling: AC4 says "proportionally scale to maintain their relative ratios" but the implementation uses additive delta (damage + delta, survivability - delta). Dev Notes explicitly specify delta. Need user decision: is ratio-preserving scaling required, or is delta-based acceptable?
-- [ ] [Review][Decision] Weight sum invariant: With independent 0–100 sliders, damage+survivability+speed can sum to any value (e.g., 300). If the optimization engine expects weights summing to 100, the submitted payload will be wrong. Decide: enforce normalization to 100, or document that weights are independent absolute values?
+- [x] [Review][Defer] AC4 — Proportional vs delta scaling: AC4 says "proportionally scale to maintain their relative ratios" but implementation uses additive delta. Deferred to story 7-3 — scaling semantics must be decided alongside Rust weight computation design; the whole optimization engine is the bedrock of the app and needs to be designed holistically.
+- [x] [Review][Defer] Weight sum invariant: damage+survivability+speed can sum to any value (0–300); if Rust engine expects sum=100 results will be wrong. Deferred to story 7-3 — normalization strategy depends on how the Rust scoring engine interprets weights.
 - [ ] [Review][Patch] AC6: `aria-controls` missing on DisclosureButton — Headless UI injects `aria-expanded` automatically, but `aria-controls` requires an explicit `id` on `DisclosurePanel` and a matching `aria-controls` prop on `DisclosureButton` [FineTunePanel.tsx]
 - [ ] [Review][Patch] Axe test covers collapsed state only — `axe(container)` runs before the panel is opened; violations inside the expanded sub-slider area are never audited. Should click trigger before running axe [FineTunePanel.test.tsx:86]
 - [ ] [Review][Patch] Test `'clamps scaled survivability to 0 when delta would underflow'` does not assert damage was also clamped — with damage=90, delta=+30, damage clamps to 100 (from 120) but this is unverified; a regression zeroing damage would pass [FineTunePanel.test.tsx:113]
