@@ -439,6 +439,12 @@ claude-sonnet-4-6
 - lebo/src/shared/stores/useOptimizationStream.test.ts
 - lebo/src-tauri/src/commands/claude_commands.rs
 
+### Review Findings
+
+- [ ] [Review][Patch] `itemDatabase === null` drops ALL affix data instead of preserving name+tier without value [`lebo/src/shared/stores/useOptimizationStream.ts`]
+- [x] [Review][Defer] Affix name sourced from build storage (`a.name`) rather than canonical DB entry name — pre-existing data design, not caused by this story
+
 ## Change Log
 
 - 2026-05-18: Story 7-5 implemented — structured gear context in optimization payload. Added StructuredGearAffix/StructuredGearSlot types (TS + Rust), gear classification and value resolution in startOptimization(), build_gear_context Rust helper, gearContext field in user_message JSON. 17 tests pass.
+- 2026-05-18: Code review — 1 patch, 1 deferred, 13 dismissed.

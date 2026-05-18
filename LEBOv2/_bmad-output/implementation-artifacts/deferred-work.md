@@ -1,5 +1,9 @@
 # Deferred Work
 
+## Deferred from: code review of 7-5-structured-gear-context-in-optimization-payload (2026-05-18)
+
+- Affix name uses build-stored `a.name` rather than canonical DB entry name (`useOptimizationStream.ts` structuredGear construction): name is written from DB at selection time (via `buildAffixEntries()`) so divergence only occurs if the DB updates after the build was saved. Pre-existing design decision — no action needed unless DB-to-build name sync becomes a product concern.
+
 ## Deferred from: code review of 7-4-level-budget-aware-ai-optimization-context (2026-05-18)
 
 - `#[allow(dead_code)]` on `allocated_passive_points` in Rust `LevelContext` struct (`claude_commands.rs:13-14`): field is intentionally accepted from TypeScript per AC1 payload spec but not emitted in the AI prompt string per AC2. Suppressing the warning is acceptable; if the prompt format ever gains an "allocated" line, remove the attribute.
