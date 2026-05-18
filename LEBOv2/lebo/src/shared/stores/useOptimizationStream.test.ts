@@ -51,6 +51,7 @@ vi.mock('./gameDataStore', () => ({
 
 import { listen } from '@tauri-apps/api/event'
 import { invokeCommand } from '../utils/invokeCommand'
+import { calculatePassivePoints } from '../utils/budgetCalculator'
 import { useBuildStore } from './buildStore'
 import { useOptimizationStore } from './optimizationStore'
 import { useOptimizationStream, startOptimization } from './useOptimizationStream'
@@ -310,12 +311,13 @@ describe('useOptimizationStream', () => {
 
     await act(async () => { await startOptimization() })
 
+    const availablePassivePoints = calculatePassivePoints(40)
     expect(mockInvokeCommand).toHaveBeenCalledWith('invoke_claude_api', expect.objectContaining({
       levelContext: {
         characterLevel: 40,
-        availablePassivePoints: 38,
+        availablePassivePoints,
         allocatedPassivePoints: 2,
-        unspentPassivePoints: 36,
+        unspentPassivePoints: availablePassivePoints - 2,
         activeSkillLevels: { slot1: 10 },
       },
     }))

@@ -41,13 +41,13 @@ export async function startOptimization() {
   let levelContext: LevelContext | null = null
   if (activeBuild.budgetEnforced) {
     const availablePassivePoints = calculatePassivePoints(activeBuild.characterLevel)
-    const allocatedPassivePoints = Object.values(activeBuild.nodeAllocations).reduce((sum, v) => sum + v, 0)
+    const allocatedPassivePoints = Object.values(activeBuild.nodeAllocations ?? {}).reduce((sum, v) => sum + v, 0)
     levelContext = {
       characterLevel: activeBuild.characterLevel,
       availablePassivePoints,
       allocatedPassivePoints,
       unspentPassivePoints: availablePassivePoints - allocatedPassivePoints,
-      activeSkillLevels: { ...activeBuild.activeSkillLevels },
+      activeSkillLevels: { ...(activeBuild.activeSkillLevels ?? {}) },
     }
   }
 

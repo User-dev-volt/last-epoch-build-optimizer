@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Run `code-review` on Story 7-4 using a different LLM to validate AC compliance and constraint logic before merging to main
+Wait for user direction on patch application method (apply all, defer as action items, or walk through individually)
 
 ---
 
