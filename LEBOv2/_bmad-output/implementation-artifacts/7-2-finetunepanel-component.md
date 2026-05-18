@@ -222,6 +222,20 @@ claude-sonnet-4-6
 - `lebo/src/shared/stores/optimizationStore.ts`
 - `lebo/src/features/layout/RightPanel.tsx`
 
+### Review Findings
+
+- [ ] [Review][Decision] AC4 — Proportional vs delta scaling: AC4 says "proportionally scale to maintain their relative ratios" but the implementation uses additive delta (damage + delta, survivability - delta). Dev Notes explicitly specify delta. Need user decision: is ratio-preserving scaling required, or is delta-based acceptable?
+- [ ] [Review][Decision] Weight sum invariant: With independent 0–100 sliders, damage+survivability+speed can sum to any value (e.g., 300). If the optimization engine expects weights summing to 100, the submitted payload will be wrong. Decide: enforce normalization to 100, or document that weights are independent absolute values?
+- [ ] [Review][Patch] AC6: `aria-controls` missing on DisclosureButton — Headless UI injects `aria-expanded` automatically, but `aria-controls` requires an explicit `id` on `DisclosurePanel` and a matching `aria-controls` prop on `DisclosureButton` [FineTunePanel.tsx]
+- [ ] [Review][Patch] Axe test covers collapsed state only — `axe(container)` runs before the panel is opened; violations inside the expanded sub-slider area are never audited. Should click trigger before running axe [FineTunePanel.test.tsx:86]
+- [ ] [Review][Patch] Test `'clamps scaled survivability to 0 when delta would underflow'` does not assert damage was also clamped — with damage=90, delta=+30, damage clamps to 100 (from 120) but this is unverified; a regression zeroing damage would pass [FineTunePanel.test.tsx:113]
+- [x] [Review][Defer] `fineTuneWeights` ↔ `buildStore.activeBuild` sync gap: persisted fine-tune weights in a saved build are not pushed into `optimizationStore` after load; `App.tsx` only bridges `nodeAllocations` — deferred, pre-existing architectural gap
+- [x] [Review][Defer] `handleChange` stale closure risk: reads `fineTuneWeights` from render closure, not from a functional `set()` callback; theoretically stale under rapid concurrent updates, but impossible in practice with single-focus range sliders — deferred, low-risk
+- [x] [Review][Defer] No reset UI for `fineTuneWeights`: once any sub-slider is moved, there is no "Reset to auto" button to return to `null`; `(Custom)` is permanent for the session — deferred, not in ACs, likely a later story
+- [x] [Review][Defer] `isFineTuneWeights` validator in `buildPersistence.ts` does not range-check values: out-of-range persisted weights (e.g., damage: 999) load without clamping — deferred, pre-existing
+- [x] [Review][Defer] `(Custom)` label persists even if delta-scaled weights happen to equal derived values: no round-trip check to auto-clear fineTuneWeights — deferred, spec does not require auto-clear
+- [x] [Review][Defer] Opacity-only panel transition does not animate height (instant collapse); AC1 says "smooth ease-out transition" but dev notes explicitly specify opacity-only — deferred, by-design per dev notes
+
 ### Change Log
 
 - 2026-05-17: Implemented story 7.2 — FineTunePanel component with Headless UI Disclosure, 3 sub-sliders (Damage/Survivability/Speed Weight), "(Custom)" label when overriding master slider, proportional delta scaling in setSliderPosition when fineTuneWeights non-null; 13 tests + axe accessibility check pass.

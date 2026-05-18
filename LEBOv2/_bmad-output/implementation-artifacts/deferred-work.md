@@ -1,5 +1,14 @@
 # Deferred Work
 
+## Deferred from: code review of 7-2-finetunepanel-component (2026-05-17)
+
+- `fineTuneWeights` ↔ `buildStore.activeBuild` sync gap: persisted fine-tune weights in a saved build are not pushed into `optimizationStore` after load; `App.tsx` only bridges `nodeAllocations`. Pre-existing architectural gap; likely addressed in story 7-5 or 7-6.
+- `handleChange` stale closure risk: reads `fineTuneWeights` from render closure rather than functional `set()` callback; theoretically stale under rapid concurrent updates, low risk for single-focus range slider UI.
+- No reset UI for `fineTuneWeights`: once any sub-slider is moved, there is no "Reset to auto" button to return to null; `(Custom)` label persists for the session. Not in ACs; likely a future UX story.
+- `isFineTuneWeights` validator in `buildPersistence.ts` does not range-check values: out-of-range persisted weights (damage: 999) load without clamping. Pre-existing; should clamp on load.
+- `(Custom)` label persists even if delta-scaled weights happen to equal derived values: no round-trip check to auto-clear `fineTuneWeights` to null. Spec does not require auto-clear.
+- Opacity-only panel transition does not animate height; AC1 says "smooth ease-out transition" but dev notes explicitly specify opacity-only. By-design per dev notes; revisit if UX feedback requests height animation.
+
 ## Deferred from: code review of 7-1-optimizationslider-component-and-useoptimizationstore-extension (2026-05-17)
 
 - `aria-valuetext` formula only tested at position=50 (symmetric case); a position=30 test would confirm "70% Survivability / 30% Damage" direction is correct — formula is simple so risk is low, but an asymmetric coverage test would give full confidence (`OptimizationSlider.test.tsx`).
