@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-1.
+1. Run `/gds-code-review` against Story 7-6 in a new session with external reviewer
 
 ---
 
