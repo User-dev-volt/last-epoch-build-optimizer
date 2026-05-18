@@ -1,0 +1,35 @@
+cargo:rerun-if-env-changed=TAURI_CONFIG
+cargo:rustc-check-cfg=cfg(desktop)
+cargo:rustc-cfg=desktop
+cargo:rustc-check-cfg=cfg(mobile)
+cargo:rerun-if-changed=D:\Obsidian Brain\Brain\10_Active_Projects\LastEpochBuildOptimizer\LEBOv2\lebo\src-tauri\tauri.conf.json
+cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_APP_NAME=dev
+cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_PREFIX=com_lebo
+cargo:rustc-check-cfg=cfg(dev)
+cargo:PERMISSION_FILES_PATH=D:\Obsidian Brain\Brain\10_Active_Projects\LastEpochBuildOptimizer\LEBOv2\lebo\src-tauri\target\release\build\lebo-04e72cce30bfacda\out\app-manifest\__app__-permission-files
+cargo:rerun-if-changed=capabilities
+cargo:rerun-if-env-changed=REMOVE_UNUSED_COMMANDS
+cargo:rustc-env=TAURI_ENV_TARGET_TRIPLE=x86_64-pc-windows-msvc
+cargo:rerun-if-changed=resources\game-data\manifest.json
+cargo:rerun-if-changed=resources\game-data\classes\sentinel.json
+cargo:rerun-if-changed=resources\game-data\classes\mage.json
+cargo:rerun-if-changed=resources\game-data\classes\primalist.json
+cargo:rerun-if-changed=resources\game-data\classes\acolyte.json
+cargo:rerun-if-changed=resources\game-data\classes\rogue.json
+package.metadata does not exist
+Microsoft (R) Windows (R) Resource Compiler Version 10.0.10011.16384
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+cargo:rustc-link-arg-bins=D:\Obsidian Brain\Brain\10_Active_Projects\LastEpochBuildOptimizer\LEBOv2\lebo\src-tauri\target\release\build\lebo-04e72cce30bfacda\out\resource.lib
+cargo:rustc-link-search=native=D:\Obsidian Brain\Brain\10_Active_Projects\LastEpochBuildOptimizer\LEBOv2\lebo\src-tauri\target\release\build\lebo-04e72cce30bfacda\out
+cargo:rustc-link-arg=/NODEFAULTLIB:libvcruntimed.lib
+cargo:rustc-link-arg=/NODEFAULTLIB:vcruntime.lib
+cargo:rustc-link-arg=/NODEFAULTLIB:vcruntimed.lib
+cargo:rustc-link-arg=/NODEFAULTLIB:libcmtd.lib
+cargo:rustc-link-arg=/NODEFAULTLIB:msvcrt.lib
+cargo:rustc-link-arg=/NODEFAULTLIB:msvcrtd.lib
+cargo:rustc-link-arg=/NODEFAULTLIB:libucrt.lib
+cargo:rustc-link-arg=/NODEFAULTLIB:libucrtd.lib
+cargo:rustc-link-arg=/DEFAULTLIB:libcmt.lib
+cargo:rustc-link-arg=/DEFAULTLIB:libvcruntime.lib
+cargo:rustc-link-arg=/DEFAULTLIB:ucrt.lib
