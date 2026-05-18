@@ -1,6 +1,6 @@
 # Story 7.4: Level-Budget-Aware AI Optimization Context
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -53,8 +53,8 @@ The existing global buildStore mock is updated to include `budgetEnforced: false
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `LevelContext` TypeScript type (AC4)
-  - [ ] 1.1: In `lebo/src/shared/types/optimization.ts`, append after the `FineTuneWeights` interface:
+- [x] Task 1: Add `LevelContext` TypeScript type (AC4)
+  - [x] 1.1: In `lebo/src/shared/types/optimization.ts`, append after the `FineTuneWeights` interface:
     ```ts
     export interface LevelContext {
       characterLevel: number
@@ -65,13 +65,13 @@ The existing global buildStore mock is updated to include `budgetEnforced: false
     }
     ```
 
-- [ ] Task 2: Compute and pass `levelContext` in `startOptimization()` (AC1, AC3)
-  - [ ] 2.1: In `lebo/src/shared/stores/useOptimizationStream.ts`, add import at the top:
+- [x] Task 2: Compute and pass `levelContext` in `startOptimization()` (AC1, AC3)
+  - [x] 2.1: In `lebo/src/shared/stores/useOptimizationStream.ts`, add import at the top:
     ```ts
     import { calculatePassivePoints } from '../utils/budgetCalculator'
     import type { LevelContext } from '../types/optimization'
     ```
-  - [ ] 2.2: In `startOptimization()`, after reading `activeBuild` and before `clearSuggestions()`, compute `levelContext`:
+  - [x] 2.2: In `startOptimization()`, after reading `activeBuild` and before `clearSuggestions()`, compute `levelContext`:
     ```ts
     let levelContext: LevelContext | null = null
     if (activeBuild.budgetEnforced) {
@@ -86,7 +86,7 @@ The existing global buildStore mock is updated to include `budgetEnforced: false
       }
     }
     ```
-  - [ ] 2.3: Add `levelContext` to the `invokeCommand` call:
+  - [x] 2.3: Add `levelContext` to the `invokeCommand` call:
     ```ts
     await invokeCommand('invoke_claude_api', {
       buildState: activeBuild,
@@ -96,8 +96,8 @@ The existing global buildStore mock is updated to include `budgetEnforced: false
     })
     ```
 
-- [ ] Task 3: Add `LevelContext` Rust struct and update command signature (AC5)
-  - [ ] 3.1: In `lebo/src-tauri/src/commands/claude_commands.rs`, add below `FineTuneWeights`:
+- [x] Task 3: Add `LevelContext` Rust struct and update command signature (AC5)
+  - [x] 3.1: In `lebo/src-tauri/src/commands/claude_commands.rs`, add below `FineTuneWeights`:
     ```rust
     #[derive(serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -110,7 +110,7 @@ The existing global buildStore mock is updated to include `budgetEnforced: false
     }
     ```
     Note: `unspent_passive_points` is `i32` (not `u32`) because it can be negative when the player was over-budget in free theory-craft mode and then toggled enforcement on.
-  - [ ] 3.2: Add `level_context: Option<LevelContext>` to the `invoke_claude_api` function signature (after `fine_tune_weights`):
+  - [x] 3.2: Add `level_context: Option<LevelContext>` to the `invoke_claude_api` function signature (after `fine_tune_weights`):
     ```rust
     pub async fn invoke_claude_api(
         app_handle: tauri::AppHandle,
@@ -121,8 +121,8 @@ The existing global buildStore mock is updated to include `budgetEnforced: false
     ) -> Result<(), String> {
     ```
 
-- [ ] Task 4: Add `build_level_constraints` helper and wire into user_message (AC2, AC3)
-  - [ ] 4.1: In `claude_commands.rs`, add a private helper after `compute_optimization_intent`:
+- [x] Task 4: Add `build_level_constraints` helper and wire into user_message (AC2, AC3)
+  - [x] 4.1: In `claude_commands.rs`, add a private helper after `compute_optimization_intent`:
     ```rust
     fn build_level_constraints(ctx: &LevelContext) -> String {
         let skills_str = if ctx.active_skill_levels.is_empty() {
@@ -146,11 +146,11 @@ The existing global buildStore mock is updated to include `budgetEnforced: false
     }
     ```
     Skills are sorted before joining for deterministic output (avoids HashMap ordering nondeterminism in the prompt).
-  - [ ] 4.2: In `invoke_claude_api`, before the `// ── Assemble user message` section, add:
+  - [x] 4.2: In `invoke_claude_api`, before the `// ── Assemble user message` section, add:
     ```rust
     let level_constraints = level_context.as_ref().map(build_level_constraints);
     ```
-  - [ ] 4.3: Update the `json!({...})` user_message to include `"levelConstraints"`:
+  - [x] 4.3: Update the `json!({...})` user_message to include `"levelConstraints"`:
     ```rust
     let user_message = serde_json::to_string(&json!({
         "optimizationIntent": optimization_intent,
@@ -161,11 +161,11 @@ The existing global buildStore mock is updated to include `budgetEnforced: false
     ```
     When `level_constraints` is `None`, serde serializes it as `null` — the AI receives the field as `null` and ignores it.
 
-- [ ] Task 5: Run `cargo check` to verify Rust compiles (prerequisite for Task 6)
-  - [ ] 5.1: Run `cd lebo && cargo check --manifest-path src-tauri/Cargo.toml` — fix any compile errors before proceeding.
+- [x] Task 5: Run `cargo check` to verify Rust compiles (prerequisite for Task 6)
+  - [x] 5.1: Run `cd lebo && cargo check --manifest-path src-tauri/Cargo.toml` — fix any compile errors before proceeding.
 
-- [ ] Task 6: Update tests (AC6)
-  - [ ] 6.1: In `lebo/src/shared/stores/useOptimizationStream.test.ts`, update the global buildStore mock to add missing budget fields (so existing tests remain green):
+- [x] Task 6: Update tests (AC6)
+  - [x] 6.1: In `lebo/src/shared/stores/useOptimizationStream.test.ts`, update the global buildStore mock to add missing budget fields (so existing tests remain green):
     ```ts
     activeBuild: {
       // existing fields...
@@ -175,7 +175,7 @@ The existing global buildStore mock is updated to include `budgetEnforced: false
       // keep all existing fields unchanged
     }
     ```
-  - [ ] 6.2: Add new test — budget enforced passes levelContext:
+  - [x] 6.2: Add new test — budget enforced passes levelContext:
     ```ts
     it('startOptimization passes levelContext when budgetEnforced is true', async () => {
       vi.mocked(useBuildStore.getState).mockReturnValueOnce({
@@ -211,7 +211,7 @@ The existing global buildStore mock is updated to include `budgetEnforced: false
       }))
     })
     ```
-  - [ ] 6.3: Add new test — budget not enforced passes null levelContext:
+  - [x] 6.3: Add new test — budget not enforced passes null levelContext:
     ```ts
     it('startOptimization passes levelContext: null when budgetEnforced is false', async () => {
       // Uses default mock where budgetEnforced: false
@@ -222,7 +222,7 @@ The existing global buildStore mock is updated to include `budgetEnforced: false
       }))
     })
     ```
-  - [ ] 6.4: Run `pnpm vitest src/shared/stores/useOptimizationStream.test.ts` — all tests must pass including the 12 existing ones.
+  - [x] 6.4: Run `pnpm vitest src/shared/stores/useOptimizationStream.test.ts` — all tests must pass including the 12 existing ones.
 
 ## Dev Notes
 
@@ -308,6 +308,18 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+Initial `cargo check` failed: `LevelContext` was `struct` (private) but used in a `pub` function registered with Tauri. Fixed by making it `pub struct`. Also added `#[allow(dead_code)]` on `allocated_passive_points` since it is deserialized from TypeScript but not read in the Rust formatting helper.
+
 ### Completion Notes List
 
+- Added `LevelContext` TypeScript interface to `optimization.ts` (AC4).
+- Updated `useOptimizationStream.ts`: imports `calculatePassivePoints` + `LevelContext`; computes `levelContext` conditionally on `activeBuild.budgetEnforced`; passes it to `invokeCommand` (AC1, AC3).
+- Added `pub struct LevelContext` to `claude_commands.rs` with `#[serde(rename_all = "camelCase")]`; added `level_context: Option<LevelContext>` param to `invoke_claude_api`; added `build_level_constraints()` helper with deterministic skill sorting; wired `"levelConstraints"` field into user_message JSON (AC2, AC3, AC5).
+- Updated `useOptimizationStream.test.ts`: added `budgetEnforced: false`, `characterLevel: 1`, `activeSkillLevels: {}` to global mock; added `useBuildStore` import; added 2 new tests. All 14 tests pass (AC6).
+
 ### File List
+
+- `lebo/src/shared/types/optimization.ts`
+- `lebo/src/shared/stores/useOptimizationStream.ts`
+- `lebo/src/shared/stores/useOptimizationStream.test.ts`
+- `lebo/src-tauri/src/commands/claude_commands.rs`

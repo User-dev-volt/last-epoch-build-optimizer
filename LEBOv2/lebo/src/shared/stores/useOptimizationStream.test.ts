@@ -32,6 +32,9 @@ vi.mock('./buildStore', () => ({
         createdAt: '2026-01-01T00:00:00Z',
         updatedAt: '2026-01-01T00:00:00Z',
         schemaVersion: 1,
+        budgetEnforced: false,
+        characterLevel: 1,
+        activeSkillLevels: {},
       },
     })),
   },
@@ -48,6 +51,7 @@ vi.mock('./gameDataStore', () => ({
 
 import { listen } from '@tauri-apps/api/event'
 import { invokeCommand } from '../utils/invokeCommand'
+import { useBuildStore } from './buildStore'
 import { useOptimizationStore } from './optimizationStore'
 import { useOptimizationStream, startOptimization } from './useOptimizationStream'
 
@@ -281,5 +285,47 @@ describe('useOptimizationStream', () => {
     expect(useOptimizationStore.getState().suggestions).toHaveLength(1)
     expect(useOptimizationStore.getState().suggestions[0].rank).toBe(1)
     expect(useOptimizationStore.getState().suggestions[0].nodeChange.toNodeId).toBe('node_b')
+  })
+
+  it('startOptimization passes levelContext when budgetEnforced is true', async () => {
+    vi.mocked(useBuildStore.getState).mockReturnValueOnce({
+      activeBuild: {
+        id: 'test',
+        name: 'Test',
+        classId: 'sentinel',
+        masteryId: 'void_knight',
+        schemaVersion: 2,
+        budgetEnforced: true,
+        characterLevel: 40,
+        nodeAllocations: { 'node_a': 2 },
+        activeSkillLevels: { slot1: 10 },
+        skillNodeAllocations: {},
+        weaverAllocations: {},
+        contextData: { gear: [], skills: [], idols: [] },
+        isPersisted: false,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      },
+    } as ReturnType<typeof useBuildStore.getState>)
+
+    await act(async () => { await startOptimization() })
+
+    expect(mockInvokeCommand).toHaveBeenCalledWith('invoke_claude_api', expect.objectContaining({
+      levelContext: {
+        characterLevel: 40,
+        availablePassivePoints: 38,
+        allocatedPassivePoints: 2,
+        unspentPassivePoints: 36,
+        activeSkillLevels: { slot1: 10 },
+      },
+    }))
+  })
+
+  it('startOptimization passes levelContext: null when budgetEnforced is false', async () => {
+    await act(async () => { await startOptimization() })
+
+    expect(mockInvokeCommand).toHaveBeenCalledWith('invoke_claude_api', expect.objectContaining({
+      levelContext: null,
+    }))
   })
 })

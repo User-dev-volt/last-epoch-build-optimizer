@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-- Run `dev-story` on story 7-4 (`level-budget-aware-ai-optimization-context`) or end workflow
+- Dev agent picks up `7-4-level-budget-aware-ai-optimization-context.md` and implements the 6 tasks in order: interfaces → plumbing → Rust wiring → tests
 
 ---
 

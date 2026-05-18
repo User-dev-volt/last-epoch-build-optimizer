@@ -4,6 +4,14 @@ export interface FineTuneWeights {
   speed: number
 }
 
+export interface LevelContext {
+  characterLevel: number
+  availablePassivePoints: number
+  allocatedPassivePoints: number
+  unspentPassivePoints: number
+  activeSkillLevels: Record<string, number>
+}
+
 export type OptimizationGoal =
   | 'maximize_damage'
   | 'maximize_survivability'

@@ -4,10 +4,11 @@ import type { UnlistenFn } from '@tauri-apps/api/event'
 import { calculateScore } from '../../features/optimization/scoringEngine'
 import { invokeCommand } from '../utils/invokeCommand'
 import { normalizeAppError } from '../utils/errorNormalizer'
+import { calculatePassivePoints } from '../utils/budgetCalculator'
 import { useBuildStore } from './buildStore'
 import { useGameDataStore } from './gameDataStore'
 import { useOptimizationStore } from './optimizationStore'
-import type { SuggestionResult } from '../types/optimization'
+import type { SuggestionResult, LevelContext } from '../types/optimization'
 
 // Payload shapes emitted by claude_service.rs (snake_case from serde)
 interface SuggestionReceivedPayload {
@@ -37,6 +38,19 @@ export async function startOptimization() {
   const { sliderPosition, fineTuneWeights } = useOptimizationStore.getState()
   if (!activeBuild) return
 
+  let levelContext: LevelContext | null = null
+  if (activeBuild.budgetEnforced) {
+    const availablePassivePoints = calculatePassivePoints(activeBuild.characterLevel)
+    const allocatedPassivePoints = Object.values(activeBuild.nodeAllocations).reduce((sum, v) => sum + v, 0)
+    levelContext = {
+      characterLevel: activeBuild.characterLevel,
+      availablePassivePoints,
+      allocatedPassivePoints,
+      unspentPassivePoints: availablePassivePoints - allocatedPassivePoints,
+      activeSkillLevels: { ...activeBuild.activeSkillLevels },
+    }
+  }
+
   useOptimizationStore.getState().clearSuggestions()
   useOptimizationStore.getState().setIsOptimizing(true)
 
@@ -45,6 +59,7 @@ export async function startOptimization() {
       buildState: activeBuild,
       sliderPosition,
       fineTuneWeights,
+      levelContext,
     })
   } catch (err) {
     const appError = normalizeAppError(err)

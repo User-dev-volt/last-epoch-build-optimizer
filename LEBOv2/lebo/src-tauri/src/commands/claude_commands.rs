@@ -9,6 +9,17 @@ pub struct FineTuneWeights {
     speed: f32,
 }
 
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LevelContext {
+    character_level: u32,
+    available_passive_points: u32,
+    #[allow(dead_code)]
+    allocated_passive_points: u32,
+    unspent_passive_points: i32,
+    active_skill_levels: std::collections::HashMap<String, u32>,
+}
+
 /// Invoke the Claude API with the current build state and optimization weights.
 /// Streams suggestions via Tauri events:
 ///   optimization:suggestion-received — one per parsed suggestion
@@ -20,6 +31,7 @@ pub async fn invoke_claude_api(
     build_state: Value,
     slider_position: f32,
     fine_tune_weights: Option<FineTuneWeights>,
+    level_context: Option<LevelContext>,
 ) -> Result<(), String> {
     // API key is fetched per-branch below based on the active provider.
 
@@ -108,8 +120,10 @@ pub async fn invoke_claude_api(
 
     // ── Assemble user message ─────────────────────────────────────────────────
     let optimization_intent = compute_optimization_intent(slider_position, fine_tune_weights);
+    let level_constraints = level_context.as_ref().map(build_level_constraints);
     let user_message = serde_json::to_string(&json!({
         "optimizationIntent": optimization_intent,
+        "levelConstraints": level_constraints,
         "build": build_state,
         "availableNodes": available_nodes
     }))
@@ -175,6 +189,27 @@ fn compute_optimization_intent(slider_position: f32, fine_tune_weights: Option<F
         (slider_position.round() as i32, (100.0 - slider_position).round() as i32, 0)
     };
     format!("Optimization intent: {}% damage, {}% survivability, {}% speed", damage_pct, surv_pct, speed_pct)
+}
+
+fn build_level_constraints(ctx: &LevelContext) -> String {
+    let skills_str = if ctx.active_skill_levels.is_empty() {
+        "none".to_string()
+    } else {
+        let mut skills: Vec<String> = ctx
+            .active_skill_levels
+            .iter()
+            .map(|(slot, level)| format!("{}: {}", slot, level))
+            .collect();
+        skills.sort();
+        skills.join(", ")
+    };
+    format!(
+        "Build constraints: Level {}, {} passive points available ({} unspent), skill levels: {}",
+        ctx.character_level,
+        ctx.available_passive_points,
+        ctx.unspent_passive_points,
+        skills_str
+    )
 }
 
 fn extract_error_type(err: &str) -> String {
