@@ -23,7 +23,7 @@ with both Claude and OpenRouter. Fixing UX friction and edge cases surfaced duri
 ---
 
 ## Next Action
-Apply the patch to `useOptimizationStream.ts` lines ~X–Y (split condition + recompute affixes array with optional value lookup).
+1.
 
 ---
 

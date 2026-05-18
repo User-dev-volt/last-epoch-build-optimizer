@@ -87,6 +87,16 @@ export function App() {
     })
   }, [])
 
+  useEffect(() => {
+    return useBuildStore.subscribe((state, prev) => {
+      if (state.activeBuild?.id === prev.activeBuild?.id) return
+      const build = state.activeBuild
+      useOptimizationStore.getState().setSliderPosition(build?.sliderPosition ?? 50)
+      useOptimizationStore.getState().setFineTuneWeights(build?.fineTuneWeights ?? null)
+      useOptimizationStore.getState().clearSuggestions()
+    })
+  }, [])
+
   // Recalculate scores when game data loads after an active build is already present.
   // Without this, a saved build loaded before initGameData() resolves would show null scores
   // until the user manually modifies a node allocation.

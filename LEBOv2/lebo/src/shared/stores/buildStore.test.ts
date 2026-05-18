@@ -894,3 +894,59 @@ describe('buildStore — resetActiveTree("weaver")', () => {
     expect(() => useBuildStore.getState().resetActiveTree('weaver')).not.toThrow()
   })
 })
+
+describe('buildStore — setActiveBuildSliderPosition', () => {
+  beforeEach(() => {
+    useBuildStore.setState(initialState, true)
+    useBuildStore.getState().setActiveBuild({ ...mockBuild, sliderPosition: 50, isPersisted: true })
+  })
+
+  it('updates sliderPosition and marks build not persisted', () => {
+    useBuildStore.getState().setActiveBuildSliderPosition(75)
+    const s = useBuildStore.getState().activeBuild!
+    expect(s.sliderPosition).toBe(75)
+    expect(s.isPersisted).toBe(false)
+  })
+
+  it('clamps to 100 when value exceeds maximum', () => {
+    useBuildStore.getState().setActiveBuildSliderPosition(150)
+    expect(useBuildStore.getState().activeBuild!.sliderPosition).toBe(100)
+  })
+
+  it('clamps to 0 when value is below minimum', () => {
+    useBuildStore.getState().setActiveBuildSliderPosition(-10)
+    expect(useBuildStore.getState().activeBuild!.sliderPosition).toBe(0)
+  })
+
+  it('is a no-op when activeBuild is null', () => {
+    useBuildStore.setState({ activeBuild: null })
+    useBuildStore.getState().setActiveBuildSliderPosition(50)
+    expect(useBuildStore.getState().activeBuild).toBeNull()
+  })
+})
+
+describe('buildStore — setActiveBuildFineTuneWeights', () => {
+  beforeEach(() => {
+    useBuildStore.setState(initialState, true)
+    useBuildStore.getState().setActiveBuild({ ...mockBuild, fineTuneWeights: null, isPersisted: true })
+  })
+
+  it('updates fineTuneWeights and marks build not persisted', () => {
+    useBuildStore.getState().setActiveBuildFineTuneWeights({ damage: 40, survivability: 40, speed: 20 })
+    const s = useBuildStore.getState().activeBuild!
+    expect(s.fineTuneWeights).toEqual({ damage: 40, survivability: 40, speed: 20 })
+    expect(s.isPersisted).toBe(false)
+  })
+
+  it('accepts null to clear fine-tune override', () => {
+    useBuildStore.getState().setActiveBuildFineTuneWeights({ damage: 60, survivability: 30, speed: 10 })
+    useBuildStore.getState().setActiveBuildFineTuneWeights(null)
+    expect(useBuildStore.getState().activeBuild!.fineTuneWeights).toBeNull()
+  })
+
+  it('is a no-op when activeBuild is null', () => {
+    useBuildStore.setState({ activeBuild: null })
+    useBuildStore.getState().setActiveBuildFineTuneWeights({ damage: 50, survivability: 40, speed: 10 })
+    expect(useBuildStore.getState().activeBuild).toBeNull()
+  })
+})

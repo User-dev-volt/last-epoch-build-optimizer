@@ -98,5 +98,5 @@ development_status:
   7-3-optimization-weight-computation-in-rust-and-prompt-construction: done  # code review complete 2026-05-18; 0 patches, 2 deferred (Rust unit tests gap, setFineTuneWeights clamping gap)
   7-4-level-budget-aware-ai-optimization-context: done  # code review complete 2026-05-18; 3 patches applied (nodeAllocations null guard, activeSkillLevels null guard, test derives from calculatePassivePoints), 2 deferred
   7-5-structured-gear-context-in-optimization-payload: done  # code review complete 2026-05-18; 1 patch applied (itemDatabase null preserves name+tier), 1 deferred
-  7-6-optimization-backward-compatibility-and-re-run-clear: ready-for-dev
+  7-6-optimization-backward-compatibility-and-re-run-clear: review
   epic-7-retrospective: optional

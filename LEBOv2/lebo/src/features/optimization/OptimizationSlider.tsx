@@ -1,8 +1,10 @@
 import { useOptimizationStore } from '../../shared/stores/optimizationStore'
+import { useBuildStore } from '../../shared/stores/buildStore'
 
 export function OptimizationSlider() {
   const sliderPosition = useOptimizationStore((s) => s.sliderPosition)
   const setSliderPosition = useOptimizationStore((s) => s.setSliderPosition)
+  const setActiveBuildSliderPosition = useBuildStore((s) => s.setActiveBuildSliderPosition)
 
   const survivability = 100 - sliderPosition
   const damage = sliderPosition
@@ -11,9 +13,11 @@ export function OptimizationSlider() {
     if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
       e.preventDefault()
       setSliderPosition(Math.min(100, sliderPosition + 5))
+      setActiveBuildSliderPosition(Math.min(100, sliderPosition + 5))
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
       e.preventDefault()
       setSliderPosition(Math.max(0, sliderPosition - 5))
+      setActiveBuildSliderPosition(Math.max(0, sliderPosition - 5))
     }
   }
 
@@ -74,7 +78,11 @@ export function OptimizationSlider() {
             aria-valuenow={sliderPosition}
             aria-label="Optimization intent"
             aria-valuetext={`${survivability}% Survivability / ${damage}% Damage`}
-            onChange={(e) => setSliderPosition(Number(e.target.value))}
+            onChange={(e) => {
+              const val = Number(e.target.value)
+              setSliderPosition(val)
+              setActiveBuildSliderPosition(val)
+            }}
             onKeyDown={handleKeyDown}
           />
         </div>

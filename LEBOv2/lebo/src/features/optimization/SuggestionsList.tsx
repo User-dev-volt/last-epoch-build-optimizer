@@ -62,6 +62,7 @@ export function SuggestionsList({ onRetry }: SuggestionsListProps) {
   const setAppliedRank = useOptimizationStore((s) => s.setAppliedRank)
   const setPreviewSuggestionRank = useOptimizationStore((s) => s.setPreviewSuggestionRank)
   const setHighlightedNodeIds = useOptimizationStore((s) => s.setHighlightedNodeIds)
+  const clearSuggestions = useOptimizationStore((s) => s.clearSuggestions)
 
   const activeBuild = useBuildStore((s) => s.activeBuild)
   const applyNodeChange = useBuildStore((s) => s.applyNodeChange)
@@ -386,6 +387,17 @@ export function SuggestionsList({ onRetry }: SuggestionsListProps) {
         >
           {countLabel}
         </p>
+      )}
+
+      {suggestions.length > 0 && !isOptimizing && (
+        <button
+          onClick={clearSuggestions}
+          data-testid="clear-suggestions-button"
+          className="text-xs self-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          style={{ color: 'var(--color-text-muted)', textDecoration: 'underline', outlineColor: 'var(--color-accent-gold)' }}
+        >
+          Clear suggestions
+        </button>
       )}
 
       {suggestions.length > 0 && (

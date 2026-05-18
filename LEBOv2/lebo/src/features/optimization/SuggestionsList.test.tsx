@@ -526,6 +526,24 @@ describe('SuggestionsList', () => {
     expect(useOptimizationStore.getState().previewSuggestionRank).toBeNull()
   })
 
+  // Story 7.6: Clear suggestions button
+  it('renders "Clear suggestions" button when suggestions are present and not optimizing', () => {
+    useOptimizationStore.setState({ suggestions: [makeSuggestion(1)], isOptimizing: false })
+    useBuildStore.setState({ activeBuild: MOCK_BUILD })
+    render(<SuggestionsList onRetry={vi.fn()} />)
+    expect(screen.getByTestId('clear-suggestions-button')).toBeInTheDocument()
+  })
+
+  it('clicking Clear suggestions calls clearSuggestions on the store', async () => {
+    useOptimizationStore.setState({ suggestions: [makeSuggestion(1)], isOptimizing: false })
+    useBuildStore.setState({ activeBuild: MOCK_BUILD })
+    render(<SuggestionsList onRetry={vi.fn()} />)
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('clear-suggestions-button'))
+    })
+    expect(useOptimizationStore.getState().suggestions).toHaveLength(0)
+  })
+
   it('global keyboard:escape event clears focused card state', async () => {
     useOptimizationStore.setState({
       suggestions: [makeSuggestion(1)],

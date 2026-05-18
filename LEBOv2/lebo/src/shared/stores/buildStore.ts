@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { BuildState, BuildMeta, ApplyNodeResult, GearItemV2, ActiveSkill, IdolItem } from '../types/build'
+import type { FineTuneWeights } from '../types/optimization'
 import type { SkillEntry } from '../types/gameData'
 import type { TreeData } from '../types/treeData'
 import { calculatePassivePoints, calculateSkillPoints, calculateWeaverPoints } from '../utils/budgetCalculator'
@@ -46,6 +47,8 @@ export interface BuildStore {
   updateContextGear: (gear: GearItemV2[]) => void
   updateContextSkills: (skills: ActiveSkill[]) => void
   updateContextIdols: (idols: IdolItem[]) => void
+  setActiveBuildSliderPosition: (pos: number) => void
+  setActiveBuildFineTuneWeights: (weights: FineTuneWeights | null) => void
 }
 
 export const selectAvailablePassivePoints = (s: BuildStore): number =>
@@ -440,6 +443,34 @@ export const useBuildStore = create<BuildStore>()((set, get) => ({
             activeBuild: {
               ...s.activeBuild,
               contextData: { ...s.activeBuild.contextData, idols },
+              isPersisted: false,
+              updatedAt: new Date().toISOString(),
+            },
+          }
+        : {}
+    ),
+
+  setActiveBuildSliderPosition: (pos) =>
+    set((s) =>
+      s.activeBuild
+        ? {
+            activeBuild: {
+              ...s.activeBuild,
+              sliderPosition: Math.max(0, Math.min(100, pos)),
+              isPersisted: false,
+              updatedAt: new Date().toISOString(),
+            },
+          }
+        : {}
+    ),
+
+  setActiveBuildFineTuneWeights: (weights) =>
+    set((s) =>
+      s.activeBuild
+        ? {
+            activeBuild: {
+              ...s.activeBuild,
+              fineTuneWeights: weights,
               isPersisted: false,
               updatedAt: new Date().toISOString(),
             },

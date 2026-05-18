@@ -2,11 +2,13 @@ import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react
 import type { FineTuneWeights } from '../../shared/types/optimization'
 import { useReducedMotion } from '../../shared/hooks/useReducedMotion'
 import { useOptimizationStore } from '../../shared/stores/optimizationStore'
+import { useBuildStore } from '../../shared/stores/buildStore'
 
 export function FineTunePanel() {
   const sliderPosition = useOptimizationStore((s) => s.sliderPosition)
   const fineTuneWeights = useOptimizationStore((s) => s.fineTuneWeights)
   const setFineTuneWeights = useOptimizationStore((s) => s.setFineTuneWeights)
+  const setActiveBuildFineTuneWeights = useBuildStore((s) => s.setActiveBuildFineTuneWeights)
   const reducedMotion = useReducedMotion()
 
   const derivedDamage = sliderPosition
@@ -25,7 +27,9 @@ export function FineTunePanel() {
       survivability: derivedSurvivability,
       speed: derivedSpeed,
     }
-    setFineTuneWeights({ ...current, [field]: value })
+    const next = { ...current, [field]: value }
+    setFineTuneWeights(next)
+    setActiveBuildFineTuneWeights(next)
   }
 
   return (
